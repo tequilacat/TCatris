@@ -29,9 +29,7 @@ public final class TetrisCanvas extends Canvas implements Runnable {
   private Tetris myGame;
 
   private Thread myTickerThread;
-  private boolean myIsLayedOut;
 
-  protected boolean myScorebarLayoutIsVertical;
   boolean myDisplayIconsVertically;
   private static int SCOREBAR_WIDTH = 7;
 
@@ -40,10 +38,6 @@ public final class TetrisCanvas extends Canvas implements Runnable {
   /**************************************************
    **************************************************/
   public TetrisCanvas() {
-//        myStop = false;
-    //myIsPaused = false;
-    myIsLayedOut = false;
-
     showNewGameMenu();
   }
 
@@ -106,28 +100,6 @@ public final class TetrisCanvas extends Canvas implements Runnable {
 
     myTickerThread.start();
   }
-    
-    
-/* 
-    boolean isActive(){
-        return myGame!=null && myGame.getState()==myGame.ACTIVE && !myStop;
-    }
-
-    private void pause(){
-        myIsPaused = true;
-        repaint();
-    }
-
-    private void resume(){
-        myIsPaused = false;
-        repaint();
-    }
-    
-    private boolean isPaused(){
-        return myIsPaused;
-    }
-
-    */
 
   /**************************************************
    * runnable
@@ -207,7 +179,7 @@ public final class TetrisCanvas extends Canvas implements Runnable {
         if (item != Ui.ITEM_BACK) {
           stopGame();
 
-          myGame = TetrisMidlet.instance.createGame(Ui.getCurrentItemIndex());
+          myGame = GameList.createGame(Ui.getCurrentItemIndex());
 
           startGame();
           repaint();
@@ -351,7 +323,7 @@ public final class TetrisCanvas extends Canvas implements Runnable {
 
   /**************************************************
    **************************************************/
-  private void paintScreen(Graphics g, boolean repaintAll) { // , boolean repaintScores){
+  private void paintScreen(Graphics g, boolean repaintAll) {
     boolean repaintScores = true; // debug!
     boolean repaintNext = true; // debug!
 
@@ -407,59 +379,6 @@ public final class TetrisCanvas extends Canvas implements Runnable {
       showInGameScores(g);
     }
   }
-
-  /****************
-   */
-  public void setLayout(
-    int fX, int fY, int fWidth, int fHeight,
-    int nextX, int nextY, int nextW, int nextH, boolean verticalIconLayout) {
-    myDisplayIconsVertically = verticalIconLayout;
-    myFieldX = fX;
-    myFieldY = fY;
-    myFieldW = fWidth;
-    myFieldH = fHeight;
-
-    myNextFigX = nextX;
-    myNextFigY = nextY;
-    myNextFigW = nextW;
-    myNextFigH = nextH;
-  }
-
-  private int myFieldX, myFieldY, myFieldW, myFieldH;
-  private int myNextFigX, myNextFigY, myNextFigW, myNextFigH;
-
-  public final int getNextFigX() {
-    return myNextFigX;
-  }
-
-  public final int getNextFigY() {
-    return myNextFigY;
-  }
-
-  public final int getNextFigWidth() {
-    return myNextFigW;
-  }
-
-  public final int getNextFigHeight() {
-    return myNextFigH;
-  }
-
-  public final int getGlassClipX() {
-    return myFieldX;
-  }
-
-  public final int getGlassClipY() {
-    return myFieldY;
-  }
-
-  public final int getGlassClipWidth() {
-    return myFieldW;
-  }
-
-  public final int getGlassClipHeight() {
-    return myFieldH;
-  }
-
 
   private boolean getClipGlassOnly(Graphics g) {
     int i = g.getClipX();

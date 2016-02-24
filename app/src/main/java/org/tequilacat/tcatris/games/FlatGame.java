@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 
 import org.tequilacat.tcatris.core.Color;
+import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.Tetris;
 import org.tequilacat.tcatris.core.TetrisCanvas;
 
@@ -226,7 +227,7 @@ public abstract class FlatGame extends Tetris {
 
   /********************************
    *********************************/
-  public void layout(TetrisCanvas canvas, int screenWidth, int screenHeight) {
+  public GameScreenLayout layout(int screenWidth, int screenHeight) {
 
     FlatGame game = this; // (FlatGame)getGame();
     int glassWidth = game.getWidth(), glassHeight = game.getHeight(),
@@ -293,7 +294,7 @@ public abstract class FlatGame extends Tetris {
     //Debug.print("Cell Size: "+myCellSize+" , fieldWidth = "+myFieldWidth);
 
 
-    canvas.setLayout(fieldX0, fieldY0, myFieldWidth, myFieldHeight,
+    return new GameScreenLayout(fieldX0, fieldY0, myFieldWidth, myFieldHeight,
       myNextShapeX0, myNextShapeY0,
       game.getMaxShapeWidth() * myCellSize, game.getMaxShapeHeight() * myCellSize,
       displayIconVertically);

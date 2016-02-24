@@ -13,6 +13,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
 
+import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.TetrisCanvas;
 
 public class Columns extends FlatGame {
@@ -38,10 +39,9 @@ public class Columns extends FlatGame {
    **************************************************/
   @Override
   protected void configure(String specSettings) {
-    super.configure(specSettings);
     // expect : fig=vert, fig=horz, fig=rotateable
 //        Debug.print("fig type: '"+  +"'");
-    String figType = getOption("fig");
+    String figType = specSettings;
     if ("horz".equals(figType)) {
       myGameType = FIGTYPE_HORZ;
     } else if ("vert".equals(figType)) {
@@ -276,9 +276,10 @@ public class Columns extends FlatGame {
 //    return myShapesImage;
 //  }
 
-  public void layout(TetrisCanvas canvas, int screenWidth, int screenHeight) {
-    super.layout(canvas, screenWidth, screenHeight);
+  public GameScreenLayout layout(int screenWidth, int screenHeight) {
+    GameScreenLayout layout = super.layout(screenWidth, screenHeight);
     createBigImage(myCellSize);
+    return layout;
   }
 
   /**************************************************

@@ -1,36 +1,21 @@
 package org.tequilacat.tcatris.core;
 
-
-import java.io.*;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.Vector;
 
-/*import javax.microedition.lcdui.*;
-import javax.microedition.rms.*;
-import javax.microedition.midlet.MIDlet;
-import javax.microedition.midlet.MIDletStateChangeException;
+/**
+ * Created by avo on 24.02.2016.
+ */
+public class GameList {
 
-import flat.*;
-*/
-
-public class TetrisMidlet extends MIDlet {
-
-  public static TetrisMidlet instance;
-
-  TetrisCanvas myGameDisplay;
-
-  private static String myState;
-
-  private static Vector myGameStateVector;
-  //    private static Object[] myGameStateVector = null;
-  private static final String RMS_NAME = "tetris_rms";
+  private Vector myGameStateVector;
 
   private Vector myGameDescriptors = new Vector();
 
   /**************************************************
    **************************************************/
-  public TetrisMidlet() {
-    instance = this;
-
+  public GameList() {
     //game=flassname:label:w:h:nw:nh:optionalParams
     String games="game=Columns:Xixit:5:12:1:3:fig=vert\n" +
       "game=ClassicGame:Tetris:10:15:2:4\n" +
@@ -58,7 +43,7 @@ public class TetrisMidlet extends MIDlet {
             // class name
             myGameDescriptors.addElement("org.tequilacat.tcatris.games." + mayBeDesc.substring(5, sep1));
             // game name
-              myGameDescriptors.addElement(mayBeDesc.substring(sep1 + 1, sep2));
+            myGameDescriptors.addElement(mayBeDesc.substring(sep1 + 1, sep2));
             // game params
             myGameDescriptors.addElement(mayBeDesc.substring(sep2 + 1));
 
@@ -70,6 +55,8 @@ public class TetrisMidlet extends MIDlet {
           stb.append((char) inChar);
         }
       }
+
+      readStoredData();
     } catch (Exception e) {
       Debug.print("Error reading game definitions: " + e);
     }
@@ -122,7 +109,7 @@ public class TetrisMidlet extends MIDlet {
 
   /**************************************************
    **************************************************/
-  public static void storeGameData(byte[] data, String gameId) {
+  public void storeGameData(byte[] data, String gameId) {
     System.out.println("Store game data '" + gameId + "': bytes are " + data.length);
     for (int i = 0; i < myGameStateVector.size(); i += 2) {
       if (myGameStateVector.elementAt(i).equals(gameId)) {
@@ -137,75 +124,13 @@ public class TetrisMidlet extends MIDlet {
 //        myGameStateVector[gameIndex+1] = data;
   }
 
-
-  /**************************************************
-   * MIDLET LYFECYCLE
-   **************************************************/
-  public void startApp() throws MIDletStateChangeException {
-//        Columns.GAME_INDEX = 0;
-//        ClassicGame.GAME_INDEX = 1;
-
-    if (myGameDisplay != null) {
-      return;
-    }
-    TetrisCanvas.display = Display.getDisplay(this);
-
-    readStoredData();
-
-    myGameDisplay = new TetrisCanvas();
-    TetrisCanvas.display.setCurrent(myGameDisplay);
-  }
-
-  /**************************************************
-   * MIDLET LYFECYCLE
-   **************************************************/
-  public void pauseApp() {
-    // don't reset if game active
-    if (myGameDisplay != null) {
-      return;
-    }
-
-    if (myGameDisplay != null)
-      myGameDisplay.stopGame();
-
-    TetrisCanvas.PlayerIcon = null;
-    TetrisCanvas.WinnerIcon = null;
-    TetrisCanvas.LevelIcon = null;
-
-    TetrisCanvas.display = null;
-    myGameDisplay = null;
-
-    saveStoredData(true);
-  }
-
-  /**************************************************
-   * MIDLET LYFECYCLE
-   **************************************************/
-  public void destroyApp(boolean flag) {
-    if (myGameDisplay != null)
-      myGameDisplay.stopGame();
-    TetrisCanvas.display = null;
-    myGameDisplay = null;
-    //notifyDestroyed();
-    saveStoredData(true);
-  }
-
-  /**************************************************
-   * MIDLET LYFECYCLE
-   **************************************************/
-  public void exitMidlet() {
-    destroyApp(true);
-    notifyDestroyed();
-  }
-
-
   /**************************************************
    **************************************************/
-  private static void readStoredData() {
-    myState = "\n";
-
+  private void readStoredData() {
     if (myGameStateVector == null) {
       myGameStateVector = new Vector();
+/*
+
 
       try {
         if (myRS == null) {
@@ -242,14 +167,15 @@ public class TetrisMidlet extends MIDlet {
         myRS = null;
         //myGameStateVector = new Vector();
       }
+    */
     }
   }
 
   /**************************************************
    **************************************************/
-  private static void saveStoredData(boolean closeOnSave) {
+  private static void saveStoredData() {
     //Debug.print("myState: "+myState + ".");
-
+/*
     try {
 
       if (myRS != null) {
@@ -293,79 +219,6 @@ public class TetrisMidlet extends MIDlet {
       Debug.print("Error writing RMS: " + e);
 //            e.printStackTrace();
     }
+    */
   }
-
-
-  public static final String TOGGLE_BOOLEAN_VALUE = "t";
-
-  /**************************************************
-   * props:
-   * \n PROPNAME  \n NAME = VAL
-   **************************************************/
-  public static void setProperty(String prop, String value) {
-//		Debug.print("------- set '"+ prop +"' = '"+ value +"'");
-
-    String propMarker = "\n" + prop + '=';
-    int index = myState.indexOf(propMarker);
-    if (index == -1) {
-      if (value != null) {
-//                Debug.print("Append '"+ prop +"' = '"+ value +"'");
-        myState = myState + propMarker.substring(1) + value + '\n';
-      }
-    } else {
-      if (value == TOGGLE_BOOLEAN_VALUE) value = null;
-//            Debug.print("Change '"+ prop +"' = '"+ value +"'");
-
-      int next = myState.indexOf("\n", index + 1);
-//			if(next == -1) next = myState.length();
-
-      if (value == null) {
-        // myState = myState.substring(0, index-1) + myState.substring(next);
-        myState = myState.substring(0, index) + myState.substring(next);
-      } else {
-        myState = myState.substring(0, index + propMarker.length()) + value + myState.substring(next);
-      }
-    }
-  }
-
-  /**************************************************
-   **************************************************/
-//	public static int getIntProperty(String prop, int defaultValue){
-//		return safeInt(getProperty(prop), defaultValue);
-//	}
-
-  /**************************************************
-   **************************************************/
-  public static int safeInt(String intString, int defaultValue) {
-    if (intString != null && !"".equals(intString)) {
-      try {
-        defaultValue = Integer.parseInt(intString);
-      } catch (Exception e) {
-      }
-    }
-    return defaultValue;
-  }
-
-  /**************************************************
-   **************************************************/
-  public static String getProperty(String prop) {
-    return getProperty(prop, myState);
-  }
-
-  /**************************************************
-   **************************************************/
-  public static String getProperty(String prop, String propertyString) {
-    String propMarker = "\n" + prop + "=";
-    String val = null;
-    int index = propertyString.indexOf(propMarker);
-
-//        System.out.println("Index "+ index +" of '"+ propMarker +"' in '"+ propertyString +"'");
-    if (index != -1) {
-      index += propMarker.length();
-      int next = propertyString.indexOf("\n", index);
-      val = propertyString.substring(index, next);
-    }
-    return val;
-  }
-
 }

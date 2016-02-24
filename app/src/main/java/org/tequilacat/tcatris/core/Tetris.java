@@ -29,9 +29,6 @@ public abstract class Tetris {
 
   public boolean IsLayedOut = false;
 
-
-  private String mySpecSettings;
-
   private int myFieldWidth;
   private int myFieldHeight;
   private int myNextWidth;
@@ -42,9 +39,7 @@ public abstract class Tetris {
    **************************************************/
   public Tetris(byte[] gameData, int gameIndex) {
     myGameIndex = gameIndex;
-
     parseHiScores(gameData);
-
   }
 
   /**************************************************
@@ -77,36 +72,11 @@ public abstract class Tetris {
     configure((sep4 < 0) ? null : gameDescriptor.substring(sep4 + 1));
   }
 
-
-  /**************************************************
-   **************************************************/
-  protected void configure(String specSettings) {
-
-    //Debug.print("init spec settings ["+ GameName +"]: '"+ specSettings +"'");
-
-    StringBuffer stb = new StringBuffer();
-    stb.append('\n');
-
-    if (specSettings != null) {
-      int sep, pos = 0;
-      while ((sep = specSettings.indexOf("\\n", pos)) != -1) {
-        stb.append(specSettings.substring(pos, sep)).append('\n');
-        pos = sep + 2;
-      }
-      stb.append(specSettings.substring(pos)).append('\n');
-    }
-
-    mySpecSettings = stb.toString();
-
-    //Debug.print("Finally '"+ mySpecSettings +"'");
-  }
-
-  /**************************************************
-   **************************************************/
-  public String getOption(String optionName) {
-
-    return TetrisMidlet.getProperty(optionName, mySpecSettings);
-  }
+  /**
+   * remaining specs of the gamedef line
+   * @param specSettings
+   */
+  protected abstract void configure(String specSettings);
 
   /**************************************************
    **************************************************/
@@ -129,7 +99,7 @@ public abstract class Tetris {
   /**************************************************
    **************************************************/
   //protected abstract void initGameGraphics(int fieldPixWidth, int fieldPixHeight);
-  public abstract void layout(TetrisCanvas tetrisCanvas, int screenWidth, int screenHeight);
+  public abstract GameScreenLayout layout(int screenWidth, int screenHeight);
 
   public abstract void paintNext(Canvas g, int nextFigX, int nextFigY, int nextFigWidth, int nextFigHeight);
 
@@ -261,7 +231,7 @@ public abstract class Tetris {
       if (scoreInserted) {
         //Debug.print("Score inserted, dump scores to the app props");
 //                debugDumpScores();
-        TetrisMidlet.storeGameData(encodeTopScores(), GameName);
+        GameList.storeGameData(encodeTopScores(), GameName);
       }
     }
     return scoreInserted;
