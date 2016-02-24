@@ -1,5 +1,7 @@
 package org.tequilacat.tcatris.core;
 
+import android.graphics.Canvas;
+
 import java.io.*;
 
 /**
@@ -129,9 +131,9 @@ public abstract class Tetris {
   //protected abstract void initGameGraphics(int fieldPixWidth, int fieldPixHeight);
   public abstract void layout(TetrisCanvas tetrisCanvas, int screenWidth, int screenHeight);
 
-  public abstract void paintNext(Graphics g, int nextFigX, int nextFigY, int nextFigWidth, int nextFigHeight);
+  public abstract void paintNext(Canvas g, int nextFigX, int nextFigY, int nextFigWidth, int nextFigHeight);
 
-  public abstract void paintField(Graphics g, int fieldPixHeight);
+  public abstract void paintField(Canvas g, int fieldPixHeight);
 
   private static final int[] sCellColors = new int[]{
     Color.lightGray,

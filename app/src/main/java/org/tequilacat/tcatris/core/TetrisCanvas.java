@@ -1,5 +1,8 @@
 package org.tequilacat.tcatris.core;
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+
 import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.Date;
@@ -9,11 +12,8 @@ import java.util.Date;
 
 public final class TetrisCanvas extends Canvas implements Runnable {
 
-  public static Display display;
-  public static Image PlayerIcon, WinnerIcon, LevelIcon;
-
-  public static int ScreenWidth, ScreenHeight;
-
+  //public static Display display;
+  public static Bitmap PlayerIcon, WinnerIcon, LevelIcon;
 
   public static final int DM_GAME = 0;
   public static final int DM_MENU = 1;
@@ -26,20 +26,11 @@ public final class TetrisCanvas extends Canvas implements Runnable {
   public static final int MARGIN_BOTTOM = 5;
   public static final int SPACING_VERT = 5;
 
-  boolean myFsModeSet = false;
-
-//    private ScoreBoard myScoreBoard;
-  //private boolean myIsPaused;
-
   private Tetris myGame;
 
   private Thread myTickerThread;
-  //    private boolean myStop;
-//    private int myFigureDropSteps;
   private boolean myIsLayedOut;
 
-  //    private long kpt;
-//    private boolean myPaintsBackground;
   protected boolean myScorebarLayoutIsVertical;
   boolean myDisplayIconsVertically;
   private static int SCOREBAR_WIDTH = 7;
@@ -272,45 +263,6 @@ public final class TetrisCanvas extends Canvas implements Runnable {
 
   /**************************************************
    **************************************************/
-  protected void keyPressed(int keyCode) {
-    if (myDisplayMode == DM_MENU) {
-      processMenuItem(Ui.menuKeyPressed(getGameAction(keyCode)));
-      return;
-    }
-
-    if (myGame == null)
-      return;
-
-    int action = getGameAction(keyCode);
-
-
-    if (myDisplayMode == DM_HISCORES) { // from hiscores there's 2 ways - startGame or not
-      myDisplayMode = DM_GAME;
-      if (myGame.getState() == Tetris.LOST) {
-        startGame();
-      }
-      repaint();
-      return;
-    }
-
-    int tetrisAction = TETRIS_NOP;
-    if (action == FIRE) {
-      tetrisAction = TETRIS_MENU;
-    } else if (action == LEFT) {
-      tetrisAction = TETRIS_LEFT;
-    } else if (action == RIGHT) {
-      tetrisAction = TETRIS_RIGHT;
-    } else if (action == UP) {
-      tetrisAction = TETRIS_ROTATE_CCW;
-    } else if (action == DOWN) {
-      tetrisAction = TETRIS_DROP;
-    }
-
-    gameAction(tetrisAction);
-  }
-
-  /**************************************************
-   **************************************************/
   private void gameAction(int tetrisAction) {
 
     // now process actions in DM_GAME mode
@@ -365,27 +317,11 @@ public final class TetrisCanvas extends Canvas implements Runnable {
 
   /**************************************************
    **************************************************/
-  protected void keyRepeated(int i) {
-    keyPressed(i);
-  }
-
-  /**************************************************
-   **************************************************/
-  public void paint(Graphics g) {
+  public void paint(Canvas c) {
 
     synchronized (myGameChangeLock) {
 
-      if (!myFsModeSet) {
-        //#ifdef Platform_MIDP20
-        setFullScreenMode(true);
-        //#endif
-
-        myFsModeSet = true;
-      }
-
       if (!myIsLayedOut) {
-        ScreenWidth = getWidth();
-        ScreenHeight = getHeight();
         initGameGraphics();
 
         if (myGame != null && !myGame.IsLayedOut) {

@@ -20,7 +20,6 @@ public class TetrisMidlet extends MIDlet {
 
   private static String myState;
 
-  private static RecordStore myRS = null;
   private static Vector myGameStateVector;
   //    private static Object[] myGameStateVector = null;
   private static final String RMS_NAME = "tetris_rms";
@@ -32,11 +31,15 @@ public class TetrisMidlet extends MIDlet {
   public TetrisMidlet() {
     instance = this;
 
-    // read from /games.txt
-    // into StringBuffer
-
+    //game=flassname:label:w:h:nw:nh:optionalParams
+    String games="game=Columns:Xixit:5:12:1:3:fig=vert\n" +
+      "game=ClassicGame:Tetris:10:15:2:4\n" +
+      "game=Columns:Columns:8:15:3:1:fig=horz\n" +
+      "game=Columns:Trix:8:15:1:3:type=rot\n";
     try {
-      Reader reader = new InputStreamReader(getClass().getResourceAsStream("/games.txt"));
+      Reader reader = new StringReader(games);
+
+      //new InputStreamReader(getClass().getResourceAsStream("/games.txt"));
       StringBuffer stb = new StringBuffer();
       //char[] chunk = new char[1000];
       //int readCount;
@@ -53,9 +56,9 @@ public class TetrisMidlet extends MIDlet {
             int sep1 = mayBeDesc.indexOf(':', 5), sep2 = mayBeDesc.indexOf(':', sep1 + 1);
 
             // class name
-            myGameDescriptors.addElement(mayBeDesc.substring(5, sep1));
+            myGameDescriptors.addElement("org.tequilacat.tcatris.games." + mayBeDesc.substring(5, sep1));
             // game name
-            myGameDescriptors.addElement(mayBeDesc.substring(sep1 + 1, sep2));
+              myGameDescriptors.addElement(mayBeDesc.substring(sep1 + 1, sep2));
             // game params
             myGameDescriptors.addElement(mayBeDesc.substring(sep2 + 1));
 

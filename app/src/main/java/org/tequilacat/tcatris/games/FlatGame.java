@@ -4,6 +4,10 @@
 
 package org.tequilacat.tcatris.games;
 
+import android.graphics.Canvas;
+import android.graphics.Paint;
+
+import org.tequilacat.tcatris.core.Color;
 import org.tequilacat.tcatris.core.Tetris;
 import org.tequilacat.tcatris.core.TetrisCanvas;
 
@@ -241,8 +245,10 @@ public abstract class FlatGame extends Tetris {
     // if there's no space for icon and text horizontally, try :
     // if big canvas, provide enough space via
 
-    Font font = Font.getDefaultFont();
-    int numInfoSize = font.stringWidth("0000");
+    // assume text size as quarter of smaller dimension
+    int numInfoSize = (screenWidth < screenHeight ? screenWidth : screenHeight) / 4;
+//    Font font = Font.getDefaultFont();
+//    int numInfoSize = font.stringWidth("0000");
 
     boolean displayIconVertically = false;
         /*
@@ -253,6 +259,7 @@ public abstract class FlatGame extends Tetris {
     if (iconSize + numInfoSize > screenWidth - TetrisCanvas.MARGIN_LEFT - myCellSize * glassWidth) {
       //Debug.print("Cell size = "+ myCellSize +" does not fit");
       myCellSize = (screenWidth - TetrisCanvas.MARGIN_LEFT - (iconSize + numInfoSize)) / glassWidth;
+
       if (myCellSize >= MIN_CELL_SIZE) {
         //Debug.print("Can't fit icon and 0000, decrease to fit both");
       } else {
@@ -296,32 +303,34 @@ public abstract class FlatGame extends Tetris {
   public static final int FIGCELL_SQUEEZED = 1;
   public static final int FIGCELL_SETTLED = 2;
 
+  private Paint _cellPainter = new Paint();
+
   /********************************
    *********************************/
-  protected void paintCellPix(Graphics g, int x, int y, int state, int cellState) {
-    g.setColor(getTypeColor(state));
+  protected void paintCellPix(Canvas g, int x, int y, int state, int cellState) {
+    _cellPainter.setColor(getTypeColor(state));
 
     if (state == FlatGame.EMPTY || cellState == FIGCELL_FALLING) {
-      g.fillRect(x, y, myCellSize - 1, myCellSize - 1);
+      g.drawRect(x, y, myCellSize - 1, myCellSize - 1, _cellPainter);
       //Debug.print("Falling:");
     } else if (cellState == FIGCELL_SQUEEZED) {
-      g.fillRect(x, y, myCellSize - 1, myCellSize - 1);
-      g.setColor(getFieldBackground());
-      g.fillRect(x + 1, y + 1, myCellSize - 3, myCellSize - 3);
+      g.drawRect(x, y, myCellSize - 1, myCellSize - 1, _cellPainter);
+      _cellPainter.setColor(getFieldBackground());
+      g.drawRect(x + 1, y + 1, myCellSize - 3, myCellSize - 3, _cellPainter);
     } else { // settled
-      g.fillRect(x, y, myCellSize - 1, myCellSize - 1);
+      g.drawRect(x, y, myCellSize - 1, myCellSize - 1, _cellPainter);
 
-      g.setColor(Color.black);
+      _cellPainter.setColor(Color.black);
       x += 3;
       y += 3;
-      g.drawLine(x, y, x + myCellSize - 8, y);
-      g.drawLine(x, y, x, y + myCellSize - 8);
+      g.drawLine(x, y, x + myCellSize - 8, y, _cellPainter);
+      g.drawLine(x, y, x, y + myCellSize - 8, _cellPainter);
     }
   }
 
   /********************************
    *********************************/
-  private void paintFieldCell(Graphics g, int x, int y, int cellType, int cellState) {
+  private void paintFieldCell(Canvas g, int x, int y, int cellType, int cellState) {
     paintCellPix(g, x, y, cellType, cellState);
 //        FlatGame game = (FlatGame)getGame();
 //		int cellX = getGlassClipX() + myCellSize*x;
@@ -332,7 +341,8 @@ public abstract class FlatGame extends Tetris {
 
   /********************************
    *********************************/
-  public void paintField(Graphics g, int fieldPixHeight) {
+  @Override
+  public void paintField(Canvas g, int fieldPixHeight) {
 
     int pixX, pixY = fieldPixHeight - myCellSize;
 
@@ -362,7 +372,8 @@ public abstract class FlatGame extends Tetris {
 
   /********************************
    *********************************/
-  public void paintNext(Graphics g, int nextFigX, int nextFigY, int nextFigWidth, int nextFigHeight) {
+  @Override
+  public void paintNext(Canvas g, int nextFigX, int nextFigY, int nextFigWidth, int nextFigHeight) {
     //FlatGame game = (FlatGame)getGame();
     FlatShape shape = getNextShape();
 

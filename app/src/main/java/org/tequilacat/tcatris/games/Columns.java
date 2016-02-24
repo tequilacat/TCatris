@@ -7,6 +7,12 @@ package org.tequilacat.tcatris.games;
 // Referenced classes of package flat:
 //            FlatGame, Shape
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.RectF;
+
 import org.tequilacat.tcatris.core.TetrisCanvas;
 
 public class Columns extends FlatGame {
@@ -30,6 +36,7 @@ public class Columns extends FlatGame {
    * expect:
    * rotate=color (if not, rotate =
    **************************************************/
+  @Override
   protected void configure(String specSettings) {
     super.configure(specSettings);
     // expect : fig=vert, fig=horz, fig=rotateable
@@ -47,6 +54,7 @@ public class Columns extends FlatGame {
   /**************************************
    * creates new (mutable) shape
    **************************************/
+  @Override
   public FlatShape createNext() {
     int c1 = 1 + getRandomInt(NCOLORS);
     int c2 = 1 + getRandomInt(NCOLORS);
@@ -61,6 +69,7 @@ public class Columns extends FlatGame {
 
   /**************************************************
    **************************************************/
+  @Override
   protected FlatShape rotate(FlatShape shape, int dir) {
     if (myGameType == FIGTYPE_ROTATE) {
       shape = super.rotate(shape, dir);
@@ -81,7 +90,7 @@ public class Columns extends FlatGame {
   }
 
   /**************************************
-   * @returns if cell is squeezable
+   * @return if cell is squeezable
    **************************************/
   protected boolean isSqueezable(int x, int y) {
     return (cellsToSqueeze != null) && canSqueeze() && cellsToSqueeze[y][x];
@@ -89,6 +98,7 @@ public class Columns extends FlatGame {
 
   /************************************************
    ************************************************/
+  @Override
   public boolean computeCanSqueeze() {
     squeezable = false;
     myLastScores = 0;
@@ -185,6 +195,7 @@ public class Columns extends FlatGame {
   /****************************************
    * @returns if squeeze leads to next squeeze
    ****************************************/
+  @Override
   public boolean squeeze() {
     long start = System.currentTimeMillis();
     //Debug.print("Increase scores by "+ myLastScores +"");
@@ -257,13 +268,13 @@ public class Columns extends FlatGame {
 
   //////////////
   private static final int N_FIGURES = 5;
-  Image myShapesImage; // = null;
+  private Bitmap myShapesImage = null;
 
   /**************************************************
    **************************************************/
-  public Image getShapesImage() {
-    return myShapesImage;
-  }
+//  public Image getShapesImage() {
+//    return myShapesImage;
+//  }
 
   public void layout(TetrisCanvas canvas, int screenWidth, int screenHeight) {
     super.layout(canvas, screenWidth, screenHeight);
@@ -284,99 +295,97 @@ public class Columns extends FlatGame {
   /**************************************************
    **************************************************/
   private void createBigImage(int cellSize) {
-    myShapesImage = Image.createImage(cellSize * 3, cellSize * N_FIGURES);
-    Graphics g = myShapesImage.getGraphics();
-    g.setColor(getFieldBackground());
-    g.fillRect(0, 0, myShapesImage.getWidth(), myShapesImage.getHeight());
+    myShapesImage = Bitmap.createBitmap(cellSize * 3, cellSize * N_FIGURES, Bitmap.Config.ARGB_8888);
 
-//        g.setColor(0x808080);
-//        g.fillRect(myShapesImage.getWidth()*2/3, 0, myShapesImage.getWidth()/3, myShapesImage.getHeight());
-    // draw wires for settled
+    Canvas c = new Canvas(myShapesImage);
+    c.drawColor(getFieldBackground());
+    Paint p = new Paint();
+    p.setStyle(Paint.Style.FILL);
 
     for (int i = 0; i < N_FIGURES; i++) {
-      drawShape(g, cellSize, 0, i * cellSize, i + 1, FIGCELL_FALLING);
-      g.translate(cellSize, 0);
-      drawShape(g, cellSize, cellSize, i * cellSize, i + 1, FIGCELL_SQUEEZED);
-      g.translate(cellSize, 0);
-
-//            g.setColor(Color.black);
-//            g.drawLine(cellSize/2, 0, cellSize/2, cellSize);
-//            g.drawLine(0, cellSize/2, cellSize, cellSize/2);
-
-      drawShape(g, cellSize, cellSize + cellSize, i * cellSize, i + 1, FIGCELL_SETTLED);
-      g.translate(-cellSize * 2, cellSize);
+      drawShape(c, p, cellSize, 0, i * cellSize, i + 1, FIGCELL_FALLING);
+      c.translate(cellSize, 0);
+      drawShape(c, p, cellSize, cellSize, i * cellSize, i + 1, FIGCELL_SQUEEZED);
+      c.translate(cellSize, 0);
+      drawShape(c, p, cellSize, cellSize + cellSize, i * cellSize, i + 1, FIGCELL_SETTLED);
+      c.translate(-cellSize * 2, cellSize);
     }
   }
 
   /**************************************************
    **************************************************/
-  private void drawShape(Graphics g, int cellSize, int x, int y, int shapeIndex, int state) {
-    g.setColor(getTypeColor(shapeIndex));
-
-//        int color = getTypeColor(shapeIndex);
-//        if(state == FIGCELL_SETTLED){
-//            color = darkerColor(color);
-//        }
-//        g.setColor(color);
+  private void drawShape(Canvas g, Paint p, int cellSize, int x, int y, int shapeIndex, int state) {
+    p.setColor(getTypeColor(shapeIndex));
+    p.setStyle(Paint.Style.STROKE);
 
     if (shapeIndex == 1) { // square
       if (state == FIGCELL_FALLING || state != FIGCELL_SQUEEZED) {
-        g.fillRect(0, 0, cellSize - 1, cellSize - 1);
+        p.setStyle(Paint.Style.FILL);
+        g.drawRect(0, 0, cellSize - 1, cellSize - 1, p);
       } else if (state == FIGCELL_SQUEEZED) {
-        g.drawRect(0, 0, cellSize - 2, cellSize - 2);
+        g.drawRect(0, 0, cellSize - 2, cellSize - 2, p);
       } else { // settled
       }
     } else if (shapeIndex == 2) {
       if (state == FIGCELL_FALLING || state != FIGCELL_SQUEEZED) {
         for (int yy = 0; yy < cellSize - 1; yy++) {
-          g.drawLine(yy / 2, yy, (cellSize - 1) - yy / 2, yy);
+          g.drawLine(yy / 2, yy, (cellSize - 1) - yy / 2, yy, p);
         }
       } else if (state == FIGCELL_SQUEEZED) {
-        g.drawLine(0, 0, cellSize - 1, 0);
-        g.drawLine(0, 0, cellSize / 2, cellSize - 2);
-        g.drawLine(cellSize - 1, 0, cellSize / 2, cellSize - 2);
+        g.drawLine(0, 0, cellSize - 1, 0, p);
+        g.drawLine(0, 0, cellSize / 2, cellSize - 2, p);
+        g.drawLine(cellSize - 1, 0, cellSize / 2, cellSize - 2, p);
       } else { // settled
       }
     } else if (shapeIndex == 3) {
       if (state == FIGCELL_FALLING || state != FIGCELL_SQUEEZED) {
         for (int yy = 0; yy < cellSize - 1; yy++) {
-          g.drawLine(0, yy, yy, yy);
+          g.drawLine(0, yy, yy, yy, p);
         }
       } else if (state == FIGCELL_SQUEEZED) {
-        g.drawLine(0, 0, cellSize - 2, cellSize - 2);
-        g.drawLine(0, 0, 0, cellSize - 2);
-        g.drawLine(cellSize - 2, cellSize - 2, 0, cellSize - 2);
+        g.drawLine(0, 0, cellSize - 2, cellSize - 2, p);
+        g.drawLine(0, 0, 0, cellSize - 2, p);
+        g.drawLine(cellSize - 2, cellSize - 2, 0, cellSize - 2, p);
       } else { // settled
       }
     } else if (shapeIndex == 4) {
+      RectF oval = new RectF(0, 0, cellSize - 1, cellSize - 1);
+
       if (state == FIGCELL_FALLING || state != FIGCELL_SQUEEZED) {
-        g.fillArc(0, 0, cellSize - 1, cellSize - 1, 0, 360);
+        // fill
+        p.setStyle(Paint.Style.FILL);
+        g.drawOval(oval, p);
       } else if (state == FIGCELL_SQUEEZED) {
-        g.drawArc(0, 0, cellSize - 1, cellSize - 1, 0, 360);
+        g.drawOval(oval, p);
       } else { // settled
       }
     } else if (shapeIndex == 5) {
       if (state == FIGCELL_FALLING || state != FIGCELL_SQUEEZED) {
         for (int yy = 0; yy < cellSize - 1; yy++) {
-          g.drawLine(yy / 2, (cellSize - 1) - yy, (cellSize - 1) - yy / 2, cellSize - 1 - yy);
+          g.drawLine(yy / 2, (cellSize - 1) - yy, (cellSize - 1) - yy / 2, cellSize - 1 - yy, p);
         }
       } else if (state == FIGCELL_SQUEEZED) {
-        g.drawLine(1, cellSize - 1, cellSize / 2, 1);
-        g.drawLine(1, cellSize - 1, cellSize - 1, cellSize - 1);
-        g.drawLine(cellSize - 1, cellSize - 1, cellSize / 2, 1);
+        g.drawLine(1, cellSize - 1, cellSize / 2, 1, p);
+        g.drawLine(1, cellSize - 1, cellSize - 1, cellSize - 1, p);
+        g.drawLine(cellSize - 1, cellSize - 1, cellSize / 2, 1, p);
       } else { // settled
       }
     }
   }
 
+  private Paint _cellPainter = new Paint();
 
   /**************************************************
    **************************************************/
-  protected void paintCellPix(Graphics g, int x, int y, int cellType, int cellState) {
+  @Override
+  protected void paintCellPix(Canvas g, int x, int y, int cellType, int cellState) {
     if (cellType > 0) {
-      g.setClip(x, y, myCellSize, myCellSize);
-      int imgX = x - cellState * myCellSize, imgY = y - (cellType - 1) * myCellSize;
-      g.drawImage(myShapesImage, imgX, imgY, Ui.G_LEFT_TOP);
+      int cx = cellState * myCellSize, cy = (cellType - 1) * myCellSize;
+      Rect src = new Rect(x, y, cx + myCellSize, cy + myCellSize);
+      //g.setClip(x, y, myCellSize, myCellSize);
+      //int imgX = x - cellState * myCellSize, imgY = y - (cellType - 1) * myCellSize;
+      RectF dst = new RectF(x, y, x + myCellSize, y + myCellSize);
+      g.drawBitmap(myShapesImage, src, dst, _cellPainter);
     }
   }
 }

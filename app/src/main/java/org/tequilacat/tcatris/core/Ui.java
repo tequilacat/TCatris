@@ -1,44 +1,49 @@
 package org.tequilacat.tcatris.core;
 
-import java.util.Vector;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Rect;
 
-import javax.microedition.lcdui.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**************************************************
  **************************************************/
 public class Ui {
-  public static final int G_LEFT_TOP = Graphics.LEFT | Graphics.TOP;
-  public static final int G_RIGHT_TOP = Graphics.RIGHT | Graphics.TOP;
-  public static final int G_CENTER_TOP = Graphics.HCENTER | Graphics.TOP;
+//  public static final int G_LEFT_TOP = Graphics.LEFT | Graphics.TOP;
+//  public static final int G_RIGHT_TOP = Graphics.RIGHT | Graphics.TOP;
+//  public static final int G_CENTER_TOP = Graphics.HCENTER | Graphics.TOP;
 
-  private static Vector myItems = new Vector();
+  private static List<String> myItems = new ArrayList<>();
   private static int myCurItem;
   private static int myMenuId;
 
+  private static Paint _uiPainter = new Paint();
+
   /**************************************************
    **************************************************/
-  public static void drawShadowText(Graphics g, String text, int x, int y, int anchor, int textColor, int shadowColor) {
-    g.setColor(shadowColor);
+  public static void drawShadowText(Canvas g, String text, int x, int y, int anchor, int textColor, int shadowColor) {
+    _uiPainter.setColor(shadowColor);
 //        g.drawString(text, xPos + 1, yPos - 1, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP);
-    g.drawString(text, x + 1, y - 1, anchor);
+    g.drawText(text, x + 1, y - 1, _uiPainter);
 
-    g.setColor(textColor);
+    _uiPainter.setColor(textColor);
 //        g.drawString(text, xPos + 2, yPos, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP);
-    g.drawString(text, x + 2, y, anchor);
+    g.drawText(text, x + 2, y, _uiPainter);
   }
 
   /**************************************************
    **************************************************/
-  public static void draw3dRect(Graphics g, int x, int y, int w, int h) {
-    g.setColor(Ui.UI_COLOR_DARKSHADOW);
-    g.drawLine(x - 1, y - 1, x - 1, y + h);
-    g.drawLine(x - 1, y - 1, x + w, y - 1);
+  public static void draw3dRect(Canvas g, int x, int y, int w, int h) {
+    _uiPainter.setColor(Ui.UI_COLOR_DARKSHADOW);
+    g.drawLine(x - 1, y - 1, x - 1, y + h, _uiPainter);
+    g.drawLine(x - 1, y - 1, x + w, y - 1, _uiPainter);
 
-    g.setColor(Ui.UI_COLOR_LIGHTSHADOW);
+    _uiPainter.setColor(Ui.UI_COLOR_LIGHTSHADOW);
     x += w;
     y += h;
-    g.drawLine(x, y, x - w, y);
-    g.drawLine(x, y, x, y - h);
+    g.drawLine(x, y, x - w, y, _uiPainter);
+    g.drawLine(x, y, x, y - h, _uiPainter);
     //g.drawLine(x-1, y-1, x+w, y-1);
 
   }
@@ -47,7 +52,7 @@ public class Ui {
    **************************************************/
   public static void initMenu(int menuId) {
     myMenuId = menuId;
-    myItems.removeAllElements();
+    myItems.clear();
     myCurItem = -1;
   }
 
@@ -66,13 +71,14 @@ public class Ui {
   /**************************************************
    **************************************************/
   public static String getItemString(int index) {
-    return (index < 0 || index >= myItems.size()) ? null : (String) myItems.elementAt(index);
+    return (index < 0 || index >= myItems.size()) ? null : myItems.get(index);
   }
 
   /**************************************************
    **************************************************/
   public static void addItem(String item) {
-    myItems.addElement(item);
+    myItems.add(item);
+
     if (myCurItem == -1) {
       myCurItem = 0;
     }
@@ -96,36 +102,7 @@ public class Ui {
   /**************************************************
    **************************************************/
   public static String getItemAtPoint(int x, int y) {
-    int pos = y / MenuItemHeight;
-    if (pos >= 0 && pos < myItems.size()) {
-      return (String) myItems.elementAt(pos);
-    } else {
-      return null;
-    }
-  }
-
-  /**************************************************
-   * @return item Id or -1
-   **************************************************/
-  public static String menuKeyPressed(int actionId) {
-    //int resItemId = ITEM_NOSELECTION;
-    String item = null;
-
-    if (actionId == Canvas.UP || actionId == Canvas.LEFT) {
-      myCurItem--;
-      if (myCurItem < 0) {
-        myCurItem = myItems.size() - 1;
-      }
-    } else if (actionId == Canvas.DOWN || actionId == Canvas.RIGHT) {
-      myCurItem++;
-      if (myCurItem >= myItems.size()) {
-        myCurItem = 0;
-      }
-    } else if (actionId == Canvas.FIRE) {
-      item = (String) myItems.elementAt(myCurItem);
-    }
-
-    return item;
+    return getItemString(y / MenuItemHeight);
   }
 
   public static final int UI_COLOR_PANEL = Color.gray;
@@ -140,39 +117,43 @@ public class Ui {
 
   /**************************************************
    **************************************************/
-  private static void drawRoundButton(Graphics g, int x, int y, int w, int h) {
-    g.drawLine(x + 1, y, x + w - 1, y); // top
-    g.drawLine(x, y + 1, x, y + h - 1); // left
+  private static void drawRoundButton(Canvas g, int x, int y, int w, int h, int color) {
+    _uiPainter.setStyle(Paint.Style.FILL);
+    _uiPainter.setColor(color);
 
-    g.drawLine(x + w, y + 1, x + w, y + h - 1); // right
-    g.drawLine(x + 1, y + h, x + w - 1, y + h); // bottom
+    g.drawLine(x + 1, y, x + w - 1, y, _uiPainter); // top
+    g.drawLine(x, y + 1, x, y + h - 1, _uiPainter); // left
+
+    g.drawLine(x + w, y + 1, x + w, y + h - 1, _uiPainter); // right
+    g.drawLine(x + 1, y + h, x + w - 1, y + h, _uiPainter); // bottom
   }
 
   private static int MenuItemHeight;
 
   /**************************************************
    **************************************************/
-  public static void displayMenu(Graphics g, int canvasWidth, int canvasHeight, String gameLabel) {
-    g.setColor(Color.gray);
-    g.fillRect(0, 0, canvasWidth, canvasHeight);
+  public static void displayMenu(Canvas c, int canvasWidth, int canvasHeight, String gameLabel) {
+    c.drawColor(Color.gray);
 
-    int fHeight = g.getFont().getHeight();
+    Rect textRect = new Rect();
+    _uiPainter.getTextBounds("0", 0, 1, textRect);
+    int fHeight = textRect.height();// g.getFont().getHeight();
     // int itemH = canvasHeight / myItems.size();
     int itemH = (canvasHeight - fHeight) / myItems.size();
     MenuItemHeight = itemH;
     int textDelta = (itemH - fHeight) / 2, y = fHeight;
 
-    g.setColor(UI_COLOR_ITEM_TEXT);
+    _uiPainter.setColor(UI_COLOR_ITEM_TEXT);
 
     // g.drawString(TetrisCanvas.getTimeStr(0), canvasWidth/2, 0, Graphics.HCENTER | Graphics.TOP);
     if (gameLabel != null) {
-      g.drawString(gameLabel, 0, 0, G_LEFT_TOP);
+      c.drawText(gameLabel, 0, 0, _uiPainter);
     }
-    g.drawString(TetrisCanvas.getTimeStr(0), canvasWidth, 0, G_RIGHT_TOP);
+    c.drawText(TetrisCanvas.getTimeStr(0), canvasWidth, 0, _uiPainter);
 
 
-    Font curFont = g.getFont();
-    Font boldFont = Font.getFont(curFont.getFace(), curFont.getStyle() | Font.STYLE_BOLD, curFont.getSize());
+    //Font curFont = g.getFont();
+    //Font boldFont = Font.getFont(curFont.getFace(), curFont.getStyle() | Font.STYLE_BOLD, curFont.getSize());
 
     for (int i = 0; i < myItems.size(); i++) {
 
@@ -183,31 +164,27 @@ public class Ui {
 //            g.drawRect(1, y + 1, canvasWidth - 3, itemH - 3);
 
 
-      g.setColor(UI_COLOR_LIGHTSHADOW);
-      drawRoundButton(g, 2, y + 2, canvasWidth - 4, itemH - 3);
-      g.setColor(UI_COLOR_DARKSHADOW);
-      drawRoundButton(g, 1, y + 1, canvasWidth - 4, itemH - 3);
+      drawRoundButton(c, 2, y + 2, canvasWidth - 4, itemH - 3, UI_COLOR_LIGHTSHADOW);
+      drawRoundButton(c, 1, y + 1, canvasWidth - 4, itemH - 3, UI_COLOR_DARKSHADOW);
 
 
-      String itemText = (String) myItems.elementAt(i);
+      String itemText = (String) myItems.get(i);
+      _uiPainter.getTextBounds(itemText, 0, 1, textRect);
 
       if (i == myCurItem) {
-        g.setFont(boldFont);
+        //g.setFont(boldFont);
         // g.setColor(UI_COLOR_LIGHTSHADOW);
-        g.setColor(UI_COLOR_DARKSHADOW);
+        _uiPainter.setColor(UI_COLOR_DARKSHADOW);
 
-        g.drawString(itemText,
-          3 + (canvasWidth - 8 - g.getFont().stringWidth(itemText)) / 2,
-          -1 + y + textDelta, Ui.G_LEFT_TOP);
-        g.setColor(UI_COLOR_SELITEM_TEXT);
+        c.drawText(itemText,
+          3 + (canvasWidth - 8 - textRect.width()) / 2,
+          -1 + y + textDelta, _uiPainter);
+        _uiPainter.setColor(UI_COLOR_SELITEM_TEXT);
       } else {
-        g.setFont(curFont);
-        g.setColor(UI_COLOR_ITEM_TEXT);
+        //g.setFont(curFont);
+        _uiPainter.setColor(UI_COLOR_ITEM_TEXT);
       }
-
-      g.drawString(itemText,
-        4 + (canvasWidth - 8 - g.getFont().stringWidth(itemText)) / 2,
-        y + textDelta, Ui.G_LEFT_TOP);
+      c.drawText(itemText, 4 + (canvasWidth - 8 - textRect.width()) / 2, y + textDelta, _uiPainter);
 
       y += itemH;
     }
