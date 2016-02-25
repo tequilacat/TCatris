@@ -45,22 +45,6 @@ public class Ui {
 
   /**************************************************
    **************************************************/
-  public static void draw3dRect(Canvas g, int x, int y, int w, int h) {
-    _uiPainter.setColor(Ui.UI_COLOR_DARKSHADOW);
-    g.drawLine(x - 1, y - 1, x - 1, y + h, _uiPainter);
-    g.drawLine(x - 1, y - 1, x + w, y - 1, _uiPainter);
-
-    _uiPainter.setColor(Ui.UI_COLOR_LIGHTSHADOW);
-    x += w;
-    y += h;
-    g.drawLine(x, y, x - w, y, _uiPainter);
-    g.drawLine(x, y, x, y - h, _uiPainter);
-    //g.drawLine(x-1, y-1, x+w, y-1);
-
-  }
-
-  /**************************************************
-   **************************************************/
   public static void initMenu(int menuId) {
     myMenuId = menuId;
     myItems.clear();
@@ -200,6 +184,35 @@ public class Ui {
 
       y += itemH;
     }
+  }
+
+  public static void fillRect(Canvas c, int x, int y, int w, int h, int fillColor) {
+    _uiPainter.setColor(fillColor);
+    Paint.Style oldStyle = _uiPainter.getStyle();
+    _uiPainter.setStyle(Paint.Style.FILL);
+    c.drawRect(x, y, w, h, _uiPainter);
+    _uiPainter.setStyle(oldStyle);
+  }
+
+  public static void fillRect(Canvas c, Rect fieldRect, int fillColor) {
+    fillRect(c, fieldRect.left, fieldRect.top, fieldRect.width(), fieldRect.height(), fillColor);
+  }
+
+  public static void draw3dRect(Canvas g, Rect rect) {
+    draw3dRect(g, rect.left, rect.top, rect.width(), rect.height());
+  }
+
+  public static void draw3dRect(Canvas g, int x, int y, int w, int h) {
+    _uiPainter.setColor(Ui.UI_COLOR_DARKSHADOW);
+    g.drawLine(x - 1, y - 1, x - 1, y + h, _uiPainter);
+    g.drawLine(x - 1, y - 1, x + w, y - 1, _uiPainter);
+
+    _uiPainter.setColor(Ui.UI_COLOR_LIGHTSHADOW);
+    x += w;
+    y += h;
+    g.drawLine(x, y, x - w, y, _uiPainter);
+    g.drawLine(x, y, x, y - h, _uiPainter);
+    //g.drawLine(x-1, y-1, x+w, y-1);
   }
 }
 

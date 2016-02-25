@@ -1,12 +1,15 @@
 package org.tequilacat.tcatris.core;
 
+import android.graphics.Rect;
+
 /**
  * Created by avo on 24.02.2016.
  */
 public class GameScreenLayout {
   private final boolean myDisplayIconsVertically;
-  private final int myFieldX, myFieldY, myFieldW, myFieldH;
-  private final int myNextFigX, myNextFigY, myNextFigW, myNextFigH;
+
+  private Rect _fieldRect;
+  private Rect _nextShapeRect;
 
   /****************
    */
@@ -14,46 +17,16 @@ public class GameScreenLayout {
                           int nextX, int nextY, int nextW, int nextH, boolean verticalIconLayout) {
 
     myDisplayIconsVertically = verticalIconLayout;
-    myFieldX = fX;
-    myFieldY = fY;
-    myFieldW = fWidth;
-    myFieldH = fHeight;
 
-    myNextFigX = nextX;
-    myNextFigY = nextY;
-    myNextFigW = nextW;
-    myNextFigH = nextH;
+    _fieldRect = new Rect(fX, fY, fWidth, fHeight);
+    _nextShapeRect = new Rect(nextX, nextY, nextW, nextH);
   }
 
-  public final int getNextFigX() {
-    return myNextFigX;
+  public Rect getNextShapeRect() {
+    return _nextShapeRect;
   }
 
-  public final int getNextFigY() {
-    return myNextFigY;
-  }
-
-  public final int getNextFigWidth() {
-    return myNextFigW;
-  }
-
-  public final int getNextFigHeight() {
-    return myNextFigH;
-  }
-
-  public final int getGlassClipX() {
-    return myFieldX;
-  }
-
-  public final int getGlassClipY() {
-    return myFieldY;
-  }
-
-  public final int getGlassClipWidth() {
-    return myFieldW;
-  }
-
-  public final int getGlassClipHeight() {
-    return myFieldH;
+  public Rect getFieldRect() {
+    return _fieldRect;
   }
 }
