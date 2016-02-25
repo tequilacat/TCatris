@@ -20,6 +20,17 @@ public class Ui {
 
   private static Paint _uiPainter = new Paint();
 
+  private static final float _lineHeight;
+
+  static {
+    Paint.FontMetrics fm = _uiPainter.getFontMetrics();
+    _lineHeight = Math.abs(fm.top) + Math.abs(fm.bottom);
+  }
+
+  public static float getLineHeight() {
+    return _lineHeight;
+  }
+
   /**************************************************
    **************************************************/
   public static void drawShadowText(Canvas g, String text, int x, int y, int anchor, int textColor, int shadowColor) {
@@ -102,7 +113,7 @@ public class Ui {
   /**************************************************
    **************************************************/
   public static String getItemAtPoint(int x, int y) {
-    return getItemString(y / MenuItemHeight);
+    return getItemString((int)(y / MenuItemHeight));
   }
 
   public static final int UI_COLOR_PANEL = Color.gray;
@@ -128,20 +139,20 @@ public class Ui {
     g.drawLine(x + 1, y + h, x + w - 1, y + h, _uiPainter); // bottom
   }
 
-  private static int MenuItemHeight;
+  private static float MenuItemHeight;
 
   /**************************************************
    **************************************************/
   public static void displayMenu(Canvas c, int canvasWidth, int canvasHeight, String gameLabel) {
     c.drawColor(Color.gray);
 
-    Rect textRect = new Rect();
-    _uiPainter.getTextBounds("0", 0, 1, textRect);
-    int fHeight = textRect.height();// g.getFont().getHeight();
+    //Rect textRect = new Rect();
+    //_uiPainter.getTextBounds("0", 0, 1, textRect);
+    //int fHeight = textRect.height();// g.getFont().getHeight();
     // int itemH = canvasHeight / myItems.size();
-    int itemH = (canvasHeight - fHeight) / myItems.size();
+    float itemH = (canvasHeight - getLineHeight()) / myItems.size();
     MenuItemHeight = itemH;
-    int textDelta = (itemH - fHeight) / 2, y = fHeight;
+    float textDelta = (itemH - getLineHeight()) / 2, y = getLineHeight();
 
     _uiPainter.setColor(UI_COLOR_ITEM_TEXT);
 
@@ -164,11 +175,12 @@ public class Ui {
 //            g.drawRect(1, y + 1, canvasWidth - 3, itemH - 3);
 
 
-      drawRoundButton(c, 2, y + 2, canvasWidth - 4, itemH - 3, UI_COLOR_LIGHTSHADOW);
-      drawRoundButton(c, 1, y + 1, canvasWidth - 4, itemH - 3, UI_COLOR_DARKSHADOW);
+      drawRoundButton(c, 2, (int)y + 2, canvasWidth - 4, (int)itemH - 3, UI_COLOR_LIGHTSHADOW);
+      drawRoundButton(c, 1, (int)y + 1, canvasWidth - 4, (int)itemH - 3, UI_COLOR_DARKSHADOW);
 
 
       String itemText = (String) myItems.get(i);
+      Rect textRect = new Rect();
       _uiPainter.getTextBounds(itemText, 0, 1, textRect);
 
       if (i == myCurItem) {

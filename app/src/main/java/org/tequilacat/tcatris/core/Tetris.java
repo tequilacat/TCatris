@@ -27,12 +27,14 @@ public abstract class Tetris {
 
   public boolean ConfRepaintsBackground = false;
 
-  public boolean IsLayedOut = false;
+  //public boolean IsLayedOut = false;
 
   private int myFieldWidth;
   private int myFieldHeight;
   private int myNextWidth;
   private int myNextHeight;
+
+  private GameScreenLayout _gameScreenLayout;
 
 
   /**************************************************
@@ -73,10 +75,11 @@ public abstract class Tetris {
   }
 
   /**
-   * remaining specs of the gamedef line
+   * remaining specs of the gamedef line.
+   * default implementation does nothing.
    * @param specSettings
    */
-  protected abstract void configure(String specSettings);
+  protected void configure(String specSettings) {}
 
   /**************************************************
    **************************************************/
@@ -99,7 +102,7 @@ public abstract class Tetris {
   /**************************************************
    **************************************************/
   //protected abstract void initGameGraphics(int fieldPixWidth, int fieldPixHeight);
-  public abstract GameScreenLayout layout(int screenWidth, int screenHeight);
+  public abstract void layout(int screenWidth, int screenHeight);
 
   public abstract void paintNext(Canvas g, int nextFigX, int nextFigY, int nextFigWidth, int nextFigHeight);
 
@@ -377,5 +380,13 @@ public abstract class Tetris {
       i = 0;
     }
     return 100 + i;
+  }
+
+  public GameScreenLayout getGameScreenLayout() {
+    return _gameScreenLayout;
+  }
+
+  public void setGameScreenLayout(GameScreenLayout _gameScreenLayout) {
+    this._gameScreenLayout = _gameScreenLayout;
   }
 }

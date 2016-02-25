@@ -276,10 +276,9 @@ public class Columns extends FlatGame {
 //    return myShapesImage;
 //  }
 
-  public GameScreenLayout layout(int screenWidth, int screenHeight) {
-    GameScreenLayout layout = super.layout(screenWidth, screenHeight);
+  public void layout(int screenWidth, int screenHeight) {
+    super.layout(screenWidth, screenHeight);
     createBigImage(myCellSize);
-    return layout;
   }
 
   /**************************************************

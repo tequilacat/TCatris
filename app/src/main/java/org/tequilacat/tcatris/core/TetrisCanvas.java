@@ -1,7 +1,9 @@
 package org.tequilacat.tcatris.core;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.view.SurfaceView;
 
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -10,7 +12,7 @@ import java.util.Date;
 // Referenced classes of package tetris:
 //            ScoreBoard, Color, Tetris
 
-public final class TetrisCanvas extends Canvas implements Runnable {
+public final class TetrisCanvas extends SurfaceView implements Runnable {
 
   //public static Display display;
   public static Bitmap PlayerIcon, WinnerIcon, LevelIcon;
@@ -34,11 +36,26 @@ public final class TetrisCanvas extends Canvas implements Runnable {
   private static int SCOREBAR_WIDTH = 7;
 
   private Object myGameChangeLock = new Object();
+  private int _screenWidth;
+  private int _screenHeight;
 
   /**************************************************
    **************************************************/
-  public TetrisCanvas() {
+  public TetrisCanvas(Context context) {
+    super(context);
     showNewGameMenu();
+  }
+
+  @Override
+  protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+    super.onSizeChanged(w, h, oldw, oldh);
+
+    _screenWidth = w;
+    _screenHeight = h;
+
+    if (getGame() != null) {
+      getGame().layout(_screenWidth, _screenHeight);
+    }
   }
 
   /**************************************************
@@ -47,11 +64,12 @@ public final class TetrisCanvas extends Canvas implements Runnable {
     return myGame;
   }
 
+
   /**************************************************
    **************************************************/
   private static void initGameGraphics() {
     if (PlayerIcon == null) {
-      SCOREBAR_WIDTH = ScreenWidth / 20;
+      SCOREBAR_WIDTH = _screenWidth / 20;
 
       String graphicsType = (ScreenWidth < 176) ? "/small" : "/big";
       try {
@@ -173,13 +191,12 @@ public final class TetrisCanvas extends Canvas implements Runnable {
     if (item != null) { // notify tetris midlet of selection
       //Debug.print("Item '"+ item +"'");
 
-      if (item == Ui.ITEM_EXIT) {
-        TetrisMidlet.instance.exitMidlet();
-      } else if (Ui.getMenuId() == Ui.MENU_SELECT_GAME) {
+      if (Ui.getMenuId() == Ui.MENU_SELECT_GAME) {
         if (item != Ui.ITEM_BACK) {
           stopGame();
 
           myGame = GameList.createGame(Ui.getCurrentItemIndex());
+          myGame.layout(_screenWidth, _screenHeight - SCOREBAR_WIDTH);
 
           startGame();
           repaint();
@@ -457,7 +474,7 @@ public final class TetrisCanvas extends Canvas implements Runnable {
 
   /**************************************************
    **************************************************/
-  private void showInGameScores(Graphics g) {
+  private void showInGameScores(Canvas c) {
     int curScore = getGame().getScore();
     int fontHeight = g.getFont().getHeight();
 

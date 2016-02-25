@@ -227,7 +227,8 @@ public abstract class FlatGame extends Tetris {
 
   /********************************
    *********************************/
-  public GameScreenLayout layout(int screenWidth, int screenHeight) {
+  @Override
+  public void layout(int screenWidth, int screenHeight) {
 
     FlatGame game = this; // (FlatGame)getGame();
     int glassWidth = game.getWidth(), glassHeight = game.getHeight(),
@@ -294,10 +295,10 @@ public abstract class FlatGame extends Tetris {
     //Debug.print("Cell Size: "+myCellSize+" , fieldWidth = "+myFieldWidth);
 
 
-    return new GameScreenLayout(fieldX0, fieldY0, myFieldWidth, myFieldHeight,
+    setGameScreenLayout(new GameScreenLayout(fieldX0, fieldY0, myFieldWidth, myFieldHeight,
       myNextShapeX0, myNextShapeY0,
       game.getMaxShapeWidth() * myCellSize, game.getMaxShapeHeight() * myCellSize,
-      displayIconVertically);
+      displayIconVertically));
   }
 
   public static final int FIGCELL_FALLING = 0;
