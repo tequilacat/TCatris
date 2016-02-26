@@ -19,6 +19,7 @@
               android:orientation="vertical"
               tools:context=".GameSelectorActivity" >
 
+
     <ListView
         android:id="@+id/lvMainOptionList"
         android:layout_width="match_parent"

@@ -2,30 +2,66 @@ package org.tequilacat.tcatris.core;
 
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by avo on 24.02.2016.
  */
 public class GameList {
+  private static final String GameDefinitions =
+    "game=Columns:Xixit:5:12:1:3:fig=vert\n" +
+    "game=ClassicGame:Tetris:10:15:2:4\n" +
+    "game=Columns:Columns:8:15:3:1:fig=horz\n" +
+    "game=Columns:Trix:8:15:1:3:type=rot\n";
 
-  private Vector myGameStateVector;
+  private List<GameData> _gameStateVector;
+  private List<GameDescriptor> _descriptors = new ArrayList<>();
 
-  private Vector myGameDescriptors = new Vector();
+  /**
+   * stores parameters of certain game type
+   */
+  public class GameDescriptor {
+    private final String _gameClassName;
+    private final String _label;
+    private final String _gameParameters;
+
+    public GameDescriptor(String gameClassName, String label, String gameParams) {
+      _gameClassName = gameClassName;
+      _label = label;
+      _gameParameters = gameParams;
+    }
+
+    public String getGameClassName() {
+      return _gameClassName;
+    }
+
+    public String getLabel() {
+      return _label;
+    }
+
+    public String getGameParameters() {
+      return _gameParameters;
+    }
+
+    public String getId() { return getGameClassName()+"/"+getLabel(); }
+
+    @Override
+    public String toString() {
+      return getLabel();
+    }
+  }
 
   /**************************************************
    **************************************************/
   public GameList() {
     //game=flassname:label:w:h:nw:nh:optionalParams
-    String games="game=Columns:Xixit:5:12:1:3:fig=vert\n" +
-      "game=ClassicGame:Tetris:10:15:2:4\n" +
-      "game=Columns:Columns:8:15:3:1:fig=horz\n" +
-      "game=Columns:Trix:8:15:1:3:type=rot\n";
+
     try {
-      Reader reader = new StringReader(games);
+      Reader reader = new StringReader(GameDefinitions);
 
       //new InputStreamReader(getClass().getResourceAsStream("/games.txt"));
-      StringBuffer stb = new StringBuffer();
+      StringBuilder stb = new StringBuilder();
       //char[] chunk = new char[1000];
       //int readCount;
       //while((readCount = reader.read(chunk)) > 0){
@@ -39,16 +75,10 @@ public class GameList {
 
             // sep1 after classname
             int sep1 = mayBeDesc.indexOf(':', 5), sep2 = mayBeDesc.indexOf(':', sep1 + 1);
+            _descriptors.add(new GameDescriptor("org.tequilacat.tcatris.games." + mayBeDesc.substring(5, sep1),
+              mayBeDesc.substring(sep1 + 1, sep2), mayBeDesc.substring(sep2 + 1)));
 
-            // class name
-            myGameDescriptors.addElement("org.tequilacat.tcatris.games." + mayBeDesc.substring(5, sep1));
-            // game name
-            myGameDescriptors.addElement(mayBeDesc.substring(sep1 + 1, sep2));
-            // game params
-            myGameDescriptors.addElement(mayBeDesc.substring(sep2 + 1));
-
-
-            //Debug.print("ADD Game: '"+ myGameDescriptors.elementAt() +"'");
+            //Debug.print("ADD Game: '"+ _descriptors.elementAt() +"'");
           }
           stb.setLength(0);
         } else {
@@ -62,29 +92,25 @@ public class GameList {
     }
   }
 
-  /**************************************************
-   **************************************************/
-  public void populateStartGameMenu() {
-    for (int i = 1; i < myGameDescriptors.size(); i += 3) {
-      Ui.addItem((String) myGameDescriptors.elementAt(i));
-    }
-//        Ui.addItem("Columns");
-//        Ui.addItem("Tetris");
+  /**
+   *
+   * @return available game types
+   */
+  public List<GameDescriptor> getGameDescriptors() {
+    return _descriptors;
   }
 
-
-  /**************************************************
-   * Creates game for given index, inits from last saved props
-   *************************************************/
-  public Tetris createGame(int index) {
+  /**
+   * Creates game of given type, inits from last saved props
+   * */
+  public Tetris createGame(GameDescriptor descriptor) {
     Tetris game = null;
+
     try {
-      String gameClass = (String) myGameDescriptors.elementAt(index * 3),
-        gameName = (String) myGameDescriptors.elementAt(index * 3 + 1),
-        gameDesc = (String) myGameDescriptors.elementAt(index * 3 + 2);
+
       //Debug.print("Create game: class = "+gameClass+", '"+ gameName +"', -> "+gameDesc);
-      game = (Tetris) Class.forName(gameClass).newInstance();
-      game.init(gameName, gameDesc, getGameData(gameName));
+      game = (Tetris) Class.forName( descriptor.getGameClassName()).newInstance();
+      game.init(descriptor.getLabel(), descriptor.getGameParameters(), getGameData(descriptor));
 
     } catch (Exception e) {
       Debug.print("Error creating game: " + e);
@@ -93,42 +119,55 @@ public class GameList {
     return game;
   }
 
-  /**************************************************
-   **************************************************/
-  // private byte[] getGameData(int index){
-  private byte[] getGameData(String gameId) {
-    for (int i = 0; i < myGameStateVector.size(); i += 2) {
-      if (myGameStateVector.elementAt(i).equals(gameId)) {
-        return (byte[]) myGameStateVector.elementAt(i + 1);
-      }
-    }
-    return null;
-    //return (index + 1 >= myGameStateVector.length) ? null : ((byte[])myGameStateVector[index+1]);
+  private class GameData {
+    public String gameId;
+    public byte[] data;
   }
 
+  private byte[] getGameData(GameDescriptor descriptor) {
+    String gameId = descriptor.getId();
+    byte[] gameData = null;
 
-  /**************************************************
-   **************************************************/
-  public void storeGameData(byte[] data, String gameId) {
-    System.out.println("Store game data '" + gameId + "': bytes are " + data.length);
-    for (int i = 0; i < myGameStateVector.size(); i += 2) {
-      if (myGameStateVector.elementAt(i).equals(gameId)) {
-        myGameStateVector.setElementAt(data, i + 1);
-        return;
+    for(GameData gd : _gameStateVector) {
+      if(gd.gameId.equals(gameId)) {
+        gameData = gd.data;
+        break;
       }
     }
-    // here only if we add game data 1st time!
-    myGameStateVector.addElement(gameId);
-    myGameStateVector.addElement(data);
 
-//        myGameStateVector[gameIndex+1] = data;
+    return gameData;
+  }
+
+  /**
+   *
+   * @param data
+   * @param descriptor
+   */
+  public void storeGameData(byte[] data, GameDescriptor descriptor) {
+    String gameId = descriptor.getId();
+    Debug.print("Store game data '" + gameId + "': bytes are " + data.length);
+    GameData foundData = null;
+
+    for (GameData gd : _gameStateVector) {
+      if (gd.gameId.equals(gameId)) {
+        foundData = gd;
+        break;
+      }
+    }
+
+    if (foundData == null) {
+      foundData = new GameData();
+      foundData.gameId = gameId;
+    }
+
+    foundData.data = data;
   }
 
   /**************************************************
    **************************************************/
   private void readStoredData() {
-    if (myGameStateVector == null) {
-      myGameStateVector = new Vector();
+    if (_gameStateVector == null) {
+      _gameStateVector = new ArrayList<>();
 /*
 
 
@@ -152,11 +191,11 @@ public class GameList {
           } else {
             //
             DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data));
-            myGameStateVector.addElement(dis.readUTF());
-            //Debug.print("Read "+myGameStateVector.lastElement()+" game: "+dis.available()+" bytes");
+            _gameStateVector.addElement(dis.readUTF());
+            //Debug.print("Read "+_gameStateVector.lastElement()+" game: "+dis.available()+" bytes");
             data = new byte[dis.available()];
             dis.read(data);
-            myGameStateVector.addElement(data);
+            _gameStateVector.addElement(data);
 
           }
         }
@@ -165,7 +204,7 @@ public class GameList {
       } catch (Exception e) {
         Debug.print("Error reading RMS " + e);
         myRS = null;
-        //myGameStateVector = new Vector();
+        //_gameStateVector = new Vector();
       }
     */
     }
@@ -183,7 +222,7 @@ public class GameList {
         byte[] data;
 
         int nRecord = 1;
-        for (int i = -2; i < myGameStateVector.size(); i += 2) {
+        for (int i = -2; i < _gameStateVector.size(); i += 2) {
           ByteArrayOutputStream baos = new ByteArrayOutputStream();
           DataOutputStream dos = new DataOutputStream(baos);
 
@@ -192,10 +231,10 @@ public class GameList {
           if (i == -2) { /// trick to save myState
             dos.writeUTF(myState);
           } else {
-            dos.writeUTF((String) myGameStateVector.elementAt(i));
-            dos.write((byte[]) myGameStateVector.elementAt(i + 1));
-//                        Debug.print("Write game " + myGameStateVector.elementAt(i)
-//                            +" : "+((byte[]) myGameStateVector.elementAt(i+1)).length+" bytes");
+            dos.writeUTF((String) _gameStateVector.elementAt(i));
+            dos.write((byte[]) _gameStateVector.elementAt(i + 1));
+//                        Debug.print("Write game " + _gameStateVector.elementAt(i)
+//                            +" : "+((byte[]) _gameStateVector.elementAt(i+1)).length+" bytes");
           }
           data = baos.toByteArray();
 

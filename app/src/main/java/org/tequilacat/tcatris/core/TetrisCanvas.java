@@ -105,7 +105,6 @@ public final class TetrisCanvas extends SurfaceView implements Runnable {
      **************************************************/
     private void showNewGameMenu() {
         Ui.initMenu(Ui.MENU_SELECT_GAME);
-        _gameList.populateStartGameMenu();
 
         Ui.addItem((getGame() != null) ? Ui.ITEM_BACK : Ui.ITEM_EXIT);
         myDisplayMode = DM_MENU;
@@ -202,7 +201,7 @@ public final class TetrisCanvas extends SurfaceView implements Runnable {
                 if (item != Ui.ITEM_BACK) {
                     stopGame();
 
-                    myGame = _gameList.createGame(Ui.getCurrentItemIndex());
+                   // TODO create game myGame = _gameList.createGame(Ui.getCurrentItemIndex());
                     myGame.layout(_screenWidth, _screenHeight - _scorebarHeight);
 
                     startGame();
