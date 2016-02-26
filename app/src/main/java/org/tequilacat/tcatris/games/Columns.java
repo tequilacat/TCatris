@@ -13,9 +13,6 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
 
-import org.tequilacat.tcatris.core.GameScreenLayout;
-import org.tequilacat.tcatris.core.TetrisCanvas;
-
 public class Columns extends FlatGame {
 
   boolean mySqueezable[];

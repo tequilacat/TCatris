@@ -1,12 +1,12 @@
 package org.tequilacat.tcatris;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import org.tequilacat.tcatris.core.GameList;
 
@@ -18,10 +18,12 @@ public class GameSelectorActivity extends Activity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+    // TODO read states of games into game list, or init with accessor to state
+    GameList.init();
+
     setContentView(R.layout.activity_gameselector);
 
-    GameList gameList = new GameList();
-    final List<GameList.GameDescriptor> gameTypes = gameList.getGameDescriptors();
+    final List<GameList.GameDescriptor> gameTypes = GameList.instance().getGameDescriptors();
     final ArrayAdapter<GameList.GameDescriptor> adapter = new ArrayAdapter<>(this,
       android.R.layout.simple_list_item_1, gameTypes);
 
@@ -30,13 +32,16 @@ public class GameSelectorActivity extends Activity {
     gameListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
       @Override
       public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Toast.makeText(GameSelectorActivity.this, gameTypes.get(position).getLabel(), Toast.LENGTH_SHORT).show();
+        // Toast.makeText(GameSelectorActivity.this, gameTypes.get(position).getLabel(), Toast.LENGTH_SHORT).show();
+        runGame(gameTypes.get(position));
       }
     });
-
-    //
-    //TetrisCanvas gameView = new TetrisCanvas(this, gameList);
-    //setContentView(gameView);
   }
 
+
+  private void runGame(GameList.GameDescriptor gameDescriptor) {
+    Intent intent = new Intent(this, GameActivity.class);
+    intent.putExtra(GameActivity.GAME_DESCRIPTOR, gameDescriptor.getId());
+    startActivity(intent);
+  }
 }

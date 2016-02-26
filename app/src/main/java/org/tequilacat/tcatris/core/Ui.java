@@ -160,7 +160,7 @@ public class Ui {
     if (gameLabel != null) {
       c.drawText(gameLabel, 0, 0, _uiPainter);
     }
-    c.drawText(TetrisCanvas.getTimeStr(0), canvasWidth, 0, _uiPainter);
+    c.drawText(GameView.getTimeStr(0), canvasWidth, 0, _uiPainter);
 
 
     //Font curFont = g.getFont();

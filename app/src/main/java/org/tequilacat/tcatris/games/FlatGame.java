@@ -10,7 +10,7 @@ import android.graphics.Paint;
 import org.tequilacat.tcatris.core.Color;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.Tetris;
-import org.tequilacat.tcatris.core.TetrisCanvas;
+import org.tequilacat.tcatris.core.GameView;
 
 // Referenced classes of package flat:
 //            Shape
@@ -234,8 +234,8 @@ public abstract class FlatGame extends Tetris {
     int glassWidth = game.getWidth(), glassHeight = game.getHeight(),
       nextFigWidth = game.getMaxShapeWidth(), nextFigHeight = game.getMaxShapeHeight();
 
-    int width = screenWidth - TetrisCanvas.MARGIN_LEFT - TetrisCanvas.MARGIN_RIGHT - TetrisCanvas.SPACING_VERT;
-    int height = screenHeight - TetrisCanvas.MARGIN_TOP - TetrisCanvas.MARGIN_BOTTOM;
+    int width = screenWidth - GameView.MARGIN_LEFT - GameView.MARGIN_RIGHT - GameView.SPACING_VERT;
+    int height = screenHeight - GameView.MARGIN_TOP - GameView.MARGIN_BOTTOM;
 
     myCellSize = width / (glassWidth + nextFigWidth);
 
@@ -257,10 +257,10 @@ public abstract class FlatGame extends Tetris {
         if image and text don't fit: 
         if suitable cell size is still good, lay out as is, 
         */
-    int iconSize = (TetrisCanvas.PlayerIcon == null) ? 0 : TetrisCanvas.PlayerIcon.getWidth();
-    if (iconSize + numInfoSize > screenWidth - TetrisCanvas.MARGIN_LEFT - myCellSize * glassWidth) {
+    int iconSize = (GameView.PlayerIcon == null) ? 0 : GameView.PlayerIcon.getWidth();
+    if (iconSize + numInfoSize > screenWidth - GameView.MARGIN_LEFT - myCellSize * glassWidth) {
       //Debug.print("Cell size = "+ myCellSize +" does not fit");
-      myCellSize = (screenWidth - TetrisCanvas.MARGIN_LEFT - (iconSize + numInfoSize)) / glassWidth;
+      myCellSize = (screenWidth - GameView.MARGIN_LEFT - (iconSize + numInfoSize)) / glassWidth;
 
       if (myCellSize >= MIN_CELL_SIZE) {
         //Debug.print("Can't fit icon and 0000, decrease to fit both");
@@ -269,7 +269,7 @@ public abstract class FlatGame extends Tetris {
         //Debug.print("Can't fit icon and number, decrease to fit number");
 
         displayIconVertically = true;
-        int cellSize = (screenWidth - TetrisCanvas.MARGIN_LEFT - numInfoSize) / glassWidth;
+        int cellSize = (screenWidth - GameView.MARGIN_LEFT - numInfoSize) / glassWidth;
 //                if(cellSize < myCellSize){
 //                    myCellSize = cellSize;
 //                }
@@ -279,8 +279,8 @@ public abstract class FlatGame extends Tetris {
 //        Debug.print("===== Always display vertically");
 //        displayIconVertically = true;
 
-    int fieldX0 = TetrisCanvas.MARGIN_LEFT;
-    int fieldY0 = TetrisCanvas.MARGIN_TOP;
+    int fieldX0 = GameView.MARGIN_LEFT;
+    int fieldY0 = GameView.MARGIN_TOP;
 
     int myFieldWidth = myCellSize * glassWidth;
     int myFieldHeight = myCellSize * glassHeight;
@@ -288,9 +288,9 @@ public abstract class FlatGame extends Tetris {
 
     // lay out next fig
 
-    int myNextShapeX0 = TetrisCanvas.MARGIN_LEFT + myFieldWidth + TetrisCanvas.SPACING_VERT;
-    myNextShapeX0 += (screenWidth - TetrisCanvas.MARGIN_RIGHT - myNextShapeX0 - myCellSize * nextFigWidth) / 2;
-    int myNextShapeY0 = TetrisCanvas.MARGIN_TOP;
+    int myNextShapeX0 = GameView.MARGIN_LEFT + myFieldWidth + GameView.SPACING_VERT;
+    myNextShapeX0 += (screenWidth - GameView.MARGIN_RIGHT - myNextShapeX0 - myCellSize * nextFigWidth) / 2;
+    int myNextShapeY0 = GameView.MARGIN_TOP;
 
     //Debug.print("Cell Size: "+myCellSize+" , fieldWidth = "+myFieldWidth);
 
