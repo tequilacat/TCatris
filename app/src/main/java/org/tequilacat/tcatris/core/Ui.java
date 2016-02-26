@@ -18,22 +18,38 @@ public class Ui {
   private static int myCurItem;
   private static int myMenuId;
 
-  private static Paint _uiPainter = new Paint();
+  private static Paint _uiPainter;
+
+  private static Paint _framePainter;
 
   private static final float _lineHeight;
 
+  private static final Paint.FontMetrics _fm;
+  private static Paint _fillPainter;
+
   static {
-    Paint.FontMetrics fm = _uiPainter.getFontMetrics();
-    _lineHeight = Math.abs(fm.top) + Math.abs(fm.bottom);
+    _framePainter = new Paint();
+    _framePainter.setStyle(Paint.Style.STROKE);
+
+    _fillPainter = new Paint();
+    _fillPainter.setStyle(Paint.Style.FILL);
+
+    _uiPainter = new Paint();
+    _fm = _uiPainter.getFontMetrics();
+    _lineHeight = Math.abs(_fm.top) + Math.abs(_fm.bottom);
   }
 
   public static float getLineHeight() {
     return _lineHeight;
   }
 
+  public static float getTextWidth(String s) {
+    return _uiPainter.measureText(s);
+  }
+
   /**************************************************
    **************************************************/
-  public static void drawShadowText(Canvas g, String text, int x, int y, int anchor, int textColor, int shadowColor) {
+  public static void drawShadowText(Canvas g, String text, int x, int y, int textColor, int shadowColor) {
     _uiPainter.setColor(shadowColor);
 //        g.drawString(text, xPos + 1, yPos - 1, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP);
     g.drawText(text, x + 1, y - 1, _uiPainter);
@@ -164,8 +180,7 @@ public class Ui {
 
 
       String itemText = (String) myItems.get(i);
-      Rect textRect = new Rect();
-      _uiPainter.getTextBounds(itemText, 0, 1, textRect);
+      float textWidth = getTextWidth(itemText);
 
       if (i == myCurItem) {
         //g.setFont(boldFont);
@@ -173,25 +188,28 @@ public class Ui {
         _uiPainter.setColor(UI_COLOR_DARKSHADOW);
 
         c.drawText(itemText,
-          3 + (canvasWidth - 8 - textRect.width()) / 2,
+          3 + (canvasWidth - 8 - textWidth) / 2,
           -1 + y + textDelta, _uiPainter);
         _uiPainter.setColor(UI_COLOR_SELITEM_TEXT);
       } else {
         //g.setFont(curFont);
         _uiPainter.setColor(UI_COLOR_ITEM_TEXT);
       }
-      c.drawText(itemText, 4 + (canvasWidth - 8 - textRect.width()) / 2, y + textDelta, _uiPainter);
+      c.drawText(itemText, 4 + (canvasWidth - 8 - textWidth) / 2, y + textDelta, _uiPainter);
 
       y += itemH;
     }
   }
 
+  public static void drawRect(Canvas c, int x, int y, int w, int h, int fillColor) {
+    _framePainter.setColor(fillColor);
+    c.drawRect(x, y, w, h, _framePainter);
+  }
+
   public static void fillRect(Canvas c, int x, int y, int w, int h, int fillColor) {
-    _uiPainter.setColor(fillColor);
-    Paint.Style oldStyle = _uiPainter.getStyle();
-    _uiPainter.setStyle(Paint.Style.FILL);
-    c.drawRect(x, y, w, h, _uiPainter);
-    _uiPainter.setStyle(oldStyle);
+    _fillPainter.setColor(fillColor);
+    _fillPainter.setStyle(Paint.Style.FILL);
+    c.drawRect(x, y, w, h, _fillPainter);
   }
 
   public static void fillRect(Canvas c, Rect fieldRect, int fillColor) {
@@ -203,15 +221,15 @@ public class Ui {
   }
 
   public static void draw3dRect(Canvas g, int x, int y, int w, int h) {
-    _uiPainter.setColor(Ui.UI_COLOR_DARKSHADOW);
-    g.drawLine(x - 1, y - 1, x - 1, y + h, _uiPainter);
-    g.drawLine(x - 1, y - 1, x + w, y - 1, _uiPainter);
+    _framePainter.setColor(Ui.UI_COLOR_DARKSHADOW);
+    g.drawLine(x - 1, y - 1, x - 1, y + h, _framePainter);
+    g.drawLine(x - 1, y - 1, x + w, y - 1, _framePainter);
 
-    _uiPainter.setColor(Ui.UI_COLOR_LIGHTSHADOW);
+    _framePainter.setColor(Ui.UI_COLOR_LIGHTSHADOW);
     x += w;
     y += h;
-    g.drawLine(x, y, x - w, y, _uiPainter);
-    g.drawLine(x, y, x, y - h, _uiPainter);
+    g.drawLine(x, y, x - w, y, _framePainter);
+    g.drawLine(x, y, x, y - h, _framePainter);
     //g.drawLine(x-1, y-1, x+w, y-1);
   }
 }

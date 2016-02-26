@@ -178,7 +178,7 @@ public final class TetrisCanvas extends SurfaceView implements Runnable {
 
             if (myGame.nextState(drop)) {
 //                myFigureDropSteps = 0;
-                repaint();
+                repaintAll();
             } else {
 //                myFigureDropSteps++;
                 repaintField();
@@ -206,7 +206,7 @@ public final class TetrisCanvas extends SurfaceView implements Runnable {
                     myGame.layout(_screenWidth, _screenHeight - _scorebarHeight);
 
                     startGame();
-                    repaint();
+                    repaintAll();
                     return;
                 }
             }
@@ -221,7 +221,7 @@ public final class TetrisCanvas extends SurfaceView implements Runnable {
             }
 
         }
-        repaint();
+        repaintAll();
     }
 
     private static final int TETRIS_NOP = 0;
@@ -272,7 +272,7 @@ public final class TetrisCanvas extends SurfaceView implements Runnable {
             } else { // show menu
                 showMainMenu();
             }
-            repaint();
+            repaintAll();
             return;
         }
 
@@ -306,32 +306,31 @@ public final class TetrisCanvas extends SurfaceView implements Runnable {
         if (updatedField) {
             repaintField();
         } else if (updatedScreen) {
-            repaint();
+            repaintAll();
         }
     }
 
+  @Override
+  protected void onDraw(Canvas c) {
+    // draw everyhing
+    synchronized (myGameChangeLock) {
 
-    /**************************************************
-     **************************************************/
-    public void paint(Canvas c) {
+      if (myDisplayMode == DM_MENU) {
+        Ui.displayMenu(c, _screenWidth, _screenHeight, (getGame() == null) ? null : getGame().GameName);
 
-        synchronized (myGameChangeLock) {
+      } else if (myDisplayMode == DM_HISCORES) {
+        showScoreTable(c);
 
-            if (myDisplayMode == DM_MENU) {
-                Ui.displayMenu(g, _screenWidth, _screenHeight, (getGame() == null) ? null : getGame().GameName);
+      } else {
+        // TODO draw running game state
+        /*paintScreen(g, !getClipGlassOnly(g));
 
-            } else if (myDisplayMode == DM_HISCORES) {
-                showScoreTable(g);
-
-            } else {
-                paintScreen(g, !getClipGlassOnly(g));
-
-                if (myGame.getState() == myGame.LOST) {
-                    message(g, Ui.MSG_GAMEOVER);
-                }
-            }
-        }
+        if (myGame.getState() == myGame.LOST) {
+          message(g, Ui.MSG_GAMEOVER);
+        }*/
+      }
     }
+  }
 
     /**************************************************
      **************************************************/
@@ -369,7 +368,6 @@ public final class TetrisCanvas extends SurfaceView implements Runnable {
         if (getGame().getLastScored() > 0) {
             Ui.drawShadowText(
                     c, "+" + getGame().getLastScored(), layout.getFieldRect().left, layout.getFieldRect().top,
-                    Ui.G_LEFT_TOP,
                     Ui.UI_COLOR_SELITEM_TEXT, Ui.UI_COLOR_DARKSHADOW);
         }
 
@@ -381,13 +379,23 @@ public final class TetrisCanvas extends SurfaceView implements Runnable {
             Ui.draw3dRect(c, layout.getNextShapeRect());
 
             getGame().paintNext(c, next.left, next.top, next.width(), next.height());
-            c.setClip(0, 0, _screenWidth, _screenHeight);
+            //c.setClip(0, 0, _screenWidth, _screenHeight);
         }
 
         if (repaintScores) {
-            showInGameScores(g);
+            showInGameScores(c);
         }
     }
+
+    private void repaintField() {
+        // TODO implement repaintField
+    }
+
+    private void repaintAll() {
+        // TODO implement repaintAll
+    }
+
+/*
 
     private boolean getClipGlassOnly(Graphics g) {
         int i = g.getClipX();
@@ -401,6 +409,7 @@ public final class TetrisCanvas extends SurfaceView implements Runnable {
         repaint(getGlassClipX(), getGlassClipY(), getGlassClipWidth(), getGlassClipHeight());
     }
 
+// TODO implement message() or use combobox
     protected void message(Graphics g, String msg) {
         int nStrings = 0;
         int width = 0, fromPos = 0;
@@ -439,32 +448,33 @@ public final class TetrisCanvas extends SurfaceView implements Runnable {
             }
         }
     }
+*/
 
-    /**************************************************
-     **************************************************/
     private void displayEntry(Canvas c, Bitmap img, int score, int xPos, int yPos) {
-        if (img != null) {
-            //g.drawImage(img, xPos, yPos, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP);
-
-            if (myDisplayIconsVertically) {
-                yPos += img.getHeight();
-            } else {
-                xPos += img.getWidth();
-                int fontHeight = g.getFont().getHeight(),
-                        lineHeight = (fontHeight > img.getHeight()) ? fontHeight : img.getHeight();
-                yPos += (lineHeight - fontHeight) / 2;
-            }
-        }
-        // g.drawString(""+score, xPos + 2, yPos, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP);
-        
-        /* g.setColor(Ui.UI_COLOR_DARKSHADOW);
-        g.drawString(""+score, xPos + 1, yPos - 1, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP);
-        g.setColor(Ui.UI_COLOR_SELITEM_TEXT);
-        g.drawString(""+score, xPos + 2, yPos, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP); */
-        Ui.drawShadowText(
-                c, "" + score, xPos, yPos,
-                myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP,
-                Ui.UI_COLOR_SELITEM_TEXT, Ui.UI_COLOR_DARKSHADOW);
+        // TODO implement display entry
+//
+//        if (img != null) {
+//            //g.drawImage(img, xPos, yPos, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP);
+//
+//            if (myDisplayIconsVertically) {
+//                yPos += img.getHeight();
+//            } else {
+//                xPos += img.getWidth();
+//                int fontHeight = g.getFont().getHeight(),
+//                        lineHeight = (fontHeight > img.getHeight()) ? fontHeight : img.getHeight();
+//                yPos += (lineHeight - fontHeight) / 2;
+//            }
+//        }
+//        // g.drawString(""+score, xPos + 2, yPos, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP);
+//
+//        /* g.setColor(Ui.UI_COLOR_DARKSHADOW);
+//        g.drawString(""+score, xPos + 1, yPos - 1, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP);
+//        g.setColor(Ui.UI_COLOR_SELITEM_TEXT);
+//        g.drawString(""+score, xPos + 2, yPos, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP); */
+//        Ui.drawShadowText(
+//                c, "" + score, xPos, yPos,
+//                myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP,
+//                Ui.UI_COLOR_SELITEM_TEXT, Ui.UI_COLOR_DARKSHADOW);
     }
 
     /**************************************************
@@ -482,10 +492,11 @@ public final class TetrisCanvas extends SurfaceView implements Runnable {
 //                    curScore = 15;
 
 
-        int scoreX = MARGIN_LEFT + layout.getGlassClipWidth() + SPACING_VERT;
+        int scoreX = MARGIN_LEFT + layout.getFieldRect().width() + SPACING_VERT;
         int scoreWidth = _screenWidth - scoreX - MARGIN_RIGHT;
-        int scoreY = layout.getNextFigY() + layout.getNextFigHeight() + MARGIN_LEFT;
-        int scoreHeight = layout.getGlassClipY() + layout.getGlassClipHeight() - scoreY;
+        int scoreY = layout.getNextShapeRect().top + layout.getNextShapeRect().height() + MARGIN_LEFT;
+        int scoreHeight = layout.getFieldRect().top + layout.getFieldRect().height() - scoreY;
+          //layout.getGlassClipY() + layout.getGlassClipHeight() - scoreY;
 
 //        g.setColor(Color.green);
 //        g.fillRect(scoreX, scoreY, scoreWidth, scoreHeight);
@@ -533,16 +544,14 @@ public final class TetrisCanvas extends SurfaceView implements Runnable {
             sbX = MARGIN_LEFT;
             sbY = _screenHeight - _scorebarHeight;
 
-            p.setColor(Color.black);
-            c.drawRect(sbX, sbY, sbWidth, sbHeight, p);
-
-            p.setColor(barColor);
+            Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, Color.black);
+            Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, Color.black);
 
             if (curScore >= hiScores[0]) { // win
                 int newPos = sbWidth * hiScores[0] / curScore;
-                c.drawRect(sbX + newPos, sbY, sbWidth - newPos, sbHeight, p);
+                Ui.drawRect(c, sbX + newPos, sbY, sbWidth - newPos, sbHeight, barColor);
             } else { // compete
-                c.drawRect(sbX, sbY, sbWidth * curScore / hiScores[0], sbHeight, p);
+                Ui.drawRect(c, sbX, sbY, sbWidth * curScore / hiScores[0], sbHeight, barColor);
             }
 
             // 3d bevel around score bar
@@ -618,7 +627,7 @@ public final class TetrisCanvas extends SurfaceView implements Runnable {
     /**************************************************
      **************************************************/
     public static String getTimeStr(long millis) {
-        StringBuffer stb = new StringBuffer();
+        StringBuilder stb = new StringBuilder();
 
 //        TimeZone.getDefault()
         Calendar curTime = Calendar.getInstance();

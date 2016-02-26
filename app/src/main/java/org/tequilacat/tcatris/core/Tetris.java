@@ -10,8 +10,6 @@ import java.io.*;
 public abstract class Tetris {
   public String GameName;
 
-  private int myGameIndex;
-
   //private boolean myShowNext;
   private int myState = NOTINIT;
   public static final int NOTINIT = 0;
@@ -40,7 +38,6 @@ public abstract class Tetris {
   /**************************************************
    **************************************************/
   public Tetris(byte[] gameData, int gameIndex) {
-    myGameIndex = gameIndex;
     parseHiScores(gameData);
   }
 
@@ -51,12 +48,11 @@ public abstract class Tetris {
 
   /**************************************************
    **************************************************/
-  public void init(int gameIndex, String gameLabel, String gameDescriptor, byte[] gameData) {
+  public void init(String gameLabel, String gameDescriptor, byte[] gameData) {
     // byte[] gameData, String gameLabel, int fWidth, int fHeight, int nextWidth, int nextHeight){
     // example:
     // 5:13:1:3
 
-    myGameIndex = gameIndex;
     GameName = gameLabel;
 //        Debug.print("Game data: '"+ gameDescriptor +"'");
     int sep1 = gameDescriptor.indexOf(':'),
@@ -234,16 +230,11 @@ public abstract class Tetris {
       if (scoreInserted) {
         //Debug.print("Score inserted, dump scores to the app props");
 //                debugDumpScores();
-        GameList.storeGameData(encodeTopScores(), GameName);
+        // TODO record top score in master game code
+        // GameList.storeGameData(encodeTopScores(), GameName);
       }
     }
     return scoreInserted;
-  }
-
-  /**************************************************
-   **************************************************/
-  public int getGameIndex() {
-    return myGameIndex;
   }
 
   /**
@@ -330,7 +321,7 @@ public abstract class Tetris {
 
   protected abstract boolean computeCanSqueeze();
 
-  protected abstract boolean dropCurrent(boolean flag);
+  protected abstract boolean dropCurrent(boolean tillBottom);
 
   protected abstract boolean acquireFallenShape();
 
@@ -342,8 +333,10 @@ public abstract class Tetris {
     return myCanSqueeze;
   }
 
-  /**************************************************
-   **************************************************/
+  /**
+   * add flash or vibration here when some cells are collapsed
+   * @return if squeeze succeeded
+   */
   private boolean internalSqueeze() {
     //#ifdef Platform_MIDP20
     //TetrisCanvas.display.vibrate(100);
@@ -352,26 +345,44 @@ public abstract class Tetris {
     return squeeze();
   }
 
-  public final boolean nextState(boolean flag) {
+  /**
+   *
+   * @param doDrop if falling shape must be dropped to bottom
+   * @return whether state changes globally (true) and whole screen to be repainted
+   */
+  public final boolean nextState(boolean doDrop) {
+    boolean repaintAll;
+
     if (myCanSqueeze) {
       myCanSqueeze = internalSqueeze() && computeCanSqueeze();
-      if (!myCanSqueeze)
+
+      if (!myCanSqueeze) {
         myState = throwInNewShape() ? ACTIVE : LOST;
-      return true;
-    }
-    if (dropCurrent(flag))
-      return false;
-    if (!acquireFallenShape()) {
+      }
+
+      repaintAll = true;
+      //return true;
+
+    }else if (dropCurrent(doDrop)) {
+      repaintAll = false;
+      //return false;
+
+    }else if (!acquireFallenShape()) {
       myState = LOST;
-      return true;
+      repaintAll = true;
+
+    }else {
+      myCanSqueeze = computeCanSqueeze();
+
+      if (myCanSqueeze) {
+        repaintAll = false;
+      } else {
+        myState = throwInNewShape() ? ACTIVE : LOST;
+        repaintAll = true;
+      }
     }
-    myCanSqueeze = computeCanSqueeze();
-    if (myCanSqueeze) {
-      return false;
-    } else {
-      myState = throwInNewShape() ? ACTIVE : LOST;
-      return true;
-    }
+
+    return repaintAll;
   }
 
   public int getLevelDelayMS() {

@@ -84,7 +84,7 @@ public class GameList {
         gameDesc = (String) myGameDescriptors.elementAt(index * 3 + 2);
       //Debug.print("Create game: class = "+gameClass+", '"+ gameName +"', -> "+gameDesc);
       game = (Tetris) Class.forName(gameClass).newInstance();
-      game.init(index, gameName, gameDesc, getGameData(gameName));
+      game.init(gameName, gameDesc, getGameData(gameName));
 
     } catch (Exception e) {
       Debug.print("Error creating game: " + e);
