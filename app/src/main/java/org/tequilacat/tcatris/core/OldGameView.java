@@ -7,18 +7,16 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Region;
 import android.util.AttributeSet;
-import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.util.Calendar;
-import java.util.TimeZone;
 import java.util.Date;
 
 // Referenced classes of package tetris:
 //            ScoreBoard, Color, Tetris
 
-public final class GameView extends SurfaceView implements Runnable {
+public final class OldGameView extends SurfaceView implements Runnable {
 
   //public static Display display;
   public static Bitmap PlayerIcon, WinnerIcon, LevelIcon;
@@ -44,16 +42,13 @@ public final class GameView extends SurfaceView implements Runnable {
   private Object myGameChangeLock = new Object();
   private int _screenWidth;
   private int _screenHeight;
-  private SurfaceHolder _holder;
-  private int _scorebarHeight;
-  private GameAction _gameThreadAction;
 
   /**
    * override for visual constructor
    * @param context
    * @param attrs
    */
-  public GameView(Context context, AttributeSet attrs) {
+  public OldGameView(Context context, AttributeSet attrs) {
     super(context, attrs);
     init(context);
   }
@@ -64,7 +59,7 @@ public final class GameView extends SurfaceView implements Runnable {
    * @param attrs
    * @param defStyle
    */
-  public GameView(Context context, AttributeSet attrs, int defStyle) {
+  public OldGameView(Context context, AttributeSet attrs, int defStyle) {
     super(context, attrs, defStyle);
     init(context);
   }
@@ -73,7 +68,7 @@ public final class GameView extends SurfaceView implements Runnable {
    * override for visual constructor
    * @param context
    */
-  public GameView(Context context) {
+  public OldGameView(Context context) {
     super(context);
     init(context);
   }
@@ -83,43 +78,33 @@ public final class GameView extends SurfaceView implements Runnable {
    * @param context
    */
   private void init(Context context) {
-    _holder = getHolder();
-    _holder.addCallback(new SurfaceHolder.Callback() {
+    SurfaceHolder holder = getHolder();
+    holder.addCallback(new SurfaceHolder.Callback() {
       @Override
       public void surfaceCreated(SurfaceHolder holder) {
         // start game
         Debug.print("surface created");
-        gameStart();
       }
 
       @Override
-      public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) { }
+      public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        Debug.print("surfaceChanged " + width + " x " + height);
+      }
 
       @Override
       public void surfaceDestroyed(SurfaceHolder holder) {
-        Debug.print("destroyed");
-        gameStop();
+
       }
     });
-
-    _gameThread = new Thread() {
-      @Override
-      public void run() {
-        runGameCycle();
-      }
-    };
-
-    setFocusable(true);
-    setFocusableInTouchMode(true);
+    //_gameList = gameList;
   }
 
   @Override
   protected void onSizeChanged(int w, int h, int oldw, int oldh) {
     super.onSizeChanged(w, h, oldw, oldh);
-    _scorebarHeight = (int) (Ui.getLineHeight() * 1.2);
 
     _screenWidth = w;
-    _screenHeight = h - _scorebarHeight;
+    _screenHeight = h;
     Debug.print("onSizeChanged " + w + " x " + h);
 
     if (getGame() != null) {
@@ -130,115 +115,49 @@ public final class GameView extends SurfaceView implements Runnable {
 
   public void setGame(Tetris game) {
     myGame = game;
+    Debug.print("set game");
   }
 
-  private Tetris getGame() {
+  public Tetris getGame() {
     return myGame;
   }
 
 
-  private void runGameCycle() {
-    // runs
-    long INTERVAL = 500; // 300 millis per step
-    long towait = INTERVAL;
-    _gameThreadAction = null;
-    boolean isRunning = true;
+  /**************************************************
+   **************************************************/
+//  private static void initGameGraphics() {
+//    if (PlayerIcon == null) {
+//      SCOREBAR_WIDTH = _screenWidth / 20;
+//
+//      String graphicsType = (ScreenWidth < 176) ? "/small" : "/big";
+//      try {
+//        PlayerIcon = Image.createImage(graphicsType + "/icon-player.png");
+//        WinnerIcon = Image.createImage(graphicsType + "/icon-winner.png");
+//        LevelIcon = Image.createImage(graphicsType + "/icon-level.png");
+//      } catch (Exception e) {
+//      }
+//    }
+//  }
 
-    synchronized (myGameChangeLock) {
-      try {
-        while(isRunning) {
-          Debug.print("Sleep " + towait);
-          long time0 = System.currentTimeMillis();
-          myGameChangeLock.wait(towait);
-          long sleptTime = System.currentTimeMillis() - time0;
 
-          Debug.print("woke up [slept=" + sleptTime + "], action = " + _gameThreadAction);
-          GameAction curAction = _gameThreadAction;
-          _gameThreadAction = null;
+  /**************************************************
+   **************************************************/
+  private void startGame() {
+    myDisplayMode = DM_GAME;
 
-          if (curAction == null) {
-            // next cycle, assume
-            Debug.print("... A cycle, sleep full to next cycle");
-            towait = INTERVAL;
-          } else {
-            // wait what's left,
-            towait = INTERVAL - sleptTime;
-            if(towait <= 0) {
-              // slept or worked too long, next cycle very soon
-              towait = 1;
-            }
-            Debug.print("... User action, sleep remaining ");
-          }
-        }
-      } catch (InterruptedException e) {
-        // TODO process exception
-        Debug.print("Thread interrupted: "+e);
-      }
+    getGame().initGame();
+    //myIsPaused = false;
+//        myStop = false;
+//        myFigureDropSteps = 0;
 
-    }
+    myTickerThread = new Thread(this);
+
+    myTickerThread.start();
   }
 
-  private Thread _gameThread;
-
-  private void gameStart() {
-    Debug.print("game start");
-    _gameThread.start();
-  }
-
-  private void gameStop() {
-    try {
-      Debug.print("game stop");
-      _gameThread.join();
-    } catch (InterruptedException e) {
-      // TODO catch Interruption
-    }
-  }
-
-  enum GameAction {
-    LEFT, RIGHT, ROTATE_CW, ROTATE_CCW, DROP,
-  }
-
-  /**
-   * sends action from GUI thread to the thread waking it from waiting
-   * @param action
-   */
-  private void sendAction(GameAction action){
-    synchronized (myGameChangeLock) {
-      _gameThreadAction = action;
-      Debug.print("UI: notify of " + action);
-      myGameChangeLock.notify();
-    }
-  }
-
-  @Override
-  public boolean onTouchEvent(MotionEvent event) {
-
-    if (event.getAction() == MotionEvent.ACTION_DOWN) {
-      // notify with some param
-      float x = event.getX(), y = event.getY();
-      int clickedArea = (int)x * 3 / _screenWidth + 3 * ((int)y * 3 / _screenHeight);
-
-      if (clickedArea == 6) {
-        sendAction(GameAction.LEFT);
-      } else if (clickedArea == 7) {
-        sendAction(GameAction.DROP);
-      } else if (clickedArea == 8) {
-        sendAction(GameAction.RIGHT);
-      } else if (clickedArea == 3) {
-        sendAction(GameAction.ROTATE_CCW);
-      } else if (clickedArea == 4) {
-        // TODO pause
-        //gameAction(TETRIS_MENU);
-      } else if (clickedArea == 5) {
-        sendAction(GameAction.ROTATE_CW);
-      }
-    }
-    return super.onTouchEvent(event);
-  }
-
-  /**
-   * old game cycle
-   */
+  /**************************************************
+   * runnable
+   **************************************************/
   public void run() {
     Tetris curGame = getGame();
 
@@ -258,7 +177,6 @@ public final class GameView extends SurfaceView implements Runnable {
       Debug.print("Game " + curGame + " finished, switch to " + getGame());
     }
   }
-
 
   /**************************************************
    **************************************************/
@@ -289,9 +207,11 @@ public final class GameView extends SurfaceView implements Runnable {
     if (myGame.getState() == Tetris.ACTIVE) {
 
       if (myGame.nextState(drop)) {
-        //repaintAll();
+//                myFigureDropSteps = 0;
+        repaintAll();
       } else {
-        //repaintField();
+//                myFigureDropSteps++;
+        repaintField();
       }
 
       if (myGame.getState() == Tetris.LOST) {
@@ -336,19 +256,6 @@ public final class GameView extends SurfaceView implements Runnable {
     repaintAll();
     */
   }
-/*
-private void startGameOld() {
-    myDisplayMode = DM_GAME;
-
-    getGame().initGame();
-    //myIsPaused = false;
-//        myStop = false;
-//        myFigureDropSteps = 0;
-
-    myTickerThread = new Thread(this);
-
-    myTickerThread.start();
-  }
 
   private static final int TETRIS_NOP = 0;
   private static final int TETRIS_DROP = 1;
@@ -358,6 +265,8 @@ private void startGameOld() {
   private static final int TETRIS_RIGHT = 5;
   private static final int TETRIS_MENU = 6;
 
+  /**************************************************
+   **************************************************/
   public void pointerPressed(int x, int y) {
     if (myDisplayMode == DM_MENU) {
       processMenuItem(Ui.getItemAtPoint(x, y));
@@ -381,35 +290,81 @@ private void startGameOld() {
     }
   }
 
+  /**************************************************
+   **************************************************/
   private void gameAction(int tetrisAction) {
 
-    if (myGame.getState() == Tetris.ACTIVE) {
-
-      if (myGame.canSqueeze()) {
-        tick();
-        return;
-      }
-
-      boolean updatedField = false, updatedScreen = false;
-
-      synchronized (myGameChangeLock) {
-        if (tetrisAction == TETRIS_DROP) {
-          //            System.out.println("drop");
-          nextGameCycle(true);
-        } else if (tetrisAction == TETRIS_LEFT) {
-          updatedField = myGame.moveLeft();
-        } else if (tetrisAction == TETRIS_RIGHT) {
-          updatedField = myGame.moveRight();
-        } else if (tetrisAction == TETRIS_ROTATE_CCW) {
-          updatedField = myGame.rotateAntiClockwise();
-        } else if (tetrisAction == TETRIS_ROTATE_CW) {
-          updatedField = myGame.rotateClockwise();
+    // now process actions in DM_GAME mode
+    if (tetrisAction == TETRIS_MENU) {
+      if (myGame.getState() == Tetris.LOST) { // check if we display hiscores or not
+        if (myGame.findScorePosition(myGame.getScore()) >= 0) {
+          myDisplayMode = DM_HISCORES;
+        } else {
+          startGame();
         }
+      } else { // show menu
+        //showMainMenu();
+      }
+      repaintAll();
+      return;
+    }
+
+
+    if (myGame.getState() != Tetris.ACTIVE) {
+      return;
+    }
+
+    if (myGame.canSqueeze()) {
+      tick();
+      return;
+    }
+
+    boolean updatedField = false, updatedScreen = false;
+
+    synchronized (myGameChangeLock) {
+      if (tetrisAction == TETRIS_DROP) {
+        //            System.out.println("drop");
+        nextGameCycle(true);
+      } else if (tetrisAction == TETRIS_LEFT) {
+        updatedField = myGame.moveLeft();
+      } else if (tetrisAction == TETRIS_RIGHT) {
+        updatedField = myGame.moveRight();
+      } else if (tetrisAction == TETRIS_ROTATE_CCW) {
+        updatedField = myGame.rotateAntiClockwise();
+      } else if (tetrisAction == TETRIS_ROTATE_CW) {
+        updatedField = myGame.rotateClockwise();
       }
     }
 
+    if (updatedField) {
+      repaintField();
+    } else if (updatedScreen) {
+      repaintAll();
+    }
   }
-  */
+
+  @Override
+  protected void onDraw(Canvas c) {
+    // draw everyhing
+    synchronized (myGameChangeLock) {
+
+      if (myDisplayMode == DM_MENU) {
+        Ui.displayMenu(c, _screenWidth, _screenHeight, (getGame() == null) ? null : getGame().GameName);
+
+      } else if (myDisplayMode == DM_HISCORES) {
+        showScoreTable(c);
+
+      } else {
+        // TODO draw running game state
+        /*paintScreen(g, !getClipGlassOnly(g));
+
+        if (myGame.getState() == myGame.LOST) {
+          message(g, Ui.MSG_GAMEOVER);
+        }*/
+      }
+    }
+  }
+
   /**************************************************
    **************************************************/
   private void paintScreen(Canvas c, boolean repaintAll) {
@@ -465,7 +420,27 @@ private void startGameOld() {
     }
   }
 
+  private void repaintField() {
+    // TODO implement repaintField
+  }
+
+  private void repaintAll() {
+    // TODO implement repaintAll
+  }
+
 /*
+
+    private boolean getClipGlassOnly(Graphics g) {
+        int i = g.getClipX();
+        int j = g.getClipY();
+        int k = g.getClipWidth();
+        int l = g.getClipHeight();
+        return l == getGlassClipHeight() && k == getGlassClipWidth() && i == getGlassClipX() && j == getGlassClipY();
+    }
+
+    public void repaintField() {
+        repaint(getGlassClipX(), getGlassClipY(), getGlassClipWidth(), getGlassClipHeight());
+    }
 
 // TODO implement message() or use combobox
     protected void message(Graphics g, String msg) {
@@ -596,10 +571,11 @@ private void startGameOld() {
 
 
       // assume horizontal score bar
-      sbHeight = _scorebarHeight - 2;
+      final int scorebarHeight = getHeight() / 20;
+      sbHeight = scorebarHeight - 2;
       sbWidth = _screenWidth - MARGIN_LEFT - MARGIN_RIGHT;
       sbX = MARGIN_LEFT;
-      sbY = _screenHeight - _scorebarHeight;
+      sbY = _screenHeight - scorebarHeight;
 
       Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, Color.black);
       Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, Color.black);

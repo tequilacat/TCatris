@@ -10,6 +10,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="org.tequilacat.tcatris.GameActivity">
 
-    <GameView android:id="@+id/gameView" android:layout_width="fill_parent" android:layout_height="fill_parent"/>
+    <org.tequilacat.tcatris.core.GameView android:id="@+id/gameView" android:layout_width="fill_parent" android:layout_height="fill_parent"/>
 
 </RelativeLayout>
