@@ -21,7 +21,7 @@ import java.util.Date;
 // Referenced classes of package tetris:
 //            ScoreBoard, Color, Tetris
 
-public final class GameView extends SurfaceView implements Runnable {
+public final class GameView extends SurfaceView {
 
   //public static Display display;
   public static Bitmap PlayerIcon, WinnerIcon, LevelIcon;
@@ -51,6 +51,7 @@ public final class GameView extends SurfaceView implements Runnable {
   private int _scorebarHeight;
   private GameAction _gameThreadAction;
   private boolean _isPaused;
+  private boolean _isRunning;
 
   /**
    * override for visual constructor
@@ -109,7 +110,7 @@ public final class GameView extends SurfaceView implements Runnable {
     _gameThread = new Thread() {
       @Override
       public void run() {
-        runGameCycle();
+        runGame();
       }
     };
 
@@ -141,58 +142,104 @@ public final class GameView extends SurfaceView implements Runnable {
   }
 
 
-  private void runGameCycle() {
+  private void runGame() {
     // runs
     long INTERVAL = 500; // 300 millis per step
     long towait = INTERVAL;
     _gameThreadAction = null;
-    boolean isRunning = true;
+    _isRunning = true;
     _isPaused = false;
+    getGame().initGame();
 
     synchronized (myGameChangeLock) {
       try {
-        while(isRunning) {
+        while(_isRunning) {
           Debug.print("Sleep " + towait);
           long time0 = System.currentTimeMillis();
           myGameChangeLock.wait(towait);
           long sleptTime = System.currentTimeMillis() - time0;
 
+          if (_isRunning) {
+            // otherwise just exit from while
 
-          if(_isPaused) {
-            // show paused screen and wait for next kick
-            Debug.print("show paused screen and wait for next kick");
-            towait = 0;
-          } else if(getGame().getState() == Tetris.LOST){
-            // show scores
-            Debug.print("lost, wait for next kick to restart");
-            towait = 0;
-          }else {
-            // normal timing operation, check action and depending on it repaint screen
-            Debug.print("   woke up [slept=" + sleptTime + "], action = " + _gameThreadAction);
-            GameAction curAction = _gameThreadAction;
-            _gameThreadAction = null;
+            Canvas c = _holder.lockCanvas();
 
-            if (curAction == null) {
-              // next cycle, assume
-              // Debug.print("... A cycle, sleep full to next cycle");
-              towait = INTERVAL;
-            } else {
-              // wait what's left,
-              towait = INTERVAL - sleptTime;
-              if (towait <= 0) {
-                // slept or worked too long, next cycle very soon
-                towait = 1;
+            synchronized (_holder) {
+              if (_isPaused) {
+                // show paused screen and wait for next kick
+                Debug.print("PAUSE: show paused screen and wait for next kick");
+                towait = 0;
+                c.drawColor(Color.blue);
+
+              } else if (getGame().getState() == Tetris.LOST) {
+                // show scores
+                Debug.print("lost, wait for next kick to restart");
+                towait = 0;
+                c.drawColor(Color.red);
+
+              } else { // ACTIVE: run action, see consequences
+                // normal timing operation, check action and depending on it repaint screen
+                Debug.print("   woke up [slept=" + sleptTime + "], action = " + _gameThreadAction);
+                GameAction curAction = _gameThreadAction;
+                _gameThreadAction = null;
+                // whether all screen data changed or only field with falling shape
+                boolean repaintAll = false;
+                boolean doRepaint = true;
+
+                if (curAction == null) {
+                  repaintAll = getGame().nextState(false);
+                  towait = INTERVAL; // getGame().getLevelDelayMS();
+
+                } else {
+                  // run action
+                  switch (curAction) {
+                    case DROP:
+                      repaintAll = getGame().nextState(true);
+                      break;
+                    case LEFT:
+                      doRepaint = getGame().moveLeft();
+                      break;
+                    case RIGHT:
+                      doRepaint = getGame().moveRight();
+                      break;
+                    case ROTATE_CW:
+                      doRepaint = getGame().rotateClockwise();
+                      break;
+                    case ROTATE_CCW:
+                      doRepaint = getGame().rotateAntiClockwise();
+                      break;
+                    default:
+                      doRepaint = false;
+                      break;
+                  }
+
+                  towait = INTERVAL - sleptTime;
+                  if (towait <= 0) {
+                    // slept or worked too long, next cycle very soon
+                    towait = 1;
+                  }
+                  //Debug.print("... User action, sleep remaining ");
+                }
+                if (doRepaint) {
+                  //c.drawColor(Color.cyan);
+                  Paint p = new Paint();
+                  p.setStyle(Paint.Style.FILL);
+                  p.setColor(Color.black);
+                  p.setAlpha(125); c.drawRect(0, 0, _screenWidth,_screenHeight, p);
+                  //paintScreen(c, repaintAll);
+                }
+
               }
-              //Debug.print("... User action, sleep remaining ");
             }
+            _holder.unlockCanvasAndPost(c);
           }
-
         }
       } catch (InterruptedException e) {
         // TODO process exception
         Debug.print("Thread interrupted: "+e);
       }
 
+      Debug.print("Exit game thread");
     }
   }
 
@@ -205,8 +252,11 @@ public final class GameView extends SurfaceView implements Runnable {
 
   private void gameStop() {
     try {
-      Debug.print("game stop");
+      Debug.print("game stop ...");
+      _isRunning = false;
+      sendAction(null);
       _gameThread.join();
+      Debug.print("game stop done.");
     } catch (InterruptedException e) {
       // TODO catch Interruption
     }
@@ -275,25 +325,6 @@ public final class GameView extends SurfaceView implements Runnable {
   /**
    * old game cycle
    */
-  public void run() {
-    Tetris curGame = getGame();
-
-    // while(!myStop && curGame == getGame()) {
-    while (myTickerThread != null && curGame == getGame() && curGame.getState() == Tetris.ACTIVE) {
-      try {
-        if (myDisplayMode == DM_GAME) {
-          tick();
-        }
-        int sleepTime = getGame().getLevelDelayMS();
-        Thread.sleep(sleepTime);
-      } catch (InterruptedException interruptedexception) {
-      }
-    }
-
-    if (curGame != getGame()) {
-      Debug.print("Game " + curGame + " finished, switch to " + getGame());
-    }
-  }
 
 
   /**************************************************
@@ -373,6 +404,26 @@ public final class GameView extends SurfaceView implements Runnable {
     */
   }
 /*
+  public void run() {
+    Tetris curGame = getGame();
+
+    // while(!myStop && curGame == getGame()) {
+    while (myTickerThread != null && curGame == getGame() && curGame.getState() == Tetris.ACTIVE) {
+      try {
+        if (myDisplayMode == DM_GAME) {
+          tick();
+        }
+        int sleepTime = getGame().getLevelDelayMS();
+        Thread.sleep(sleepTime);
+      } catch (InterruptedException interruptedexception) {
+      }
+    }
+
+    if (curGame != getGame()) {
+      Debug.print("Game " + curGame + " finished, switch to " + getGame());
+    }
+  }
+
 private void startGameOld() {
     myDisplayMode = DM_GAME;
 
@@ -602,11 +653,13 @@ private void startGameOld() {
     //c.setColor(Color.black);
     //int fontX = scoreX, fontY = scoreY;
     float dY;
+    int playerIconHeight = PlayerIcon == null ? 50 : PlayerIcon.getHeight();
+
     if (myDisplayIconsVertically) {
       scoreX += (_screenWidth - MARGIN_RIGHT - scoreX) / 2;
-      dY = fontHeight + PlayerIcon.getHeight();
+      dY = fontHeight + playerIconHeight;
     } else {
-      dY = (fontHeight > PlayerIcon.getHeight()) ? fontHeight : PlayerIcon.getHeight();
+      dY = (fontHeight > playerIconHeight) ? fontHeight : playerIconHeight;
     }
 
     displayEntry(c, LevelIcon, getGame().getLevel(), scoreX, scoreY);
