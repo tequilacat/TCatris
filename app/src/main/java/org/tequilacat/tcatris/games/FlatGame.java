@@ -11,6 +11,7 @@ import org.tequilacat.tcatris.core.ColorCodes;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.Tetris;
 import org.tequilacat.tcatris.core.GameView;
+import org.tequilacat.tcatris.core.Ui;
 
 // Referenced classes of package flat:
 //            Shape
@@ -310,17 +311,16 @@ public abstract class FlatGame extends Tetris {
   /********************************
    *********************************/
   protected void paintCellPix(Canvas g, int x, int y, int state, int cellState) {
-    _cellPainter.setColor(getTypeColor(state));
+    int cellColor = getTypeColor(state);
 
     if (state == FlatGame.EMPTY || cellState == FIGCELL_FALLING) {
-      g.drawRect(x, y, myCellSize - 1, myCellSize - 1, _cellPainter);
+      Ui.fillRect(g, x, y, myCellSize - 1, myCellSize - 1, cellColor);
       //Debug.print("Falling:");
     } else if (cellState == FIGCELL_SQUEEZED) {
-      g.drawRect(x, y, myCellSize - 1, myCellSize - 1, _cellPainter);
-      _cellPainter.setColor(getFieldBackground());
-      g.drawRect(x + 1, y + 1, myCellSize - 3, myCellSize - 3, _cellPainter);
+      Ui.drawRect(g, x, y, myCellSize - 1, myCellSize - 1, cellColor);
+      Ui.fillRect(g, x + 1, y + 1, myCellSize - 3, myCellSize - 3, getFieldBackground());
     } else { // settled
-      g.drawRect(x, y, myCellSize - 1, myCellSize - 1, _cellPainter);
+      Ui.fillRect(g, x, y, myCellSize - 1, myCellSize - 1, cellColor);
 
       _cellPainter.setColor(ColorCodes.black);
       x += 3;

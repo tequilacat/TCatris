@@ -18,8 +18,8 @@ public class GameScreenLayout {
 
     myDisplayIconsVertically = verticalIconLayout;
 
-    _fieldRect = new Rect(fX, fY, fWidth, fHeight);
-    _nextShapeRect = new Rect(nextX, nextY, nextW, nextH);
+    _fieldRect = new Rect(fX, fY, fX + fWidth, fY + fHeight);
+    _nextShapeRect = new Rect(nextX, nextY, nextX + nextW, nextY + nextH);
   }
 
   public Rect getNextShapeRect() {

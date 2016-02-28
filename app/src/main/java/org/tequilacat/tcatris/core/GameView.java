@@ -495,9 +495,35 @@ private void startGameOld() {
 
   }
   */
+
+  private void paintScreen(Canvas c, boolean repaintAll) {
+    final GameScreenLayout layout = getGame().getGameScreenLayout();
+    final int COLOR_FIELD_BG = getGame().getFieldBackground();
+
+    if(repaintAll) {
+      Debug.print("repaint all !!!");
+      c.drawColor(Ui.UI_COLOR_PANEL);
+
+      //Ui.fillRect(c, layout.getNextShapeRect(), COLOR_FIELD_BG);
+      Ui.fillRect(c, layout.getNextShapeRect(), ColorCodes.yellow);
+      //Rect next = layout.getNextShapeRect();
+      //getGame().paintNext(c, next.left, next.top, next.width(), next.height());
+    }else {
+      Debug.print("paint field...");
+    }
+
+    //Ui.fillRect(c, layout.getFieldRect(), ColorCodes.cyan);
+    //Ui.fillRect(c, layout.getNextShapeRect(), ColorCodes.yellow);
+    //Ui.fillRect(c, layout.getFieldRect(), COLOR_FIELD_BG);
+
+    c.translate(layout.getFieldRect().left, layout.getFieldRect().top);
+    getGame().paintField(c, layout.getFieldRect().height());
+    c.translate(-layout.getFieldRect().left, -layout.getFieldRect().top);
+  }
+
   /**************************************************
    **************************************************/
-  private void paintScreen(Canvas c, boolean repaintAll) {
+  private void paintScreenOld(Canvas c, boolean repaintAll) {
     boolean repaintScores = true; // debug!
     boolean repaintNext = true; // debug!
     final GameScreenLayout layout = getGame().getGameScreenLayout();
@@ -521,7 +547,7 @@ private void startGameOld() {
     c.translate(layout.getFieldRect().left, layout.getFieldRect().top);
     getGame().paintField(c, layout.getFieldRect().height());
     c.translate(-layout.getFieldRect().left, -layout.getFieldRect().top);
-    c.clipRect(0, 0, _screenWidth, _screenHeight, Region.Op.REPLACE);
+    //c.clipRect(0, 0, _screenWidth, _screenHeight, Region.Op.REPLACE);
 
 
     // debug

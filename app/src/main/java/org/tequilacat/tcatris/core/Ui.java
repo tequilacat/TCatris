@@ -208,7 +208,6 @@ public class Ui {
 
   public static void fillRect(Canvas c, int x, int y, int w, int h, int fillColor) {
     _fillPainter.setColor(fillColor);
-    _fillPainter.setStyle(Paint.Style.FILL);
     c.drawRect(x, y, w, h, _fillPainter);
   }
 
