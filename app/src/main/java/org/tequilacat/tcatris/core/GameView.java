@@ -7,7 +7,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.Region;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -26,12 +25,6 @@ public final class GameView extends SurfaceView {
   //public static Display display;
   public static Bitmap PlayerIcon, WinnerIcon, LevelIcon;
 
-  public static final int DM_GAME = 0;
-  public static final int DM_MENU = 1;
-  public static final int DM_HISCORES = 2;
-
-  int myDisplayMode = DM_GAME;
-
   public static final int MARGIN_LEFT = 5;
   public static final int MARGIN_RIGHT = 5;
   public static final int MARGIN_TOP = 5;
@@ -40,18 +33,17 @@ public final class GameView extends SurfaceView {
 
   private Tetris myGame;
 
-  private Thread myTickerThread;
-
-  boolean myDisplayIconsVertically;
+  //boolean myDisplayIconsVertically;
 
   private Object myGameChangeLock = new Object();
-  private int _screenWidth;
-  private int _screenHeight;
+  //private int _screenWidth;
+  //private int _screenHeight;
   //private SurfaceHolder _holder;
-  private int _scorebarHeight;
+  //private int _scorebarHeight;
   private GameAction _gameThreadAction;
   private boolean _isPaused;
   private boolean _isRunning;
+  private Thread _gameThread;
 
   /**
    * override for visual constructor
@@ -121,17 +113,8 @@ public final class GameView extends SurfaceView {
   @Override
   protected void onSizeChanged(int w, int h, int oldw, int oldh) {
     super.onSizeChanged(w, h, oldw, oldh);
-    _scorebarHeight = (int) (Ui.getLineHeight() * 1.2);
-
-    _screenWidth = w;
-    _screenHeight = h - _scorebarHeight;
-    Debug.print("onSizeChanged " + w + " x " + h);
-
-    if (getGame() != null) {
-      getGame().layout(_screenWidth, _screenHeight);
-    }
+    layoutGameScreen(w, h);
   }
-
 
   public void setGame(Tetris game) {
     myGame = game;
@@ -140,7 +123,6 @@ public final class GameView extends SurfaceView {
   private Tetris getGame() {
     return myGame;
   }
-
 
   private void runGame() {
     // runs
@@ -155,7 +137,7 @@ public final class GameView extends SurfaceView {
       try {
         while(_isRunning) {
 
-          Debug.print("Sleep " + towait);
+          //Debug.print("Sleep " + towait);
           long time0 = System.currentTimeMillis();
           myGameChangeLock.wait(towait);
           long sleptTime = System.currentTimeMillis() - time0;
@@ -163,40 +145,40 @@ public final class GameView extends SurfaceView {
           if (_isRunning) {
             // otherwise just exit from while
 
-            Canvas c = getHolder().lockCanvas();
-
-            synchronized (getHolder()) {
               if (_isPaused) {
                 // show paused screen and wait for next kick
                 Debug.print("PAUSE: show paused screen and wait for next kick");
                 towait = 0;
-                //c.drawColor(ColorCodes.blue);
-                c.drawRGB(0, 0, 255);
+                paintScreen(ScreenPaintType.PAUSED);
 
               } else if (getGame().getState() == Tetris.LOST) {
                 // show scores
                 Debug.print("lost, wait for next kick to restart");
                 towait = 0;
-                c.drawColor(ColorCodes.red);
-                c.drawRGB(255, 0, 0);
+                paintScreen(ScreenPaintType.FAILED);
+
               } else { // ACTIVE: run action, see consequences
                 // normal timing operation, check action and depending on it repaint screen
-                Debug.print("   woke up [slept=" + sleptTime + "], action = " + _gameThreadAction);
+                //Debug.print("   woke up [slept=" + sleptTime + "], action = " + _gameThreadAction);
                 GameAction curAction = _gameThreadAction;
                 _gameThreadAction = null;
                 // whether all screen data changed or only field with falling shape
-                boolean repaintAll = false;
-                boolean doRepaint = true;
+                //boolean repaintAll = false;
+                //boolean doRepaint = true;
+                ScreenPaintType repaintType = null;
 
                 if (curAction == null) {
-                  repaintAll = getGame().nextState(false);
+                  repaintType = getGame().nextState(false) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
                   towait = INTERVAL; // getGame().getLevelDelayMS();
 
                 } else {
                   // run action
+                  final boolean doRepaint;
+
                   switch (curAction) {
                     case DROP:
-                      repaintAll = getGame().nextState(true);
+                      doRepaint = true;
+                      repaintType = getGame().nextState(true) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
                       break;
                     case LEFT:
                       doRepaint = getGame().moveLeft();
@@ -215,6 +197,10 @@ public final class GameView extends SurfaceView {
                       break;
                   }
 
+                  if(doRepaint && repaintType == null) {
+                    repaintType = ScreenPaintType.FIELD_ONLY;
+                  }
+
                   towait = INTERVAL - sleptTime;
                   if (towait <= 0) {
                     // slept or worked too long, next cycle very soon
@@ -222,26 +208,17 @@ public final class GameView extends SurfaceView {
                   }
                   //Debug.print("... User action, sleep remaining ");
                 }
-                if (doRepaint) {
-                  //c.drawColor(ColorCodes.cyan);
-                  paintScreen(c, repaintAll);
-                }
 
+                paintScreen(repaintType);
               }
-            }
-            getHolder().unlockCanvasAndPost(c);
           }
         }
       } catch (InterruptedException e) {
         // TODO process exception
         Debug.print("Thread interrupted: "+e);
       }
-
-      Debug.print("Exit game thread");
     }
   }
-
-  private Thread _gameThread;
 
   private void gameStart() {
     Debug.print("game start");
@@ -276,6 +253,7 @@ public final class GameView extends SurfaceView {
             });
 
     _isPaused = true;
+    sendAction(null);
     dlgAlert.create().show();
   }
 
@@ -297,11 +275,12 @@ public final class GameView extends SurfaceView {
 
   @Override
   public boolean onTouchEvent(MotionEvent event) {
+    int scrWidth = getWidth(), scrHeight = getHeight();
 
     if (event.getAction() == MotionEvent.ACTION_DOWN) {
       // notify with some param
       float x = event.getX(), y = event.getY();
-      int clickedArea = (int)x * 3 / _screenWidth + 3 * ((int)y * 3 / _screenHeight);
+      int clickedArea = (int)x * 3 / scrWidth + 3 * ((int)y * 3 / scrHeight);
 
       if (clickedArea == 6) {
         sendAction(GameAction.LEFT);
@@ -320,15 +299,10 @@ public final class GameView extends SurfaceView {
     return super.onTouchEvent(event);
   }
 
-  /**
-   * old game cycle
-   */
-
-
   /**************************************************
    **************************************************/
   public void stopGame() {
-    myTickerThread = null;
+    //myTickerThread = null;
     //myStop = true;
     if (myGame != null) {
       Debug.print("Stop game");
@@ -336,189 +310,92 @@ public final class GameView extends SurfaceView {
     }
   }
 
-  /**************************************************
-   **************************************************/
-  public void tick() {
-    synchronized (myGameChangeLock) {
-      if (isShown()) {
-        nextGameCycle(false);
+
+  /**
+   * type of repaint
+   */
+  enum ScreenPaintType {
+    PAUSED, FAILED, FULLSCREEN, FIELD_ONLY,
+  }
+
+  /**
+   * paints app screen according to expected info to be displayed
+   * @param paintType type of info to be displayed
+   */
+  private void paintScreen(ScreenPaintType paintType) {
+    if (paintType != null) {
+      synchronized (getHolder()) {
+        Canvas c = null;
+
+        try {
+//          c = paintType == ScreenPaintType.FIELD_ONLY ?
+//                  getHolder().lockCanvas(getGame().getGameScreenLayout().getFieldRect()) :
+//                  getHolder().lockCanvas();
+          c = getHolder().lockCanvas();
+
+          if (paintType == ScreenPaintType.PAUSED) {
+            c.drawColor(ColorCodes.blue);
+
+          } else if (paintType == ScreenPaintType.FAILED) {
+            c.drawColor(ColorCodes.red);
+
+          } else if (paintType == ScreenPaintType.FULLSCREEN || paintType == ScreenPaintType.FIELD_ONLY) {
+            Debug.print("PGS: " + paintType);
+            paintGameStateScreen(c, paintType == ScreenPaintType.FULLSCREEN);
+          }
+        } finally {
+          if (c != null) {
+            getHolder().unlockCanvasAndPost(c);
+          }
+        }
       }
+    }
+  }
+
+  private Rect _gameArea = new Rect();
+  private Rect _buttonArea = new Rect();
+  private Rect _scoreBarArea = new Rect();
+  /**
+   * computes all areas to be displayed on screen
+   * @param w
+   * @param h
+   */
+  private void layoutGameScreen(int w, int h) {
+    final int scoreHeight = (int) Ui.getLineHeight(), buttonHeight = h / 10;
+
+    _scoreBarArea.set(0, 0, w, scoreHeight);
+    _gameArea.set(0,_scoreBarArea.bottom, w, h - buttonHeight - scoreHeight);
+    _buttonArea.set(0, _gameArea.bottom, w, h - scoreHeight);
+
+    if (getGame() != null) {
+      getGame().layout(_gameArea.width(), _gameArea.height());
     }
   }
 
   /**
-   * called from thread, or from pointer events
-   * @param drop
+   * paints field or whole game screen
+   * @param c
+   * @param repaintAll
    */
-  private void nextGameCycle(boolean drop) {
-    if (myGame.getState() == Tetris.ACTIVE) {
+  private void paintGameStateScreen(Canvas c, boolean repaintAll) {
+    // TODO redraw only field when needed
+    repaintAll = true;
 
-      if (myGame.nextState(drop)) {
-        //repaintAll();
-      } else {
-        //repaintField();
-      }
-
-      if (myGame.getState() == Tetris.LOST) {
-        stopGame();
-      }
-    } else {
-      Debug.print("ERROR : FAILED GAME LIVES ON");
-    }
-  }
-
-  /**************************************************
-   **************************************************/
-  private void processMenuItem(String item) {
-    /*
-    TODO totally remove item processing
-    if (item != null) { // notify tetris midlet of selection
-      //Debug.print("Item '"+ item +"'");
-
-      if (Ui.getMenuId() == Ui.MENU_SELECT_GAME) {
-        if (item != Ui.ITEM_BACK) {
-          stopGame();
-
-          // TODO create game myGame = _gameList.createGame(Ui.getCurrentItemIndex());
-          myGame.layout(_screenWidth, _screenHeight - _scorebarHeight);
-
-          startGame();
-          repaintAll();
-          return;
-        }
-      }
-
-      //TetrisMidlet.instance.menuItemSelected(item, Ui.getCurrentItemIndex());
-      if (item == Ui.ITEM_SHOWSCORES) {
-        myDisplayMode = DM_HISCORES;
-      } else if (item == Ui.ITEM_NEWGAME) {
-        //showNewGameMenu();
-      } else if (item == Ui.ITEM_BACK) {
-        myDisplayMode = DM_GAME;
-      }
-
-    }
-    repaintAll();
-    */
-  }
-/*
-  public void run() {
-    Tetris curGame = getGame();
-
-    // while(!myStop && curGame == getGame()) {
-    while (myTickerThread != null && curGame == getGame() && curGame.getState() == Tetris.ACTIVE) {
-      try {
-        if (myDisplayMode == DM_GAME) {
-          tick();
-        }
-        int sleepTime = getGame().getLevelDelayMS();
-        Thread.sleep(sleepTime);
-      } catch (InterruptedException interruptedexception) {
-      }
-    }
-
-    if (curGame != getGame()) {
-      Debug.print("Game " + curGame + " finished, switch to " + getGame());
-    }
-  }
-
-private void startGameOld() {
-    myDisplayMode = DM_GAME;
-
-    getGame().initGame();
-    //myIsPaused = false;
-//        myStop = false;
-//        myFigureDropSteps = 0;
-
-    myTickerThread = new Thread(this);
-
-    myTickerThread.start();
-  }
-
-  private static final int TETRIS_NOP = 0;
-  private static final int TETRIS_DROP = 1;
-  private static final int TETRIS_ROTATE_CW = 2;
-  private static final int TETRIS_ROTATE_CCW = 3;
-  private static final int TETRIS_LEFT = 4;
-  private static final int TETRIS_RIGHT = 5;
-  private static final int TETRIS_MENU = 6;
-
-  public void pointerPressed(int x, int y) {
-    if (myDisplayMode == DM_MENU) {
-      processMenuItem(Ui.getItemAtPoint(x, y));
-    } else if (myDisplayMode == DM_GAME) {
-      //x = x / 3;
-      int clickedArea = x * 3 / _screenWidth + 3 * (y * 3 / _screenHeight);
-
-      if (clickedArea == 6) {
-        gameAction(TETRIS_LEFT);
-      } else if (clickedArea == 7) {
-        gameAction(TETRIS_DROP);
-      } else if (clickedArea == 8) {
-        gameAction(TETRIS_RIGHT);
-      } else if (clickedArea == 3) {
-        gameAction(TETRIS_ROTATE_CCW);
-      } else if (clickedArea == 4) {
-        gameAction(TETRIS_MENU);
-      } else if (clickedArea == 5) {
-        gameAction(TETRIS_ROTATE_CW);
-      }
-    }
-  }
-
-  private void gameAction(int tetrisAction) {
-
-    if (myGame.getState() == Tetris.ACTIVE) {
-
-      if (myGame.canSqueeze()) {
-        tick();
-        return;
-      }
-
-      boolean updatedField = false, updatedScreen = false;
-
-      synchronized (myGameChangeLock) {
-        if (tetrisAction == TETRIS_DROP) {
-          //            System.out.println("drop");
-          nextGameCycle(true);
-        } else if (tetrisAction == TETRIS_LEFT) {
-          updatedField = myGame.moveLeft();
-        } else if (tetrisAction == TETRIS_RIGHT) {
-          updatedField = myGame.moveRight();
-        } else if (tetrisAction == TETRIS_ROTATE_CCW) {
-          updatedField = myGame.rotateAntiClockwise();
-        } else if (tetrisAction == TETRIS_ROTATE_CW) {
-          updatedField = myGame.rotateClockwise();
-        }
-      }
-    }
-
-  }
-  */
-
-  private void paintScreen(Canvas c, boolean repaintAll) {
     final GameScreenLayout layout = getGame().getGameScreenLayout();
     final int COLOR_FIELD_BG = getGame().getFieldBackground();
 
     if(repaintAll) {
-      Debug.print("repaint all !!!");
       c.drawColor(Ui.UI_COLOR_PANEL);
 
-      //Ui.fillRect(c, layout.getNextShapeRect(), COLOR_FIELD_BG);
-      Ui.fillRect(c, layout.getNextShapeRect(), ColorCodes.yellow);
-      //Rect next = layout.getNextShapeRect();
-      //getGame().paintNext(c, next.left, next.top, next.width(), next.height());
-    }else {
-      Debug.print("paint field...");
+      Rect next = layout.getNextShapeRect();
+      Ui.fillRect(c, next, COLOR_FIELD_BG);
+      getGame().paintNext(c, next.left, next.top, next.width(), next.height());
     }
 
-    //Ui.fillRect(c, layout.getFieldRect(), ColorCodes.cyan);
-    //Ui.fillRect(c, layout.getNextShapeRect(), ColorCodes.yellow);
-    //Ui.fillRect(c, layout.getFieldRect(), COLOR_FIELD_BG);
-
-    c.translate(layout.getFieldRect().left, layout.getFieldRect().top);
-    getGame().paintField(c, layout.getFieldRect().height());
-    c.translate(-layout.getFieldRect().left, -layout.getFieldRect().top);
+    Rect fieldRect = layout.getFieldRect();
+    c.translate(fieldRect.left, fieldRect.top);
+    getGame().paintField(c, fieldRect.height());
+    c.translate(-fieldRect.left, -fieldRect.top);
   }
 
   /**************************************************
@@ -660,11 +537,13 @@ private void startGameOld() {
 //                    hiScores[0] = 0;
 //                    curScore = 15;
 
+    int scoreWidth = _scoreBarArea.width();
+    int scoreHeight = _scoreBarArea.height();
 
     int scoreX = MARGIN_LEFT + layout.getFieldRect().width() + SPACING_VERT;
-    int scoreWidth = _screenWidth - scoreX - MARGIN_RIGHT;
+    scoreWidth = scoreWidth - scoreX - MARGIN_RIGHT;
     int scoreY = layout.getNextShapeRect().top + layout.getNextShapeRect().height() + MARGIN_LEFT;
-    int scoreHeight = layout.getFieldRect().top + layout.getFieldRect().height() - scoreY;
+    //int scoreHeight = layout.getFieldRect().top + layout.getFieldRect().height() - scoreY;
     //layout.getGlassClipY() + layout.getGlassClipHeight() - scoreY;
 
 //        g.setColor(ColorCodes.green);
@@ -678,9 +557,9 @@ private void startGameOld() {
     //int fontX = scoreX, fontY = scoreY;
     float dY;
     int playerIconHeight = PlayerIcon == null ? 50 : PlayerIcon.getHeight();
-
+    boolean myDisplayIconsVertically = true;// historical, to be removed completely
     if (myDisplayIconsVertically) {
-      scoreX += (_screenWidth - MARGIN_RIGHT - scoreX) / 2;
+      scoreX += (scoreWidth - MARGIN_RIGHT - scoreX) / 2;
       dY = fontHeight + playerIconHeight;
     } else {
       dY = (fontHeight > playerIconHeight) ? fontHeight : playerIconHeight;
@@ -709,10 +588,10 @@ private void startGameOld() {
 
 
       // assume horizontal score bar
-      sbHeight = _scorebarHeight - 2;
-      sbWidth = _screenWidth - MARGIN_LEFT - MARGIN_RIGHT;
+      sbHeight = scoreHeight - 2;
+      sbWidth = scoreWidth - MARGIN_LEFT - MARGIN_RIGHT;
       sbX = MARGIN_LEFT;
-      sbY = _screenHeight - _scorebarHeight;
+      sbY = _scoreBarArea.top;
 
       Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, ColorCodes.black);
       Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, ColorCodes.black);
@@ -732,6 +611,7 @@ private void startGameOld() {
   /**************************************************
    **************************************************/
   private void showScoreTable(Canvas c) {
+    int scrWidth = getWidth(), scrHeight = getHeight();
     Paint p = new Paint();
     float fontHeight = Ui.getLineHeight();
 
@@ -743,18 +623,18 @@ private void startGameOld() {
     // display game name
     c.drawText(myGame.GameName, 0, 0, p);
     p.setTextAlign(Paint.Align.RIGHT);
-    c.drawText(getTimeStr(0), _screenWidth, 0, p);
+    c.drawText(getTimeStr(0), scrWidth, 0, p);
     p.setTextAlign(Paint.Align.LEFT);
-    c.drawText(Ui.MSG_PRESS_ANYKEY, 0, _screenHeight - 1 - fontHeight, p);
+    c.drawText(Ui.MSG_PRESS_ANYKEY, 0, scrHeight - 1 - fontHeight, p);
 
-    c.drawRect(0, fontHeight, _screenWidth, _screenHeight - fontHeight * 2, p);
+    c.drawRect(0, fontHeight, scrWidth, scrHeight - fontHeight * 2, p);
 
     int nScores = myGame.getScoreTableSize();
 
     if (nScores > 0) {
       int pos = 0, curScorePosition = myGame.findScorePosition(curScore);
       float yPos = fontHeight;
-      float entryHeight = (_screenHeight - fontHeight * 2) / nScores;
+      float entryHeight = (scrHeight - fontHeight * 2) / nScores;
 
       if (entryHeight > fontHeight * 2) {
         entryHeight = fontHeight * 2;
@@ -781,7 +661,7 @@ private void startGameOld() {
         //g.setFont(curFont);
         p.setTextAlign(Paint.Align.RIGHT);
         c.drawText(getTimeStr(recordDate),
-          _screenWidth - 3, yPos + 2 + (entryHeight - fontHeight) / 2 - fontHeight, p);
+          scrWidth - 3, yPos + 2 + (entryHeight - fontHeight) / 2 - fontHeight, p);
         p.setTextAlign(Paint.Align.LEFT);
 
         yPos += entryHeight;

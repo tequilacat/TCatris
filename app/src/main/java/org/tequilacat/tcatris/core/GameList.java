@@ -10,8 +10,8 @@ import java.util.List;
  */
 public class GameList {
   private static final String GameDefinitions =
-    "game=Columns:Xixit:5:12:1:3:fig=vert\n" +
     "game=ClassicGame:Tetris:10:15:2:4\n" +
+    "game=Columns:Xixit:5:12:1:3:fig=vert\n" +
     "game=Columns:Columns:8:15:3:1:fig=horz\n" +
     "game=Columns:Trix:8:15:1:3:type=rot\n";
   private static GameList _instance;

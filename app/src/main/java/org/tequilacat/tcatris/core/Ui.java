@@ -116,7 +116,7 @@ public class Ui {
     return getItemString((int)(y / MenuItemHeight));
   }
 
-  public static final int UI_COLOR_PANEL = ColorCodes.gray;
+  public static final int UI_COLOR_PANEL = ColorCodes.darkYellow;
   public static final int UI_COLOR_DARKSHADOW = ColorCodes.darkGray;
   public static final int UI_COLOR_LIGHTSHADOW = ColorCodes.white;
   // public static final int UI_COLOR_SELITEMBACKGROUND = ColorCodes.white;
@@ -203,12 +203,12 @@ public class Ui {
 
   public static void drawRect(Canvas c, int x, int y, int w, int h, int fillColor) {
     _framePainter.setColor(fillColor);
-    c.drawRect(x, y, w, h, _framePainter);
+    c.drawRect(x, y, x + w, y + h, _framePainter);
   }
 
   public static void fillRect(Canvas c, int x, int y, int w, int h, int fillColor) {
     _fillPainter.setColor(fillColor);
-    c.drawRect(x, y, w, h, _fillPainter);
+    c.drawRect(x, y, x + w, y + h, _fillPainter);
   }
 
   public static void fillRect(Canvas c, Rect fieldRect, int fillColor) {
