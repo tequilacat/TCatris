@@ -1,6 +1,8 @@
 package org.tequilacat.tcatris.core;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -11,8 +13,9 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import org.tequilacat.tcatris.R;
+
 import java.util.Calendar;
-import java.util.TimeZone;
 import java.util.Date;
 
 // Referenced classes of package tetris:
@@ -47,6 +50,7 @@ public final class GameView extends SurfaceView implements Runnable {
   private SurfaceHolder _holder;
   private int _scorebarHeight;
   private GameAction _gameThreadAction;
+  private boolean _isPaused;
 
   /**
    * override for visual constructor
@@ -55,7 +59,7 @@ public final class GameView extends SurfaceView implements Runnable {
    */
   public GameView(Context context, AttributeSet attrs) {
     super(context, attrs);
-    init(context);
+    initView(context);
   }
 
   /**
@@ -66,7 +70,7 @@ public final class GameView extends SurfaceView implements Runnable {
    */
   public GameView(Context context, AttributeSet attrs, int defStyle) {
     super(context, attrs, defStyle);
-    init(context);
+    initView(context);
   }
 
   /**
@@ -75,14 +79,14 @@ public final class GameView extends SurfaceView implements Runnable {
    */
   public GameView(Context context) {
     super(context);
-    init(context);
+    initView(context);
   }
 
   /**
    * Real constructor code
    * @param context
    */
-  private void init(Context context) {
+  private void initView(Context context) {
     _holder = getHolder();
     _holder.addCallback(new SurfaceHolder.Callback() {
       @Override
@@ -143,6 +147,7 @@ public final class GameView extends SurfaceView implements Runnable {
     long towait = INTERVAL;
     _gameThreadAction = null;
     boolean isRunning = true;
+    _isPaused = false;
 
     synchronized (myGameChangeLock) {
       try {
@@ -152,23 +157,36 @@ public final class GameView extends SurfaceView implements Runnable {
           myGameChangeLock.wait(towait);
           long sleptTime = System.currentTimeMillis() - time0;
 
-          Debug.print("woke up [slept=" + sleptTime + "], action = " + _gameThreadAction);
-          GameAction curAction = _gameThreadAction;
-          _gameThreadAction = null;
 
-          if (curAction == null) {
-            // next cycle, assume
-            Debug.print("... A cycle, sleep full to next cycle");
-            towait = INTERVAL;
-          } else {
-            // wait what's left,
-            towait = INTERVAL - sleptTime;
-            if(towait <= 0) {
-              // slept or worked too long, next cycle very soon
-              towait = 1;
+          if(_isPaused) {
+            // show paused screen and wait for next kick
+            Debug.print("show paused screen and wait for next kick");
+            towait = 0;
+          } else if(getGame().getState() == Tetris.LOST){
+            // show scores
+            Debug.print("lost, wait for next kick to restart");
+            towait = 0;
+          }else {
+            // normal timing operation, check action and depending on it repaint screen
+            Debug.print("   woke up [slept=" + sleptTime + "], action = " + _gameThreadAction);
+            GameAction curAction = _gameThreadAction;
+            _gameThreadAction = null;
+
+            if (curAction == null) {
+              // next cycle, assume
+              // Debug.print("... A cycle, sleep full to next cycle");
+              towait = INTERVAL;
+            } else {
+              // wait what's left,
+              towait = INTERVAL - sleptTime;
+              if (towait <= 0) {
+                // slept or worked too long, next cycle very soon
+                towait = 1;
+              }
+              //Debug.print("... User action, sleep remaining ");
             }
-            Debug.print("... User action, sleep remaining ");
           }
+
         }
       } catch (InterruptedException e) {
         // TODO process exception
@@ -192,6 +210,25 @@ public final class GameView extends SurfaceView implements Runnable {
     } catch (InterruptedException e) {
       // TODO catch Interruption
     }
+  }
+
+  private void showPauseDialog() {
+    AlertDialog.Builder dlgAlert  = new AlertDialog.Builder(getContext());
+    dlgAlert.setMessage("Game is paused");
+    dlgAlert.setTitle(R.string.app_name);
+    dlgAlert.setCancelable(true);
+    dlgAlert.setPositiveButton("Ok",
+            new DialogInterface.OnClickListener() {
+              public void onClick(DialogInterface dialog, int which) {
+                //dismiss the dialog
+                Debug.print("unpause");
+                _isPaused = false;
+                sendAction(null); // just kick the waiter
+              }
+            });
+
+    _isPaused = true;
+    dlgAlert.create().show();
   }
 
   enum GameAction {
@@ -227,8 +264,7 @@ public final class GameView extends SurfaceView implements Runnable {
       } else if (clickedArea == 3) {
         sendAction(GameAction.ROTATE_CCW);
       } else if (clickedArea == 4) {
-        // TODO pause
-        //gameAction(TETRIS_MENU);
+        showPauseDialog();
       } else if (clickedArea == 5) {
         sendAction(GameAction.ROTATE_CW);
       }
