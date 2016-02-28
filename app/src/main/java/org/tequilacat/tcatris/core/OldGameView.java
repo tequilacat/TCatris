@@ -14,7 +14,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 // Referenced classes of package tetris:
-//            ScoreBoard, Color, Tetris
+//            ScoreBoard, ColorCodes, Tetris
 
 public final class OldGameView extends SurfaceView implements Runnable {
 
@@ -395,7 +395,7 @@ public final class OldGameView extends SurfaceView implements Runnable {
 
 
     // debug
-//        g.setColor(Color.black);
+//        g.setColor(ColorCodes.black);
 //        g.drawString("Drops: "+myFigureDropSteps, 0, 0, Ui.G_LEFT_TOP);
 
     if (getGame().getLastScored() > 0) {
@@ -464,10 +464,10 @@ public final class OldGameView extends SurfaceView implements Runnable {
         //int scrWidth = getWidth(), scrHeight = getHeight();
         float x = (getWidth() - width) / 2, y = (getHeight() - height) / 2;
 
-        g.setColor(Color.white);
+        g.setColor(ColorCodes.white);
         g.fillRect(x, y, width, height);
 
-        g.setColor(Color.black);
+        g.setColor(ColorCodes.black);
         g.drawRect(x, y, width, height);
 
         fromPos = 0;
@@ -531,14 +531,14 @@ public final class OldGameView extends SurfaceView implements Runnable {
     int scoreHeight = layout.getFieldRect().top + layout.getFieldRect().height() - scoreY;
     //layout.getGlassClipY() + layout.getGlassClipHeight() - scoreY;
 
-//        g.setColor(Color.green);
+//        g.setColor(ColorCodes.green);
 //        g.fillRect(scoreX, scoreY, scoreWidth, scoreHeight);
 //        Ui.draw3dRect(g, scoreX, scoreY, scoreWidth, scoreHeight);
 
     //Debug.print("display score : is icon Vert? "+myDisplayIconsVertically);
 
     /// SCORES AND LEVEL
-    //c.setColor(Color.black);
+    //c.setColor(ColorCodes.black);
     //int fontX = scoreX, fontY = scoreY;
     float dY;
     if (myDisplayIconsVertically) {
@@ -566,7 +566,7 @@ public final class OldGameView extends SurfaceView implements Runnable {
 
     /////////// SCORE BAR (AS PLAYER COMPETES HISCORE)
     if (hiScores[0] > 0) {
-      int barColor = (curScore >= hiScores[0]) ? Color.green : Color.yellow;
+      int barColor = (curScore >= hiScores[0]) ? ColorCodes.green : ColorCodes.yellow;
       int sbX, sbY, sbWidth, sbHeight;
 
 
@@ -577,8 +577,8 @@ public final class OldGameView extends SurfaceView implements Runnable {
       sbX = MARGIN_LEFT;
       sbY = _screenHeight - scorebarHeight;
 
-      Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, Color.black);
-      Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, Color.black);
+      Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, ColorCodes.black);
+      Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, ColorCodes.black);
 
       if (curScore >= hiScores[0]) { // win
         int newPos = sbWidth * hiScores[0] / curScore;
@@ -602,7 +602,7 @@ public final class OldGameView extends SurfaceView implements Runnable {
 
     c.drawColor(getGame().getFieldBackground());
 
-    p.setColor(Color.black);
+    p.setColor(ColorCodes.black);
     // display game name
     c.drawText(myGame.GameName, 0, 0, p);
     p.setTextAlign(Paint.Align.RIGHT);
@@ -630,9 +630,9 @@ public final class OldGameView extends SurfaceView implements Runnable {
       while ((recordDate = myGame.getScoreTableEntry(pos)) >= 0) {
 
         if (pos == curScorePosition) {
-          p.setColor(Color.yellow);
+          p.setColor(ColorCodes.yellow);
         } else {
-          p.setColor(Color.white);
+          p.setColor(ColorCodes.white);
         }
 
         //g.drawRect(1, yPos+1, scrWidth-3, entryHeight - 2);
@@ -651,7 +651,7 @@ public final class OldGameView extends SurfaceView implements Runnable {
         pos++;
       }
 
-      p.setColor(Color.black);
+      p.setColor(ColorCodes.black);
 
     }
   }

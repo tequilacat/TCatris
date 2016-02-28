@@ -19,7 +19,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 // Referenced classes of package tetris:
-//            ScoreBoard, Color, Tetris
+//            ScoreBoard, ColorCodes, Tetris
 
 public final class GameView extends SurfaceView {
 
@@ -47,7 +47,7 @@ public final class GameView extends SurfaceView {
   private Object myGameChangeLock = new Object();
   private int _screenWidth;
   private int _screenHeight;
-  private SurfaceHolder _holder;
+  //private SurfaceHolder _holder;
   private int _scorebarHeight;
   private GameAction _gameThreadAction;
   private boolean _isPaused;
@@ -88,7 +88,7 @@ public final class GameView extends SurfaceView {
    * @param context
    */
   private void initView(Context context) {
-    _holder = getHolder();
+    SurfaceHolder _holder = getHolder();
     _holder.addCallback(new SurfaceHolder.Callback() {
       @Override
       public void surfaceCreated(SurfaceHolder holder) {
@@ -154,6 +154,7 @@ public final class GameView extends SurfaceView {
     synchronized (myGameChangeLock) {
       try {
         while(_isRunning) {
+
           Debug.print("Sleep " + towait);
           long time0 = System.currentTimeMillis();
           myGameChangeLock.wait(towait);
@@ -162,21 +163,22 @@ public final class GameView extends SurfaceView {
           if (_isRunning) {
             // otherwise just exit from while
 
-            Canvas c = _holder.lockCanvas();
+            Canvas c = getHolder().lockCanvas();
 
-            synchronized (_holder) {
+            synchronized (getHolder()) {
               if (_isPaused) {
                 // show paused screen and wait for next kick
                 Debug.print("PAUSE: show paused screen and wait for next kick");
                 towait = 0;
-                c.drawColor(Color.blue);
+                //c.drawColor(ColorCodes.blue);
+                c.drawRGB(0, 0, 255);
 
               } else if (getGame().getState() == Tetris.LOST) {
                 // show scores
                 Debug.print("lost, wait for next kick to restart");
                 towait = 0;
-                c.drawColor(Color.red);
-
+                c.drawColor(ColorCodes.red);
+                c.drawRGB(255, 0, 0);
               } else { // ACTIVE: run action, see consequences
                 // normal timing operation, check action and depending on it repaint screen
                 Debug.print("   woke up [slept=" + sleptTime + "], action = " + _gameThreadAction);
@@ -221,17 +223,13 @@ public final class GameView extends SurfaceView {
                   //Debug.print("... User action, sleep remaining ");
                 }
                 if (doRepaint) {
-                  //c.drawColor(Color.cyan);
-                  Paint p = new Paint();
-                  p.setStyle(Paint.Style.FILL);
-                  p.setColor(Color.black);
-                  p.setAlpha(125); c.drawRect(0, 0, _screenWidth,_screenHeight, p);
-                  //paintScreen(c, repaintAll);
+                  //c.drawColor(ColorCodes.cyan);
+                  paintScreen(c, repaintAll);
                 }
 
               }
             }
-            _holder.unlockCanvasAndPost(c);
+            getHolder().unlockCanvasAndPost(c);
           }
         }
       } catch (InterruptedException e) {
@@ -527,7 +525,7 @@ private void startGameOld() {
 
 
     // debug
-//        g.setColor(Color.black);
+//        g.setColor(ColorCodes.black);
 //        g.drawString("Drops: "+myFigureDropSteps, 0, 0, Ui.G_LEFT_TOP);
 
     if (getGame().getLastScored() > 0) {
@@ -576,10 +574,10 @@ private void startGameOld() {
         //int scrWidth = getWidth(), scrHeight = getHeight();
         float x = (getWidth() - width) / 2, y = (getHeight() - height) / 2;
 
-        g.setColor(Color.white);
+        g.setColor(ColorCodes.white);
         g.fillRect(x, y, width, height);
 
-        g.setColor(Color.black);
+        g.setColor(ColorCodes.black);
         g.drawRect(x, y, width, height);
 
         fromPos = 0;
@@ -643,14 +641,14 @@ private void startGameOld() {
     int scoreHeight = layout.getFieldRect().top + layout.getFieldRect().height() - scoreY;
     //layout.getGlassClipY() + layout.getGlassClipHeight() - scoreY;
 
-//        g.setColor(Color.green);
+//        g.setColor(ColorCodes.green);
 //        g.fillRect(scoreX, scoreY, scoreWidth, scoreHeight);
 //        Ui.draw3dRect(g, scoreX, scoreY, scoreWidth, scoreHeight);
 
     //Debug.print("display score : is icon Vert? "+myDisplayIconsVertically);
 
     /// SCORES AND LEVEL
-    //c.setColor(Color.black);
+    //c.setColor(ColorCodes.black);
     //int fontX = scoreX, fontY = scoreY;
     float dY;
     int playerIconHeight = PlayerIcon == null ? 50 : PlayerIcon.getHeight();
@@ -680,7 +678,7 @@ private void startGameOld() {
 
     /////////// SCORE BAR (AS PLAYER COMPETES HISCORE)
     if (hiScores[0] > 0) {
-      int barColor = (curScore >= hiScores[0]) ? Color.green : Color.yellow;
+      int barColor = (curScore >= hiScores[0]) ? ColorCodes.green : ColorCodes.yellow;
       int sbX, sbY, sbWidth, sbHeight;
 
 
@@ -690,8 +688,8 @@ private void startGameOld() {
       sbX = MARGIN_LEFT;
       sbY = _screenHeight - _scorebarHeight;
 
-      Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, Color.black);
-      Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, Color.black);
+      Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, ColorCodes.black);
+      Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, ColorCodes.black);
 
       if (curScore >= hiScores[0]) { // win
         int newPos = sbWidth * hiScores[0] / curScore;
@@ -715,7 +713,7 @@ private void startGameOld() {
 
     c.drawColor(getGame().getFieldBackground());
 
-    p.setColor(Color.black);
+    p.setColor(ColorCodes.black);
     // display game name
     c.drawText(myGame.GameName, 0, 0, p);
     p.setTextAlign(Paint.Align.RIGHT);
@@ -743,9 +741,9 @@ private void startGameOld() {
       while ((recordDate = myGame.getScoreTableEntry(pos)) >= 0) {
 
         if (pos == curScorePosition) {
-          p.setColor(Color.yellow);
+          p.setColor(ColorCodes.yellow);
         } else {
-          p.setColor(Color.white);
+          p.setColor(ColorCodes.white);
         }
 
         //g.drawRect(1, yPos+1, scrWidth-3, entryHeight - 2);
@@ -764,7 +762,7 @@ private void startGameOld() {
         pos++;
       }
 
-      p.setColor(Color.black);
+      p.setColor(ColorCodes.black);
 
     }
   }

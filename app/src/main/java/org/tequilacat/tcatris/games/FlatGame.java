@@ -7,7 +7,7 @@ package org.tequilacat.tcatris.games;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
-import org.tequilacat.tcatris.core.Color;
+import org.tequilacat.tcatris.core.ColorCodes;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.Tetris;
 import org.tequilacat.tcatris.core.GameView;
@@ -322,7 +322,7 @@ public abstract class FlatGame extends Tetris {
     } else { // settled
       g.drawRect(x, y, myCellSize - 1, myCellSize - 1, _cellPainter);
 
-      _cellPainter.setColor(Color.black);
+      _cellPainter.setColor(ColorCodes.black);
       x += 3;
       y += 3;
       g.drawLine(x, y, x + myCellSize - 8, y, _cellPainter);

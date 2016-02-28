@@ -105,9 +105,9 @@ public abstract class Tetris {
   public abstract void paintField(Canvas g, int fieldPixHeight);
 
   private static final int[] sCellColors = new int[]{
-    Color.lightGray,
-    Color.red, Color.blue, Color.purple, Color.orange, Color.green,
-    Color.darkRed, Color.darkGreen, Color.blue, Color.cyan, Color.magenta, Color.orange, Color.lightBrown
+    ColorCodes.lightGray,
+    ColorCodes.red, ColorCodes.blue, ColorCodes.purple, ColorCodes.orange, ColorCodes.green,
+    ColorCodes.darkRed, ColorCodes.darkGreen, ColorCodes.blue, ColorCodes.cyan, ColorCodes.magenta, ColorCodes.orange, ColorCodes.lightBrown
   };
 
   /**************************************************

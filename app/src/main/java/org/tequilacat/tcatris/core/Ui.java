@@ -116,15 +116,15 @@ public class Ui {
     return getItemString((int)(y / MenuItemHeight));
   }
 
-  public static final int UI_COLOR_PANEL = Color.gray;
-  public static final int UI_COLOR_DARKSHADOW = Color.darkGray;
-  public static final int UI_COLOR_LIGHTSHADOW = Color.white;
-  // public static final int UI_COLOR_SELITEMBACKGROUND = Color.white;
+  public static final int UI_COLOR_PANEL = ColorCodes.gray;
+  public static final int UI_COLOR_DARKSHADOW = ColorCodes.darkGray;
+  public static final int UI_COLOR_LIGHTSHADOW = ColorCodes.white;
+  // public static final int UI_COLOR_SELITEMBACKGROUND = ColorCodes.white;
 
-  public static final int UI_COLOR_SELITEM_BACKGROUND = Color.red;
-  public static final int UI_COLOR_SELITEM_TEXT = Color.green;
+  public static final int UI_COLOR_SELITEM_BACKGROUND = ColorCodes.red;
+  public static final int UI_COLOR_SELITEM_TEXT = ColorCodes.green;
 
-  public static final int UI_COLOR_ITEM_TEXT = Color.black;
+  public static final int UI_COLOR_ITEM_TEXT = ColorCodes.black;
 
   /**************************************************
    **************************************************/
@@ -144,7 +144,7 @@ public class Ui {
   /**************************************************
    **************************************************/
   public static void displayMenu(Canvas c, int canvasWidth, int canvasHeight, String gameLabel) {
-    c.drawColor(Color.gray);
+    c.drawColor(ColorCodes.gray);
 
     //Rect textRect = new Rect();
     //_uiPainter.getTextBounds("0", 0, 1, textRect);
