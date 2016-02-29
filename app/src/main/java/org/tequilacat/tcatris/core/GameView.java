@@ -311,12 +311,39 @@ public final class GameView extends SurfaceView {
   }
 
 
+
+  private Rect _gameArea = new Rect();
+  private Rect _buttonArea = new Rect();
+  private Rect _scoreBarArea = new Rect();
+
+  /**
+   * computes all areas to be displayed on screen
+   * @param w
+   * @param h
+   */
+  private void layoutGameScreen(int w, int h) {
+    final int scoreHeight = (int) Ui.getLineHeight(), buttonHeight = h / 10;
+
+    _scoreBarArea.set(0, 0, w, scoreHeight);
+    _gameArea.set(0, _scoreBarArea.bottom, w, h - buttonHeight - scoreHeight);
+    _buttonArea.set(0, _gameArea.bottom, w, h - scoreHeight);
+
+    if (getGame() != null) {
+      getGame().layout(_gameArea.width(), _gameArea.height());
+    }
+  }
+
   /**
    * type of repaint
    */
-  enum ScreenPaintType {
+  private enum ScreenPaintType {
     PAUSED, FAILED, FULLSCREEN, FIELD_ONLY,
   }
+
+  /**
+   * field used in determining whether to repaint everything
+   */
+  private Rect _fieldUpdateRect = new Rect();
 
   /**
    * paints app screen according to expected info to be displayed
@@ -328,10 +355,21 @@ public final class GameView extends SurfaceView {
         Canvas c = null;
 
         try {
-//          c = paintType == ScreenPaintType.FIELD_ONLY ?
-//                  getHolder().lockCanvas(getGame().getGameScreenLayout().getFieldRect()) :
-//                  getHolder().lockCanvas();
-          c = getHolder().lockCanvas();
+          Rect fieldRect = getGame().getGameScreenLayout().getFieldRect();
+          Rect updateRect;
+
+          if (paintType != ScreenPaintType.FIELD_ONLY) {
+            updateRect = null;
+          } else {
+            updateRect = _fieldUpdateRect;
+            updateRect.set(fieldRect);
+          }
+
+          c = getHolder().lockCanvas(updateRect);
+
+          if (updateRect != null && !updateRect.equals(fieldRect)) {
+            updateRect = null;
+          }
 
           if (paintType == ScreenPaintType.PAUSED) {
             c.drawColor(ColorCodes.blue);
@@ -340,8 +378,8 @@ public final class GameView extends SurfaceView {
             c.drawColor(ColorCodes.red);
 
           } else if (paintType == ScreenPaintType.FULLSCREEN || paintType == ScreenPaintType.FIELD_ONLY) {
-            Debug.print("PGS: " + paintType);
-            paintGameStateScreen(c, paintType == ScreenPaintType.FULLSCREEN);
+            //Debug.print("PGS: " + paintType);
+            paintGameStateScreen(c, updateRect == null);
           }
         } finally {
           if (c != null) {
@@ -352,34 +390,13 @@ public final class GameView extends SurfaceView {
     }
   }
 
-  private Rect _gameArea = new Rect();
-  private Rect _buttonArea = new Rect();
-  private Rect _scoreBarArea = new Rect();
-  /**
-   * computes all areas to be displayed on screen
-   * @param w
-   * @param h
-   */
-  private void layoutGameScreen(int w, int h) {
-    final int scoreHeight = (int) Ui.getLineHeight(), buttonHeight = h / 10;
-
-    _scoreBarArea.set(0, 0, w, scoreHeight);
-    _gameArea.set(0,_scoreBarArea.bottom, w, h - buttonHeight - scoreHeight);
-    _buttonArea.set(0, _gameArea.bottom, w, h - scoreHeight);
-
-    if (getGame() != null) {
-      getGame().layout(_gameArea.width(), _gameArea.height());
-    }
-  }
-
   /**
    * paints field or whole game screen
    * @param c
    * @param repaintAll
    */
   private void paintGameStateScreen(Canvas c, boolean repaintAll) {
-    // TODO redraw only field when needed
-    repaintAll = true;
+    //repaintAll = true;
 
     final GameScreenLayout layout = getGame().getGameScreenLayout();
     final int COLOR_FIELD_BG = getGame().getFieldBackground();
@@ -390,6 +407,9 @@ public final class GameView extends SurfaceView {
       Rect next = layout.getNextShapeRect();
       Ui.fillRect(c, next, COLOR_FIELD_BG);
       getGame().paintNext(c, next.left, next.top, next.width(), next.height());
+      Debug.print("repaint ALL");
+    }else{
+      Debug.print("repaint field");
     }
 
     Rect fieldRect = layout.getFieldRect();
