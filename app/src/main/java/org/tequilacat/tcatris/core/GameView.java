@@ -17,9 +17,6 @@ import org.tequilacat.tcatris.R;
 import java.util.Calendar;
 import java.util.Date;
 
-// Referenced classes of package tetris:
-//            ScoreBoard, ColorCodes, Tetris
-
 public final class GameView extends SurfaceView {
 
   //public static Display display;
@@ -273,27 +270,29 @@ public final class GameView extends SurfaceView {
     }
   }
 
+  private static final GameAction[] BUTTON_ACTIONS = new GameAction[]{
+    GameAction.LEFT, GameAction.ROTATE_CCW, GameAction.DROP, GameAction.ROTATE_CW, GameAction.RIGHT
+  };
+
   @Override
   public boolean onTouchEvent(MotionEvent event) {
-    int scrWidth = getWidth(), scrHeight = getHeight();
+    //int scrWidth = getWidth(), scrHeight = getHeight();
 
     if (event.getAction() == MotionEvent.ACTION_DOWN) {
-      // notify with some param
-      float x = event.getX(), y = event.getY();
-      int clickedArea = (int)x * 3 / scrWidth + 3 * ((int)y * 3 / scrHeight);
+      GameAction clickedAction = null;
 
-      if (clickedArea == 6) {
-        sendAction(GameAction.LEFT);
-      } else if (clickedArea == 7) {
-        sendAction(GameAction.DROP);
-      } else if (clickedArea == 8) {
-        sendAction(GameAction.RIGHT);
-      } else if (clickedArea == 3) {
-        sendAction(GameAction.ROTATE_CCW);
-      } else if (clickedArea == 4) {
+      if (_buttonArea.contains((int) event.getX(), (int) event.getY())) {
+        // compute by
+        int buttonId = (int) (event.getX() - _buttonArea.left) / (_buttonArea.width() / BUTTON_COUNT);
+        if (buttonId >= 0 && buttonId < BUTTON_ACTIONS.length) {
+          clickedAction = BUTTON_ACTIONS[buttonId];
+        }
+      }
+
+      if(clickedAction != null){
+        sendAction(clickedAction);
+      }else{
         showPauseDialog();
-      } else if (clickedArea == 5) {
-        sendAction(GameAction.ROTATE_CW);
       }
     }
     return super.onTouchEvent(event);
@@ -311,6 +310,7 @@ public final class GameView extends SurfaceView {
   }
 
 
+  private static final int BUTTON_COUNT = 5;
 
   private Rect _gameArea = new Rect();
   private Rect _buttonArea = new Rect();
@@ -407,15 +407,31 @@ public final class GameView extends SurfaceView {
       Rect next = layout.getNextShapeRect();
       Ui.fillRect(c, next, COLOR_FIELD_BG);
       getGame().paintNext(c, next.left, next.top, next.width(), next.height());
-      Debug.print("repaint ALL");
-    }else{
-      Debug.print("repaint field");
+
+      // TODO really paint scores
+      Ui.fillRect(c, _scoreBarArea, ColorCodes.black);
+      //Ui.drawShadowText(c, "Score: ", _scoreBarArea.left, _scoreBarArea.top, ColorCodes.gray, ColorCodes.white);
+//      Paint tp=new Paint();
+//      tp.setColor(ColorCodes.yellow);
+//      c.drawText("123", 100, 100, tp);
+
+
+      // paint buttons
+      int bX = _buttonArea.left, bW = _buttonArea.width() / BUTTON_COUNT,
+        bY = _buttonArea.top, bH = _buttonArea.height();
+
+      for (int i = 0; i < 5; i++) {
+        Ui.draw3dRect(c, bX, bY, bW, bH);
+        bX += bW;
+      }
     }
 
     Rect fieldRect = layout.getFieldRect();
-    c.translate(fieldRect.left, fieldRect.top);
+    int dx = fieldRect.left + _gameArea.left, dy = fieldRect.top + _gameArea.top;
+    c.translate(dx, dy);
     getGame().paintField(c, fieldRect.height());
-    c.translate(-fieldRect.left, -fieldRect.top);
+    c.translate(-dx, -dy);
+
   }
 
   /**************************************************

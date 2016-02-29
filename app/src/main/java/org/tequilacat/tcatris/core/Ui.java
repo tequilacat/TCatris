@@ -18,14 +18,14 @@ public class Ui {
   private static int myCurItem;
   private static int myMenuId;
 
-  private static Paint _uiPainter;
+  private static final Paint _uiPainter;
 
-  private static Paint _framePainter;
+  private static final Paint _framePainter;
 
   private static final float _lineHeight;
 
   private static final Paint.FontMetrics _fm;
-  private static Paint _fillPainter;
+  private static final Paint _fillPainter;
 
   static {
     _framePainter = new Paint();
@@ -116,7 +116,7 @@ public class Ui {
     return getItemString((int)(y / MenuItemHeight));
   }
 
-  public static final int UI_COLOR_PANEL = ColorCodes.darkYellow;
+  public static final int UI_COLOR_PANEL = ColorCodes.gray;
   public static final int UI_COLOR_DARKSHADOW = ColorCodes.darkGray;
   public static final int UI_COLOR_LIGHTSHADOW = ColorCodes.white;
   // public static final int UI_COLOR_SELITEMBACKGROUND = ColorCodes.white;
@@ -220,6 +220,12 @@ public class Ui {
   }
 
   public static void draw3dRect(Canvas g, int x, int y, int w, int h) {
+    // fillRect(g, x, y, w, h, UI_COLOR_PANEL);
+    x += 2;
+    w -= 4;
+    y += 2;
+    h -= 4;
+
     _framePainter.setColor(Ui.UI_COLOR_DARKSHADOW);
     g.drawLine(x - 1, y - 1, x - 1, y + h, _framePainter);
     g.drawLine(x - 1, y - 1, x + w, y - 1, _framePainter);
