@@ -72,7 +72,7 @@ public class Ui {
     _textPainter.setTextSize(fontSize);
     _textPainter.setColor(textColor);
     Paint.FontMetrics fm = _textPainter.getFontMetrics();
-    g.drawText(text, x, y - fm.top, _textPainter);
+    g.drawText(text, x, y - fm.ascent, _textPainter);
   }
 
   /**************************************************
