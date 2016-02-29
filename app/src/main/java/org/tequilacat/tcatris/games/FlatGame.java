@@ -5,19 +5,14 @@
 package org.tequilacat.tcatris.games;
 
 import android.graphics.Canvas;
-import android.graphics.Paint;
 
-import org.tequilacat.tcatris.core.ColorCodes;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.Tetris;
 import org.tequilacat.tcatris.core.GameView;
 import org.tequilacat.tcatris.core.Ui;
 
-// Referenced classes of package flat:
-//            Shape
-
 public abstract class FlatGame extends Tetris {
-  int myCellSize;
+  // int myCellSize;
 
   public static final int EMPTY = 0;
 
@@ -30,8 +25,15 @@ public abstract class FlatGame extends Tetris {
 
   protected static final int MIN_CELL_SIZE = 8;
 
-  /**************************************************
-   **************************************************/
+  private AbstractFlatGamePainter _fieldPainter;
+
+  protected FlatGame(AbstractFlatGamePainter fieldPainter) {
+    _fieldPainter = fieldPainter;
+  }
+
+  /**
+   * resets game to initial step
+   */
   public void init() {
     myScore = 0;
     myFallingShape = null;
@@ -238,126 +240,88 @@ public abstract class FlatGame extends Tetris {
     int width = screenWidth - GameView.MARGIN_LEFT - GameView.MARGIN_RIGHT - GameView.SPACING_VERT;
     int height = screenHeight - GameView.MARGIN_TOP - GameView.MARGIN_BOTTOM;
 
-    myCellSize = width / (glassWidth + nextFigWidth);
+    int cellSize = width / (glassWidth + nextFigWidth);
 
-    if (myCellSize * glassHeight > height) {
-      myCellSize = height / glassHeight;
+    if (cellSize * glassHeight > height) {
+      cellSize = height / glassHeight;
     }
 
 
     // if there's no space for icon and text horizontally, try :
     // if big canvas, provide enough space via
-
+/*
     // assume text size as quarter of smaller dimension
     int numInfoSize = (screenWidth < screenHeight ? screenWidth : screenHeight) / 4;
 //    Font font = Font.getDefaultFont();
 //    int numInfoSize = font.stringWidth("0000");
 
     boolean displayIconVertically = false;
-        /*
-        if image and text don't fit: 
-        if suitable cell size is still good, lay out as is, 
-        */
     int iconSize = (GameView.PlayerIcon == null) ? 0 : GameView.PlayerIcon.getWidth();
-    if (iconSize + numInfoSize > screenWidth - GameView.MARGIN_LEFT - myCellSize * glassWidth) {
+    if (iconSize + numInfoSize > screenWidth - GameView.MARGIN_LEFT - cellSize * glassWidth) {
       //Debug.print("Cell size = "+ myCellSize +" does not fit");
-      myCellSize = (screenWidth - GameView.MARGIN_LEFT - (iconSize + numInfoSize)) / glassWidth;
+      cellSize = (screenWidth - GameView.MARGIN_LEFT - (iconSize + numInfoSize)) / glassWidth;
 
-      if (myCellSize >= MIN_CELL_SIZE) {
+      if (cellSize >= MIN_CELL_SIZE) {
         //Debug.print("Can't fit icon and 0000, decrease to fit both");
       } else {
         // decrease to fit
         //Debug.print("Can't fit icon and number, decrease to fit number");
 
         displayIconVertically = true;
-        int cellSize = (screenWidth - GameView.MARGIN_LEFT - numInfoSize) / glassWidth;
+       // int cellSize = (screenWidth - GameView.MARGIN_LEFT - numInfoSize) / glassWidth;
 //                if(cellSize < myCellSize){
 //                    myCellSize = cellSize;
 //                }
       }
     }
-
+*/
 //        Debug.print("===== Always display vertically");
 //        displayIconVertically = true;
 
     int fieldX0 = GameView.MARGIN_LEFT;
     int fieldY0 = GameView.MARGIN_TOP;
 
-    int myFieldWidth = myCellSize * glassWidth;
-    int myFieldHeight = myCellSize * glassHeight;
+    int myFieldWidth = cellSize * glassWidth;
+    int myFieldHeight = cellSize * glassHeight;
 
 
     // lay out next fig
 
     int myNextShapeX0 = GameView.MARGIN_LEFT + myFieldWidth + GameView.SPACING_VERT;
-    myNextShapeX0 += (screenWidth - GameView.MARGIN_RIGHT - myNextShapeX0 - myCellSize * nextFigWidth) / 2;
+    myNextShapeX0 += (screenWidth - GameView.MARGIN_RIGHT - myNextShapeX0 - cellSize * nextFigWidth) / 2;
     int myNextShapeY0 = GameView.MARGIN_TOP;
 
     //Debug.print("Cell Size: "+myCellSize+" , fieldWidth = "+myFieldWidth);
 
 
-    setGameScreenLayout(new GameScreenLayout(fieldX0, fieldY0, myFieldWidth, myFieldHeight,
+    setGameScreenLayout(new GameScreenLayout(cellSize,
+      fieldX0, fieldY0, myFieldWidth, myFieldHeight,
       myNextShapeX0, myNextShapeY0,
-      game.getMaxShapeWidth() * myCellSize, game.getMaxShapeHeight() * myCellSize,
-      displayIconVertically));
+      game.getMaxShapeWidth() * cellSize, game.getMaxShapeHeight() * cellSize));
+
+    _fieldPainter.init(getGameScreenLayout());
   }
 
-  public static final int FIGCELL_FALLING = 0;
-  public static final int FIGCELL_SQUEEZED = 1;
-  public static final int FIGCELL_SETTLED = 2;
-
-  private Paint _cellPainter = new Paint();
-
-  /********************************
-   *********************************/
-  protected void paintCellPix(Canvas g, int x, int y, int state, int cellState) {
-    int cellColor = getTypeColor(state);
-
-    if (state == FlatGame.EMPTY || cellState == FIGCELL_FALLING) {
-      Ui.fillRect(g, x, y, myCellSize - 1, myCellSize - 1, cellColor);
-      //Debug.print("Falling:");
-    } else if (cellState == FIGCELL_SQUEEZED) {
-      Ui.drawRect(g, x, y, myCellSize - 1, myCellSize - 1, cellColor);
-      Ui.fillRect(g, x + 1, y + 1, myCellSize - 3, myCellSize - 3, getFieldBackground());
-    } else { // settled
-      Ui.fillRect(g, x, y, myCellSize - 1, myCellSize - 1, cellColor);
-
-      _cellPainter.setColor(ColorCodes.black);
-      x += 3;
-      y += 3;
-      g.drawLine(x, y, x + myCellSize - 8, y, _cellPainter);
-      g.drawLine(x, y, x, y + myCellSize - 8, _cellPainter);
-    }
-  }
-
-  /********************************
-   *********************************/
-  private void paintFieldCell(Canvas g, int x, int y, int cellType, int cellState) {
-    paintCellPix(g, x, y, cellType, cellState);
-//        FlatGame game = (FlatGame)getGame();
-//		int cellX = getGlassClipX() + myCellSize*x;
-//        int cellY = getGlassClipY()+myCellSize*(game.getHeight()-y-1);
-//		
-//		paintCellPix(g, cellX, cellY, cellType, cellState);
-  }
-
-  /********************************
-   *********************************/
+  /**
+   * paints game field
+   * @param g
+   * @param fieldPixHeight
+   */
   @Override
   public void paintField(Canvas g, int fieldPixHeight) {
-
-    int pixX, pixY = fieldPixHeight - myCellSize;
+    int cellSize = getGameScreenLayout().getCellSize();
+    int pixX, pixY = fieldPixHeight - cellSize;
 
     for (int y = 0; y < getHeight(); y++) {
       pixX = 0;
       for (int x = 0; x < getWidth(); x++) {
         // settled
 
-        paintFieldCell(g, pixX, pixY, getCellValue(x, y),
-          isSqueezable(x, y) ? FIGCELL_SQUEEZED : FIGCELL_SETTLED);
-        pixX += myCellSize;
+        _fieldPainter.paintCellPix(g, pixX, pixY, getCellValue(x, y),
+          isSqueezable(x, y) ? CellState.SQUEEZED : CellState.SETTLED);
+        pixX += cellSize;
       }
-      pixY -= myCellSize;
+      pixY -= cellSize;
     }
 
     if (getState() == ACTIVE && !canSqueeze()) {
@@ -365,18 +329,25 @@ public abstract class FlatGame extends Tetris {
       for (int i = 0; i < shape.size(); i++) {
         int x = shape.getX(i), y = shape.getY(i);
         if (x >= 0 && x < getWidth() && y >= 0 && y < getHeight()) {
-          paintFieldCell(g, x * myCellSize, fieldPixHeight - (y + 1) * myCellSize, shape.getCellType(i), FIGCELL_FALLING);
+          _fieldPainter.paintCellPix(g, x * cellSize, fieldPixHeight - (y + 1) * cellSize, shape.getCellType(i), CellState.FALLING);
         }
       }
     }
   }
 
-
-  /********************************
-   *********************************/
+  /**
+   * paints next figure in given rect
+   * @param g
+   * @param nextFigX
+   * @param nextFigY
+   * @param nextFigWidth
+   * @param nextFigHeight
+   */
   @Override
   public void paintNext(Canvas g, int nextFigX, int nextFigY, int nextFigWidth, int nextFigHeight) {
-    //FlatGame game = (FlatGame)getGame();
+    Ui.fillRect(g, nextFigX, nextFigY, nextFigWidth, nextFigHeight, _fieldPainter.getFieldBackground());
+
+    int cellSize = getGameScreenLayout().getCellSize();
     FlatShape shape = getNextShape();
 
     // find out max leftToCenter and rightToCenter
@@ -390,9 +361,9 @@ public abstract class FlatGame extends Tetris {
     // int nextX = myNextShapeWindow.x + 2, nextY = myNextShapeWindow.y + 2;
     for (int i = 0; i < shape.size(); i++) {
       int x = shape.getX(i), y = shape.getY(i);
-      paintCellPix(g, nextFigX + (x - maxLeft) * myCellSize,
-        nextFigY + (maxUp - y) * myCellSize,
-        shape.getCellType(i), FIGCELL_FALLING);
+      _fieldPainter.paintCellPix(g, nextFigX + (x - maxLeft) * cellSize,
+        nextFigY + (maxUp - y) * cellSize,
+        shape.getCellType(i), CellState.FALLING);
     }
   }
 }

@@ -8,7 +8,12 @@ import java.io.*;
  * implements game logic
  */
 public abstract class Tetris {
-  public String GameName;
+
+  public enum CellState {
+    FALLING, SQUEEZED, SETTLED
+  }
+
+  private String _gameLabel;
 
   //private boolean myShowNext;
   private int myState = NOTINIT;
@@ -25,8 +30,6 @@ public abstract class Tetris {
 
   public boolean ConfRepaintsBackground = false;
 
-  //public boolean IsLayedOut = false;
-
   private int myFieldWidth;
   private int myFieldHeight;
   private int myNextWidth;
@@ -34,16 +37,11 @@ public abstract class Tetris {
 
   private GameScreenLayout _gameScreenLayout;
 
-
-  /**************************************************
-   **************************************************/
-  public Tetris(byte[] gameData, int gameIndex) {
-    parseHiScores(gameData);
+  public Tetris() {
   }
 
-  /**************************************************
-   **************************************************/
-  public Tetris() {
+  public String getGameLabel() {
+    return _gameLabel;
   }
 
   /**************************************************
@@ -53,7 +51,7 @@ public abstract class Tetris {
     // example:
     // 5:13:1:3
 
-    GameName = gameLabel;
+    _gameLabel = gameLabel;
 //        Debug.print("Game data: '"+ gameDescriptor +"'");
     int sep1 = gameDescriptor.indexOf(':'),
       sep2 = gameDescriptor.indexOf(':', sep1 + 1),
@@ -110,16 +108,8 @@ public abstract class Tetris {
     ColorCodes.darkRed, ColorCodes.darkGreen, ColorCodes.blue, ColorCodes.cyan, ColorCodes.magenta, ColorCodes.orange, ColorCodes.lightBrown
   };
 
-  /**************************************************
-   **************************************************/
   public static int getTypeColor(int cellType) {
-    // return (cellType == 0) ? getFieldBackground() :  sCellColors[cellType - 1];
     return sCellColors[cellType];
-  }
-
-  public int getFieldBackground() {
-    //return myFieldBackground;
-    return getTypeColor(0);
   }
 
   /**************************************************

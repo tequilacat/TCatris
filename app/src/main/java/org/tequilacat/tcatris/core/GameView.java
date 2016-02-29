@@ -19,9 +19,6 @@ import java.util.Date;
 
 public final class GameView extends SurfaceView {
 
-  //public static Display display;
-  public static Bitmap PlayerIcon, WinnerIcon, LevelIcon;
-
   public static final int MARGIN_LEFT = 5;
   public static final int MARGIN_RIGHT = 5;
   public static final int MARGIN_TOP = 5;
@@ -414,7 +411,6 @@ public final class GameView extends SurfaceView {
     //repaintAll = true;
 
     final GameScreenLayout layout = getGame().getGameScreenLayout();
-    final int COLOR_FIELD_BG = getGame().getFieldBackground();
     Rect fieldRect = layout.getFieldRect();
 
     // Debug.print("paint: " + (repaintAll ? "ALL" : "field only"));
@@ -423,12 +419,12 @@ public final class GameView extends SurfaceView {
       c.drawColor(Ui.UI_COLOR_PANEL);
 
       Rect next = layout.getNextShapeRect();
-      Ui.fillRect(c, next, COLOR_FIELD_BG);
       getGame().paintNext(c, _gameArea.left + next.left, _gameArea.top + next.top, next.width(), next.height());
 
-      // TODO really paint scores
+      // TODO paint scores as bar
       Ui.fillRect(c, _scoreBarArea, ColorCodes.black);
-      Ui.drawText(c, "Score: ", _scoreBarArea.left, _scoreBarArea.top, _fontSize, ColorCodes.yellow);
+      Ui.drawText(c, getGame().getGameLabel()+ ": " + getGame().getScore(),
+        _scoreBarArea.left, _scoreBarArea.top, _fontSize, ColorCodes.yellow);
 
       // paint buttons
       int bX = _buttonArea.left, bW = _buttonArea.width() / BUTTON_COUNT,
@@ -445,63 +441,6 @@ public final class GameView extends SurfaceView {
     getGame().paintField(c, fieldRect.height());
     c.translate(-dx, -dy);
 
-  }
-
-  /**************************************************
-   **************************************************/
-  private void paintScreenOld(Canvas c, boolean repaintAll) {
-    boolean repaintScores = true; // debug!
-    boolean repaintNext = true; // debug!
-    final GameScreenLayout layout = getGame().getGameScreenLayout();
-    final int COLOR_FIELD_BG = getGame().getFieldBackground();
-
-    if (repaintAll) {
-      repaintScores = true;
-      repaintNext = true;
-      c.drawColor(Ui.UI_COLOR_PANEL);
-    }
-
-    //Debug.print("Paint screen: "+repaintAll+", "+repaintScores+", "+repaintNext);
-
-    //if(!myPaintsBackground){
-    if (!getGame().ConfRepaintsBackground) {
-      Ui.fillRect(c, layout.getFieldRect(), COLOR_FIELD_BG);
-    }
-    Ui.draw3dRect(c, layout.getFieldRect());
-
-    // paint field
-    c.translate(layout.getFieldRect().left, layout.getFieldRect().top);
-    getGame().paintField(c, layout.getFieldRect().height());
-    c.translate(-layout.getFieldRect().left, -layout.getFieldRect().top);
-    //c.clipRect(0, 0, _screenWidth, _screenHeight, Region.Op.REPLACE);
-
-
-    // debug
-//        g.setColor(ColorCodes.black);
-//        g.drawString("Drops: "+myFigureDropSteps, 0, 0, Ui.G_LEFT_TOP);
-
-    if (getGame().getLastScored() > 0) {
-      Ui.drawShadowText(
-        c, "+" + getGame().getLastScored(),
-        _fontSize,
-        layout.getFieldRect().left, layout.getFieldRect().top,
-        Ui.UI_COLOR_SELITEM_TEXT, Ui.UI_COLOR_DARKSHADOW);
-    }
-
-
-    if (repaintNext) {
-      Rect next = layout.getNextShapeRect();
-      Ui.fillRect(c, next, COLOR_FIELD_BG);
-
-      Ui.draw3dRect(c, layout.getNextShapeRect());
-
-      getGame().paintNext(c, next.left, next.top, next.width(), next.height());
-      //c.setClip(0, 0, _screenWidth, _screenHeight);
-    }
-
-    if (repaintScores) {
-      showInGameScores(c);
-    }
   }
 
 /*
@@ -548,34 +487,9 @@ public final class GameView extends SurfaceView {
 */
 
   private void displayEntry(Canvas c, Bitmap img, int score, int xPos, int yPos) {
-    // TODO implement display entry
-//
-//        if (img != null) {
-//            //g.drawImage(img, xPos, yPos, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP);
-//
-//            if (myDisplayIconsVertically) {
-//                yPos += img.getHeight();
-//            } else {
-//                xPos += img.getWidth();
-//                int fontHeight = g.getFont().getHeight(),
-//                        lineHeight = (fontHeight > img.getHeight()) ? fontHeight : img.getHeight();
-//                yPos += (lineHeight - fontHeight) / 2;
-//            }
-//        }
-//        // g.drawString(""+score, xPos + 2, yPos, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP);
-//
-//        /* g.setColor(Ui.UI_COLOR_DARKSHADOW);
-//        g.drawString(""+score, xPos + 1, yPos - 1, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP);
-//        g.setColor(Ui.UI_COLOR_SELITEM_TEXT);
-//        g.drawString(""+score, xPos + 2, yPos, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP); */
-//        Ui.drawShadowText(
-//                c, "" + score, xPos, yPos,
-//                myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP,
-//                Ui.UI_COLOR_SELITEM_TEXT, Ui.UI_COLOR_DARKSHADOW);
   }
 
-  /**************************************************
-   **************************************************/
+  /*
   private void showInGameScores(Canvas c) {
     GameScreenLayout layout = getGame().getGameScreenLayout();
     int curScore = getGame().getScore();
@@ -658,7 +572,7 @@ public final class GameView extends SurfaceView {
       Ui.draw3dRect(c, sbX, sbY, sbWidth, sbHeight);
     }
   }
-
+*/
   /**************************************************
    **************************************************/
   private void showScoreTable(Canvas c) {
@@ -668,11 +582,11 @@ public final class GameView extends SurfaceView {
 
     int curScore = getGame().getScore();
 
-    c.drawColor(getGame().getFieldBackground());
+    c.drawColor(ColorCodes.white);
 
     p.setColor(ColorCodes.black);
     // display game name
-    c.drawText(myGame.GameName, 0, 0, p);
+    c.drawText(myGame.getGameLabel(), 0, 0, p);
     p.setTextAlign(Paint.Align.RIGHT);
     c.drawText(getTimeStr(0), scrWidth, 0, p);
     p.setTextAlign(Paint.Align.LEFT);

@@ -7,17 +7,11 @@ package org.tequilacat.tcatris.games;
 // Referenced classes of package flat:
 //            FlatGame, Shape
 
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.RectF;
-
 public class Columns extends FlatGame {
 
   boolean mySqueezable[];
   int myLastScores;
-  private static final int NCOLORS = 5;
+  private static final int N_FIGURES = 5;
   boolean cellsToSqueeze[][];
   boolean squeezable;
 
@@ -30,21 +24,20 @@ public class Columns extends FlatGame {
   private static final int FIGTYPE_HORZ = 1;
   private static final int FIGTYPE_ROTATE = 2;
 
+  public Columns() {
+    super(new FlatRectGamePainter());
+  }
+
   /**************************************************
-   * expect:
-   * rotate=color (if not, rotate =
    **************************************************/
   @Override
   protected void configure(String specSettings) {
-    // expect : fig=vert, fig=horz, fig=rotateable
-//        Debug.print("fig type: '"+  +"'");
-    String figType = specSettings;
-    if ("horz".equals(figType)) {
+    if ("columns".equals(specSettings)) {// was horz
       myGameType = FIGTYPE_HORZ;
-    } else if ("vert".equals(figType)) {
+    } else if ("xixit".equals(specSettings)) { // was vert
       myGameType = FIGTYPE_VERT;
     } else {
-      myGameType = FIGTYPE_ROTATE;
+      myGameType = FIGTYPE_ROTATE; // was trix
     }
   }
 
@@ -53,10 +46,10 @@ public class Columns extends FlatGame {
    **************************************/
   @Override
   public FlatShape createNext() {
-    int c1 = 1 + getRandomInt(NCOLORS);
-    int c2 = 1 + getRandomInt(NCOLORS);
-    int c3 = 1 + getRandomInt(NCOLORS);
-    // return new ColumnShape(c1, c2, c3);
+    int c1 = 1 + getRandomInt(N_FIGURES);
+    int c2 = 1 + getRandomInt(N_FIGURES);
+    int c3 = 1 + getRandomInt(N_FIGURES);
+
     FlatShape fs = new FlatShape(new int[]{0, -1, c1, 0, 0, c2, 0, 1, c3});
     if (myGameType == FIGTYPE_HORZ) {
       fs.rotate(1);
@@ -241,56 +234,16 @@ public class Columns extends FlatGame {
   }
 
 
-  /********************************
-   * rotates and checks
-   ******************************/
-  /* public boolean moveShape(Shape theShape, int newX, int newY, int rotationDir){
-//		Debug.print(" at : "+ newX +" , "+ newY +"");
-		ColumnShape shape = (ColumnShape)theShape;
-
-		if(newX < 0 || newX >= getWidth()) return false;
-		if(newY < 1)  return false; // shape out of bounds
-		
-		if((newY >= getHeight() || getCellValue(newX, newY)==0 )
-			&& (newY-1 >= getHeight() || getCellValue(newX, newY-1)==0 )
-			&& (newY+1 >= getHeight() || getCellValue(newX, newY+1)==0) ){
-				
-				shape.moveTo(newX, newY, rotationDir);
-				return true;
-		}
-		
-		return false;
-	} */
-
 
   //////////////
-  private static final int N_FIGURES = 5;
+/*
   private Bitmap myShapesImage = null;
-
-  /**************************************************
-   **************************************************/
-//  public Image getShapesImage() {
-//    return myShapesImage;
-//  }
 
   public void layout(int screenWidth, int screenHeight) {
     super.layout(screenWidth, screenHeight);
     createBigImage(myCellSize);
   }
 
-  /**************************************************
-   **************************************************/
-//    private int darkerColor(int color){
-//        int red =   ( (color&0xff0000) >> 24) * 7 / 10;
-//        int green = ( (color&0xff00) >> 16  ) * 7 / 10;
-//        int blue =  ( color & 0xff          ) * 7 / 10;
-//         
-//        return (red & 0xff) << 24
-//            +(green&0xff) << 16 + (blue & 0xff);
-//    }
-
-  /**************************************************
-   **************************************************/
   private void createBigImage(int cellSize) {
     myShapesImage = Bitmap.createBitmap(cellSize * 3, cellSize * N_FIGURES, Bitmap.Config.ARGB_8888);
 
@@ -309,8 +262,6 @@ public class Columns extends FlatGame {
     }
   }
 
-  /**************************************************
-   **************************************************/
   private void drawShape(Canvas g, Paint p, int cellSize, int x, int y, int shapeIndex, int state) {
     p.setColor(getTypeColor(shapeIndex));
     p.setStyle(Paint.Style.STROKE);
@@ -372,9 +323,6 @@ public class Columns extends FlatGame {
 
   private Paint _cellPainter = new Paint();
 
-  /**************************************************
-   **************************************************/
-  @Override
   protected void paintCellPix(Canvas g, int x, int y, int cellType, int cellState) {
     if (cellType > 0) {
       int cx = cellState * myCellSize, cy = (cellType - 1) * myCellSize;
@@ -385,4 +333,5 @@ public class Columns extends FlatGame {
       g.drawBitmap(myShapesImage, src, dst, _cellPainter);
     }
   }
+  */
 }

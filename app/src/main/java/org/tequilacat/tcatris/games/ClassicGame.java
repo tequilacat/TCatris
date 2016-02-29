@@ -28,7 +28,7 @@ public class ClassicGame extends FlatGame {
   /**************************************************
    **************************************************/
   public ClassicGame() {
-    ConfRepaintsBackground = true;
+    super(new FlatRectGamePainter());
   }
 
   /**************************************

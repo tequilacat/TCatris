@@ -349,7 +349,7 @@ public final class OldGameView extends SurfaceView implements Runnable {
     synchronized (myGameChangeLock) {
 
       if (myDisplayMode == DM_MENU) {
-        Ui.displayMenu(c, _screenWidth, _screenHeight, (getGame() == null) ? null : getGame().GameName);
+        Ui.displayMenu(c, _screenWidth, _screenHeight, (getGame() == null) ? null : getGame().getGameLabel());
 
       } else if (myDisplayMode == DM_HISCORES) {
         showScoreTable(c);
@@ -371,7 +371,7 @@ public final class OldGameView extends SurfaceView implements Runnable {
     boolean repaintScores = true; // debug!
     boolean repaintNext = true; // debug!
     final GameScreenLayout layout = getGame().getGameScreenLayout();
-    final int COLOR_FIELD_BG = getGame().getFieldBackground();
+    final int COLOR_FIELD_BG = ColorCodes.gray;
 
     if (repaintAll) {
       repaintScores = true;
@@ -382,9 +382,7 @@ public final class OldGameView extends SurfaceView implements Runnable {
     //Debug.print("Paint screen: "+repaintAll+", "+repaintScores+", "+repaintNext);
 
     //if(!myPaintsBackground){
-    if (!getGame().ConfRepaintsBackground) {
-      Ui.fillRect(c, layout.getFieldRect(), COLOR_FIELD_BG);
-    }
+
     Ui.draw3dRect(c, layout.getFieldRect());
 
     // paint field
@@ -603,11 +601,11 @@ public final class OldGameView extends SurfaceView implements Runnable {
 
     int curScore = getGame().getScore();
 
-    c.drawColor(getGame().getFieldBackground());
+    c.drawColor(ColorCodes.white);
 
     p.setColor(ColorCodes.black);
     // display game name
-    c.drawText(myGame.GameName, 0, 0, p);
+    c.drawText(myGame.getGameLabel(), 0, 0, p);
     p.setTextAlign(Paint.Align.RIGHT);
     c.drawText(getTimeStr(0), _screenWidth, 0, p);
     p.setTextAlign(Paint.Align.LEFT);
