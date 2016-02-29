@@ -399,9 +399,9 @@ public final class OldGameView extends SurfaceView implements Runnable {
 //        g.drawString("Drops: "+myFigureDropSteps, 0, 0, Ui.G_LEFT_TOP);
 
     if (getGame().getLastScored() > 0) {
-      Ui.drawShadowText(
-        c, "+" + getGame().getLastScored(), layout.getFieldRect().left, layout.getFieldRect().top,
-        Ui.UI_COLOR_SELITEM_TEXT, Ui.UI_COLOR_DARKSHADOW);
+//      Ui.drawShadowText(
+//        c, "+" + getGame().getLastScored(), layout.getFieldRect().left, layout.getFieldRect().top,
+//        Ui.UI_COLOR_SELITEM_TEXT, Ui.UI_COLOR_DARKSHADOW);
     }
 
 
@@ -515,7 +515,7 @@ public final class OldGameView extends SurfaceView implements Runnable {
   private void showInGameScores(Canvas c) {
     GameScreenLayout layout = getGame().getGameScreenLayout();
     int curScore = getGame().getScore();
-    float fontHeight = Ui.getLineHeight();
+    float fontHeight = _lineHeight;
 
     int[] hiScores = getGame().getHiScores();
     // along right side, draw
@@ -592,11 +592,14 @@ public final class OldGameView extends SurfaceView implements Runnable {
     }
   }
 
+  /** compilation stub */
+  private float _lineHeight = 24;
+
   /**************************************************
    **************************************************/
   private void showScoreTable(Canvas c) {
     Paint p = new Paint();
-    float fontHeight = Ui.getLineHeight();
+    float fontHeight = _lineHeight;
 
     int curScore = getGame().getScore();
 
@@ -608,7 +611,7 @@ public final class OldGameView extends SurfaceView implements Runnable {
     p.setTextAlign(Paint.Align.RIGHT);
     c.drawText(getTimeStr(0), _screenWidth, 0, p);
     p.setTextAlign(Paint.Align.LEFT);
-    c.drawText(Ui.MSG_PRESS_ANYKEY, 0, _screenHeight - 1 - fontHeight, p);
+    c.drawText("press any key", 0, _screenHeight - 1 - fontHeight, p);
 
     c.drawRect(0, fontHeight, _screenWidth, _screenHeight - fontHeight * 2, p);
 

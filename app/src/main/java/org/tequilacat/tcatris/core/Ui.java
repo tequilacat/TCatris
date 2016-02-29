@@ -4,6 +4,8 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
+import org.tequilacat.tcatris.R;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +21,7 @@ public class Ui {
   private static int myMenuId;
 
   private static final Paint _uiPainter;
+  private static final Paint _textPainter;
 
   private static final Paint _framePainter;
 
@@ -28,6 +31,10 @@ public class Ui {
   private static final Paint _fillPainter;
 
   static {
+    _textPainter = new Paint();
+    _textPainter.setAntiAlias(true);
+    _textPainter.setTextAlign(Paint.Align.LEFT);
+
     _framePainter = new Paint();
     _framePainter.setStyle(Paint.Style.STROKE);
 
@@ -35,11 +42,12 @@ public class Ui {
     _fillPainter.setStyle(Paint.Style.FILL);
 
     _uiPainter = new Paint();
+    float textSize = _uiPainter.getTextSize();
     _fm = _uiPainter.getFontMetrics();
     _lineHeight = Math.abs(_fm.top) + Math.abs(_fm.bottom);
   }
 
-  public static float getLineHeight() {
+  private static float getLineHeight() {
     return _lineHeight;
   }
 
@@ -49,34 +57,22 @@ public class Ui {
 
   /**************************************************
    **************************************************/
-  public static void drawShadowText(Canvas g, String text, int x, int y, int textColor, int shadowColor) {
-    _uiPainter.setColor(shadowColor);
+  public static void drawShadowText(Canvas g, String text, int x, int y, int fontSize, int textColor, int shadowColor) {
+
+    _textPainter.setColor(shadowColor);
 //        g.drawString(text, xPos + 1, yPos - 1, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP);
-    g.drawText(text, x + 1, y - 1, _uiPainter);
+    g.drawText(text, x + 1, y - 1, _textPainter);
 
-    _uiPainter.setColor(textColor);
+    _textPainter.setColor(textColor);
 //        g.drawString(text, xPos + 2, yPos, myDisplayIconsVertically ? Ui.G_CENTER_TOP : Ui.G_LEFT_TOP);
-    g.drawText(text, x + 2, y, _uiPainter);
+    g.drawText(text, x + 2, y, _textPainter);
   }
 
-  /**************************************************
-   **************************************************/
-  public static void initMenu(int menuId) {
-    myMenuId = menuId;
-    myItems.clear();
-    myCurItem = -1;
-  }
-
-  /**************************************************
-   **************************************************/
-  public static int getMenuId() {
-    return myMenuId;
-  }
-
-  /**************************************************
-   **************************************************/
-  public static int getCurrentItemIndex() {
-    return myCurItem;
+  public static void drawText(Canvas g, String text, int x, int y, int fontSize, int textColor) {
+    _textPainter.setTextSize(fontSize);
+    _textPainter.setColor(textColor);
+    Paint.FontMetrics fm = _textPainter.getFontMetrics();
+    g.drawText(text, x, y - fm.top, _textPainter);
   }
 
   /**************************************************
@@ -87,31 +83,6 @@ public class Ui {
 
   /**************************************************
    **************************************************/
-  public static void addItem(String item) {
-    myItems.add(item);
-
-    if (myCurItem == -1) {
-      myCurItem = 0;
-    }
-  }
-
-  public static final int MENU_INGAME = 0;
-  public static final int MENU_SELECT_GAME = 1;
-  public static final int MENU_OPTIONS = 2;
-
-  public static final String ITEM_BACK = "Back";
-  public static final String ITEM_EXIT = "Exit";
-  public static final String ITEM_NEWGAME = "New game";
-  public static final String ITEM_SHOWSCORES = "Show scores";
-  public static final String ITEM_CONTINUE = "Continue";
-  public static final String ITEM_OPTIONS = "Options";
-
-  public static final String MSG_GAMEOVER = "Game over\npress FIRE\nto continue";
-  public static final String MSG_PRESS_ANYKEY = "Press a key";
-
-
-  /**************************************************
-   **************************************************/
   public static String getItemAtPoint(int x, int y) {
     return getItemString((int)(y / MenuItemHeight));
   }
@@ -119,7 +90,6 @@ public class Ui {
   public static final int UI_COLOR_PANEL = ColorCodes.gray;
   public static final int UI_COLOR_DARKSHADOW = ColorCodes.darkGray;
   public static final int UI_COLOR_LIGHTSHADOW = ColorCodes.white;
-  // public static final int UI_COLOR_SELITEMBACKGROUND = ColorCodes.white;
 
   public static final int UI_COLOR_SELITEM_BACKGROUND = ColorCodes.red;
   public static final int UI_COLOR_SELITEM_TEXT = ColorCodes.green;

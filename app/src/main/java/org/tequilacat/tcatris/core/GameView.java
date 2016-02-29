@@ -316,21 +316,32 @@ public final class GameView extends SurfaceView {
   private Rect _buttonArea = new Rect();
   private Rect _scoreBarArea = new Rect();
 
+  private int _fontSize;
+
+  private int getLineHeight() {
+    return _fontSize;
+  }
+
   /**
    * computes all areas to be displayed on screen
    * @param w
    * @param h
    */
   private void layoutGameScreen(int w, int h) {
-    final int scoreHeight = (int) Ui.getLineHeight(), buttonHeight = h / 10;
+    _fontSize = getResources().getDimensionPixelSize(R.dimen.gamescreen_font_size);
+    //setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimensionPixelSize(R.dimen.typo14));
+
+    final int scoreHeight = getLineHeight();
+    final int buttonHeight = h / 10;
 
     _scoreBarArea.set(0, 0, w, scoreHeight);
     _gameArea.set(0, _scoreBarArea.bottom, w, h - buttonHeight - scoreHeight);
     _buttonArea.set(0, _gameArea.bottom, w, h - scoreHeight);
 
-    if (getGame() != null) {
-      getGame().layout(_gameArea.width(), _gameArea.height());
-    }
+    getGame().layout(_gameArea.width(), _gameArea.height());
+    Rect fieldRect = getGame().getGameScreenLayout().getFieldRect();
+    _fieldRect.set(_gameArea.left + fieldRect.left, _gameArea.top + fieldRect.top,
+      _gameArea.left + fieldRect.right, _gameArea.top + fieldRect.bottom);
   }
 
   /**
@@ -346,6 +357,11 @@ public final class GameView extends SurfaceView {
   private Rect _fieldUpdateRect = new Rect();
 
   /**
+   * game field in absolute screen coordinates
+   * */
+  private Rect _fieldRect = new Rect();
+
+  /**
    * paints app screen according to expected info to be displayed
    * @param paintType type of info to be displayed
    */
@@ -355,19 +371,18 @@ public final class GameView extends SurfaceView {
         Canvas c = null;
 
         try {
-          Rect fieldRect = getGame().getGameScreenLayout().getFieldRect();
           Rect updateRect;
 
           if (paintType != ScreenPaintType.FIELD_ONLY) {
             updateRect = null;
           } else {
             updateRect = _fieldUpdateRect;
-            updateRect.set(fieldRect);
+            updateRect.set(_fieldRect);
           }
 
           c = getHolder().lockCanvas(updateRect);
 
-          if (updateRect != null && !updateRect.equals(fieldRect)) {
+          if (updateRect != null && !updateRect.equals(_fieldRect)) {
             updateRect = null;
           }
 
@@ -400,21 +415,20 @@ public final class GameView extends SurfaceView {
 
     final GameScreenLayout layout = getGame().getGameScreenLayout();
     final int COLOR_FIELD_BG = getGame().getFieldBackground();
+    Rect fieldRect = layout.getFieldRect();
+
+    // Debug.print("paint: " + (repaintAll ? "ALL" : "field only"));
 
     if(repaintAll) {
       c.drawColor(Ui.UI_COLOR_PANEL);
 
       Rect next = layout.getNextShapeRect();
       Ui.fillRect(c, next, COLOR_FIELD_BG);
-      getGame().paintNext(c, next.left, next.top, next.width(), next.height());
+      getGame().paintNext(c, _gameArea.left + next.left, _gameArea.top + next.top, next.width(), next.height());
 
       // TODO really paint scores
       Ui.fillRect(c, _scoreBarArea, ColorCodes.black);
-      //Ui.drawShadowText(c, "Score: ", _scoreBarArea.left, _scoreBarArea.top, ColorCodes.gray, ColorCodes.white);
-//      Paint tp=new Paint();
-//      tp.setColor(ColorCodes.yellow);
-//      c.drawText("123", 100, 100, tp);
-
+      Ui.drawText(c, "Score: ", _scoreBarArea.left, _scoreBarArea.top, _fontSize, ColorCodes.yellow);
 
       // paint buttons
       int bX = _buttonArea.left, bW = _buttonArea.width() / BUTTON_COUNT,
@@ -426,7 +440,6 @@ public final class GameView extends SurfaceView {
       }
     }
 
-    Rect fieldRect = layout.getFieldRect();
     int dx = fieldRect.left + _gameArea.left, dy = fieldRect.top + _gameArea.top;
     c.translate(dx, dy);
     getGame().paintField(c, fieldRect.height());
@@ -469,7 +482,9 @@ public final class GameView extends SurfaceView {
 
     if (getGame().getLastScored() > 0) {
       Ui.drawShadowText(
-        c, "+" + getGame().getLastScored(), layout.getFieldRect().left, layout.getFieldRect().top,
+        c, "+" + getGame().getLastScored(),
+        _fontSize,
+        layout.getFieldRect().left, layout.getFieldRect().top,
         Ui.UI_COLOR_SELITEM_TEXT, Ui.UI_COLOR_DARKSHADOW);
     }
 
@@ -564,7 +579,7 @@ public final class GameView extends SurfaceView {
   private void showInGameScores(Canvas c) {
     GameScreenLayout layout = getGame().getGameScreenLayout();
     int curScore = getGame().getScore();
-    float fontHeight = Ui.getLineHeight();
+    float fontHeight = getLineHeight();
 
     int[] hiScores = getGame().getHiScores();
     // along right side, draw
@@ -649,7 +664,7 @@ public final class GameView extends SurfaceView {
   private void showScoreTable(Canvas c) {
     int scrWidth = getWidth(), scrHeight = getHeight();
     Paint p = new Paint();
-    float fontHeight = Ui.getLineHeight();
+    float fontHeight = getLineHeight();
 
     int curScore = getGame().getScore();
 
@@ -661,7 +676,7 @@ public final class GameView extends SurfaceView {
     p.setTextAlign(Paint.Align.RIGHT);
     c.drawText(getTimeStr(0), scrWidth, 0, p);
     p.setTextAlign(Paint.Align.LEFT);
-    c.drawText(Ui.MSG_PRESS_ANYKEY, 0, scrHeight - 1 - fontHeight, p);
+    c.drawText("press any key", 0, scrHeight - 1 - fontHeight, p);
 
     c.drawRect(0, fontHeight, scrWidth, scrHeight - fontHeight * 2, p);
 
