@@ -1,8 +1,9 @@
 <resources>
     <string name="app_name">TCatris</string>
 
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_activity_gameselector">Choose game</string>
-    <string name="title_activity_android_surfaceview_example">AndroidSurfaceviewExample</string>
+    <string name="msg_app_paused">Game is paused</string>
+    <string name="btn_ok">Ok</string>
+
+    <string name="msg_score">score</string>
 </resources>

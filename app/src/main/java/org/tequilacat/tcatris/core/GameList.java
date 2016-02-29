@@ -130,6 +130,7 @@ public class GameList {
 
       //Debug.print("Create game: class = "+gameClass+", '"+ gameName +"', -> "+gameDesc);
       game = (Tetris) Class.forName( descriptor.getGameClassName()).newInstance();
+      game.setId(descriptor.getId());
       game.init(descriptor.getLabel(), descriptor.getGameParameters(), getGameData(descriptor));
 
     } catch (Exception e) {

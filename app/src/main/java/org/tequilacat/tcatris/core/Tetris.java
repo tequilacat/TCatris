@@ -28,12 +28,15 @@ public abstract class Tetris {
   private int[] myScores;
   private long[] myScoreDates;
 
-  public boolean ConfRepaintsBackground = false;
-
   private int myFieldWidth;
   private int myFieldHeight;
   private int myNextWidth;
   private int myNextHeight;
+
+  /**
+   * uniquely identifies game type
+   */
+  private String _id;
 
   private GameScreenLayout _gameScreenLayout;
 
@@ -42,6 +45,14 @@ public abstract class Tetris {
 
   public String getGameLabel() {
     return _gameLabel;
+  }
+
+  public String getId() {
+    return _id;
+  }
+
+  public void setId(String id) {
+    _id = id;
   }
 
   /**************************************************

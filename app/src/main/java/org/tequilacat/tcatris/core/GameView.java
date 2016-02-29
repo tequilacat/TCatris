@@ -25,11 +25,11 @@ public final class GameView extends SurfaceView {
   public static final int MARGIN_BOTTOM = 5;
   public static final int SPACING_VERT = 5;
 
-  private Tetris myGame;
+  private Tetris _currentGame;
 
   //boolean myDisplayIconsVertically;
 
-  private Object myGameChangeLock = new Object();
+  private Object _gameChangeLock = new Object();
   //private int _screenWidth;
   //private int _screenHeight;
   //private SurfaceHolder _holder;
@@ -79,7 +79,6 @@ public final class GameView extends SurfaceView {
       @Override
       public void surfaceCreated(SurfaceHolder holder) {
         // start game
-        Debug.print("surface created");
         gameStart();
       }
 
@@ -88,7 +87,6 @@ public final class GameView extends SurfaceView {
 
       @Override
       public void surfaceDestroyed(SurfaceHolder holder) {
-        Debug.print("destroyed");
         gameStop();
       }
     });
@@ -111,11 +109,12 @@ public final class GameView extends SurfaceView {
   }
 
   public void setGame(Tetris game) {
-    myGame = game;
+    _currentGame = game;
+    //GameList.instance().getMaxScore(_currentGame.getGameLabel())
   }
 
   private Tetris getGame() {
-    return myGame;
+    return _currentGame;
   }
 
   private void runGame() {
@@ -127,13 +126,13 @@ public final class GameView extends SurfaceView {
     _isPaused = false;
     getGame().initGame();
 
-    synchronized (myGameChangeLock) {
+    synchronized (_gameChangeLock) {
       try {
         while(_isRunning) {
 
           //Debug.print("Sleep " + towait);
           long time0 = System.currentTimeMillis();
-          myGameChangeLock.wait(towait);
+          _gameChangeLock.wait(towait);
           long sleptTime = System.currentTimeMillis() - time0;
 
           if (_isRunning) {
@@ -221,11 +220,9 @@ public final class GameView extends SurfaceView {
 
   private void gameStop() {
     try {
-      Debug.print("game stop ...");
       _isRunning = false;
       sendAction(null);
       _gameThread.join();
-      Debug.print("game stop done.");
     } catch (InterruptedException e) {
       // TODO catch Interruption
     }
@@ -233,10 +230,10 @@ public final class GameView extends SurfaceView {
 
   private void showPauseDialog() {
     AlertDialog.Builder dlgAlert  = new AlertDialog.Builder(getContext());
-    dlgAlert.setMessage("Game is paused");
+    dlgAlert.setMessage(R.string.msg_app_paused);
     dlgAlert.setTitle(R.string.app_name);
     dlgAlert.setCancelable(true);
-    dlgAlert.setPositiveButton("Ok",
+    dlgAlert.setPositiveButton(R.string.btn_ok,
             new DialogInterface.OnClickListener() {
               public void onClick(DialogInterface dialog, int which) {
                 //dismiss the dialog
@@ -260,10 +257,9 @@ public final class GameView extends SurfaceView {
    * @param action
    */
   private void sendAction(GameAction action){
-    synchronized (myGameChangeLock) {
+    synchronized (_gameChangeLock) {
       _gameThreadAction = action;
-      Debug.print("UI: notify of " + action);
-      myGameChangeLock.notify();
+      _gameChangeLock.notify();
     }
   }
 
@@ -300,9 +296,9 @@ public final class GameView extends SurfaceView {
   public void stopGame() {
     //myTickerThread = null;
     //myStop = true;
-    if (myGame != null) {
+    if (_currentGame != null) {
       Debug.print("Stop game");
-      myGame.insertTopScore(myGame.getScore());
+      _currentGame.insertTopScore(_currentGame.getScore());
     }
   }
 
@@ -423,7 +419,8 @@ public final class GameView extends SurfaceView {
 
       // TODO paint scores as bar
       Ui.fillRect(c, _scoreBarArea, ColorCodes.black);
-      Ui.drawText(c, getGame().getGameLabel()+ ": " + getGame().getScore(),
+      Ui.drawText(c,
+        String.format("%s %s: %d", getGame().getGameLabel(), getContext().getString(R.string.msg_score), getGame().getScore()),
         _scoreBarArea.left, _scoreBarArea.top, _fontSize, ColorCodes.yellow);
 
       // paint buttons
@@ -586,7 +583,7 @@ public final class GameView extends SurfaceView {
 
     p.setColor(ColorCodes.black);
     // display game name
-    c.drawText(myGame.getGameLabel(), 0, 0, p);
+    c.drawText(_currentGame.getGameLabel(), 0, 0, p);
     p.setTextAlign(Paint.Align.RIGHT);
     c.drawText(getTimeStr(0), scrWidth, 0, p);
     p.setTextAlign(Paint.Align.LEFT);
@@ -594,10 +591,10 @@ public final class GameView extends SurfaceView {
 
     c.drawRect(0, fontHeight, scrWidth, scrHeight - fontHeight * 2, p);
 
-    int nScores = myGame.getScoreTableSize();
+    int nScores = _currentGame.getScoreTableSize();
 
     if (nScores > 0) {
-      int pos = 0, curScorePosition = myGame.findScorePosition(curScore);
+      int pos = 0, curScorePosition = _currentGame.findScorePosition(curScore);
       float yPos = fontHeight;
       float entryHeight = (scrHeight - fontHeight * 2) / nScores;
 
@@ -609,7 +606,7 @@ public final class GameView extends SurfaceView {
       //Font curFont = g.getFont();
       //Font boldFont = Font.getFont(curFont.getFace(), curFont.getStyle() | Font.STYLE_BOLD, curFont.getSize());
       long recordDate;
-      while ((recordDate = myGame.getScoreTableEntry(pos)) >= 0) {
+      while ((recordDate = _currentGame.getScoreTableEntry(pos)) >= 0) {
 
         if (pos == curScorePosition) {
           p.setColor(ColorCodes.yellow);
@@ -619,7 +616,7 @@ public final class GameView extends SurfaceView {
 
         //g.drawRect(1, yPos+1, scrWidth-3, entryHeight - 2);
 
-        String posAndScore = "" + (pos + 1) + ". " + myGame.getHiScores()[pos];
+        String posAndScore = "" + (pos + 1) + ". " + _currentGame.getHiScores()[pos];
 
         //g.setFont(boldFont);
         c.drawText(posAndScore, 3, yPos + 2 + (entryHeight - fontHeight) / 2, p);
