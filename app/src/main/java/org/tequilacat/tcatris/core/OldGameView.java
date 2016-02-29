@@ -185,7 +185,7 @@ public final class OldGameView extends SurfaceView implements Runnable {
     //myStop = true;
     if (myGame != null) {
       Debug.print("Stop game");
-      myGame.insertTopScore(myGame.getScore());
+      //myGame.insertTopScore(myGame.getScore());
     }
   }
 
@@ -297,11 +297,11 @@ public final class OldGameView extends SurfaceView implements Runnable {
     // now process actions in DM_GAME mode
     if (tetrisAction == TETRIS_MENU) {
       if (myGame.getState() == Tetris.LOST) { // check if we display hiscores or not
-        if (myGame.findScorePosition(myGame.getScore()) >= 0) {
-          myDisplayMode = DM_HISCORES;
-        } else {
-          startGame();
-        }
+//        if (myGame.findScorePosition(myGame.getScore()) >= 0) {
+//          myDisplayMode = DM_HISCORES;
+//        } else {
+//          startGame();
+//        }
       } else { // show menu
         //showMainMenu();
       }
@@ -515,7 +515,7 @@ public final class OldGameView extends SurfaceView implements Runnable {
     int curScore = getGame().getScore();
     float fontHeight = _lineHeight;
 
-    int[] hiScores = getGame().getHiScores();
+    int[] hiScores = null;// getGame().getHiScores();
     // along right side, draw
 
     // DEBUG
@@ -613,10 +613,10 @@ public final class OldGameView extends SurfaceView implements Runnable {
 
     c.drawRect(0, fontHeight, _screenWidth, _screenHeight - fontHeight * 2, p);
 
-    int nScores = myGame.getScoreTableSize();
+    int nScores = 0;//myGame.getScoreTableSize();
 
     if (nScores > 0) {
-      int pos = 0, curScorePosition = myGame.findScorePosition(curScore);
+      int pos = 0, curScorePosition = 0;//myGame.findScorePosition(curScore);
       float yPos = fontHeight;
       float entryHeight = (_screenHeight - fontHeight * 2) / nScores;
 
@@ -628,7 +628,7 @@ public final class OldGameView extends SurfaceView implements Runnable {
       //Font curFont = g.getFont();
       //Font boldFont = Font.getFont(curFont.getFace(), curFont.getStyle() | Font.STYLE_BOLD, curFont.getSize());
       long recordDate;
-      while ((recordDate = myGame.getScoreTableEntry(pos)) >= 0) {
+      while ((recordDate = /*myGame.getScoreTableEntry(pos)*/ 0) >= 0) {
 
         if (pos == curScorePosition) {
           p.setColor(ColorCodes.yellow);
@@ -638,7 +638,7 @@ public final class OldGameView extends SurfaceView implements Runnable {
 
         //g.drawRect(1, yPos+1, scrWidth-3, entryHeight - 2);
 
-        String posAndScore = "" + (pos + 1) + ". " + myGame.getHiScores()[pos];
+        String posAndScore = "" + (pos + 1) + ". " + 0;// myGame.getHiScores()[pos];
 
         //g.setFont(boldFont);
         c.drawText(posAndScore, 3, yPos + 2 + (entryHeight - fontHeight) / 2, p);

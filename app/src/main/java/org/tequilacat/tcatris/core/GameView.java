@@ -263,6 +263,10 @@ public final class GameView extends SurfaceView {
     }
   }
 
+  private static Ui.ButtonGlyph[] BTN_GLYPHS = new Ui.ButtonGlyph[] {
+    Ui.ButtonGlyph.LEFT, Ui.ButtonGlyph.RCCW, Ui.ButtonGlyph.DROP, Ui.ButtonGlyph.RCW, Ui.ButtonGlyph.RIGHT
+  };
+
   private static final GameAction[] BUTTON_ACTIONS = new GameAction[]{
     GameAction.LEFT, GameAction.ROTATE_CCW, GameAction.DROP, GameAction.ROTATE_CW, GameAction.RIGHT
   };
@@ -276,7 +280,7 @@ public final class GameView extends SurfaceView {
 
       if (_buttonArea.contains((int) event.getX(), (int) event.getY())) {
         // compute by
-        int buttonId = (int) (event.getX() - _buttonArea.left) / (_buttonArea.width() / BUTTON_COUNT);
+        int buttonId = (int) (event.getX() - _buttonArea.left) / (_buttonArea.width() / BUTTON_ACTIONS.length);
         if (buttonId >= 0 && buttonId < BUTTON_ACTIONS.length) {
           clickedAction = BUTTON_ACTIONS[buttonId];
         }
@@ -298,12 +302,10 @@ public final class GameView extends SurfaceView {
     //myStop = true;
     if (_currentGame != null) {
       Debug.print("Stop game");
-      _currentGame.insertTopScore(_currentGame.getScore());
+      //_currentGame.insertTopScore(_currentGame.getScore());
     }
   }
 
-
-  private static final int BUTTON_COUNT = 5;
 
   private Rect _gameArea = new Rect();
   private Rect _buttonArea = new Rect();
@@ -381,6 +383,8 @@ public final class GameView extends SurfaceView {
 
           if (paintType == ScreenPaintType.PAUSED) {
             c.drawColor(ColorCodes.blue);
+//            Ui.drawGlyph(c, 10, 10, 100, 100, Ui.ButtonGlyph.LEFT);
+//            Ui.drawGlyph(c, 300, 300, 100, 100, Ui.ButtonGlyph.RIGHT);
 
           } else if (paintType == ScreenPaintType.FAILED) {
             c.drawColor(ColorCodes.red);
@@ -424,11 +428,14 @@ public final class GameView extends SurfaceView {
         _scoreBarArea.left, _scoreBarArea.top, _fontSize, ColorCodes.yellow);
 
       // paint buttons
-      int bX = _buttonArea.left, bW = _buttonArea.width() / BUTTON_COUNT,
+      int bX = _buttonArea.left, bW = _buttonArea.width() / BUTTON_ACTIONS.length,
         bY = _buttonArea.top, bH = _buttonArea.height();
 
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < BUTTON_ACTIONS.length; i++) {
+      //for(Ui.ButtonGlyph glyph : Ui.ButtonGlyph.values()) {
         Ui.draw3dRect(c, bX, bY, bW, bH);
+        Ui.drawGlyph(c, bX, bY, bW, bH, BTN_GLYPHS[i]);
+
         bX += bW;
       }
     }
@@ -481,12 +488,7 @@ public final class GameView extends SurfaceView {
             }
         }
     }
-*/
 
-  private void displayEntry(Canvas c, Bitmap img, int score, int xPos, int yPos) {
-  }
-
-  /*
   private void showInGameScores(Canvas c) {
     GameScreenLayout layout = getGame().getGameScreenLayout();
     int curScore = getGame().getScore();
@@ -569,9 +571,7 @@ public final class GameView extends SurfaceView {
       Ui.draw3dRect(c, sbX, sbY, sbWidth, sbHeight);
     }
   }
-*/
-  /**************************************************
-   **************************************************/
+
   private void showScoreTable(Canvas c) {
     int scrWidth = getWidth(), scrHeight = getHeight();
     Paint p = new Paint();
@@ -634,47 +634,6 @@ public final class GameView extends SurfaceView {
 
     }
   }
+*/
 
-
-  /**************************************************
-   **************************************************/
-  public static String getTimeStr(long millis) {
-    StringBuilder stb = new StringBuilder();
-
-//        TimeZone.getDefault()
-    Calendar curTime = Calendar.getInstance();
-    Calendar scoreTime = curTime;
-    if (millis != 0) {
-      scoreTime = Calendar.getInstance();
-      scoreTime.setTime(new Date(millis));
-    }
-        
-        /* 
-        Debug.print("Cur time: "+curTime.get(Calendar.YEAR)+"."
-            +curTime.get(Calendar.MONTH)+"."+curTime.get(Calendar.DAY_OF_MONTH));
-            
-        Debug.print("Score time ["+ millis +"]: "+scoreTime.get(Calendar.YEAR)+"."
-            +scoreTime.get(Calendar.MONTH)+"."+scoreTime.get(Calendar.DAY_OF_MONTH));
-         */
-//         Debug.print("Current TZ: "+curTime.getTimeZone().getID());
-
-    // today, or if request current time:
-    if (scoreTime == curTime ||
-      (curTime.get(Calendar.YEAR) == scoreTime.get(Calendar.YEAR)
-        && curTime.get(Calendar.MONTH) == scoreTime.get(Calendar.MONTH)
-        && curTime.get(Calendar.DAY_OF_MONTH) == scoreTime.get(Calendar.DAY_OF_MONTH))) {
-
-      // same day, display HH:MM
-      int hh = scoreTime.get(Calendar.HOUR_OF_DAY), mm = scoreTime.get(Calendar.MINUTE);
-
-      stb.append(hh).append(':');
-      if (mm < 10) stb.append('0');
-      stb.append(mm);
-    } else {
-      stb.append(scoreTime.get(Calendar.DAY_OF_MONTH)).append('.')
-        .append(scoreTime.get(Calendar.MONTH)).append('.')
-        .append(scoreTime.get(Calendar.YEAR));
-    }
-    return stb.toString();
-  }
 }

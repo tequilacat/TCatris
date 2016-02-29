@@ -1,10 +1,10 @@
 package org.tequilacat.tcatris.core;
 
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
-
-import org.tequilacat.tcatris.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -130,7 +130,7 @@ public class Ui {
     if (gameLabel != null) {
       c.drawText(gameLabel, 0, 0, _uiPainter);
     }
-    c.drawText(GameView.getTimeStr(0), canvasWidth, 0, _uiPainter);
+    //c.drawText(GameView.getTimeStr(0), canvasWidth, 0, _uiPainter);
 
 
     //Font curFont = g.getFont();
@@ -206,6 +206,86 @@ public class Ui {
     g.drawLine(x, y, x - w, y, _framePainter);
     g.drawLine(x, y, x, y - h, _framePainter);
     //g.drawLine(x-1, y-1, x+w, y-1);
+  }
+
+
+  public enum ButtonGlyph {
+    LEFT, RIGHT, RCW, RCCW, DROP,
+  }
+
+  private static List<Path> GLYPH_PATHS;
+  private static Paint _buttonGlyphFillPainter = new Paint();
+  private static Paint _buttonGlyphStrokePainter = new Paint();
+
+  /**
+   * rotatas path around center which is considered 0.5, 0.5
+   * @param srcPath
+   * @param degree
+   * @return
+   */
+  private static Path rotated(Path srcPath, int degree) {
+    Matrix mtx = new Matrix();
+    mtx.postTranslate(-0.5f, -0.5f);
+    mtx.postRotate(degree);
+    mtx.postTranslate(0.5f, 0.5f);
+    //mtx.postScale(-1, 1, 0, 0);
+    //mtx.postTranslate(side, 0);
+    Path path = new Path();
+    srcPath.transform(mtx, path);
+    return path;
+  }
+
+  static {
+    _buttonGlyphStrokePainter.setStyle(Paint.Style.STROKE);
+    _buttonGlyphStrokePainter.setStrokeWidth(0.02f);
+    _buttonGlyphStrokePainter.setColor(ColorCodes.black);
+    _buttonGlyphStrokePainter.setStrokeJoin(Paint.Join.ROUND);
+
+    _buttonGlyphFillPainter.setStyle(Paint.Style.FILL);
+    _buttonGlyphFillPainter.setColor(ColorCodes.white);
+
+    // create buttons
+    GLYPH_PATHS = new ArrayList<>();
+
+    float side = 1;
+    // create path
+    Path arrowRightPath = new Path();
+    arrowRightPath.moveTo(side * 0.2f, side * 0.4f);
+    arrowRightPath.lineTo(side * 0.4f, side * 0.4f);
+    arrowRightPath.lineTo(side * 0.4f, side * 0.2f);
+    arrowRightPath.lineTo(side * 0.8f, side * 0.5f);
+    arrowRightPath.lineTo(side * 0.4f, side * 0.8f);
+    arrowRightPath.lineTo(side * 0.4f, side * 0.6f);
+    arrowRightPath.lineTo(side * 0.2f, side * 0.6f);
+    arrowRightPath.close();
+
+    GLYPH_PATHS.add(rotated(arrowRightPath, 180)); // left
+    GLYPH_PATHS.add(arrowRightPath); // right
+    GLYPH_PATHS.add(rotated(arrowRightPath, 45)); // CW
+    GLYPH_PATHS.add(rotated(arrowRightPath, 135)); // CCW
+    GLYPH_PATHS.add(rotated(arrowRightPath, 90)); // DROP
+  }
+
+  public static void drawGlyph(Canvas c, Rect bounds, ButtonGlyph glyph){
+    drawGlyph(c, bounds.left, bounds.top, bounds.width(), bounds.height(), glyph);
+  }
+
+  public static void drawGlyph(Canvas c, int x, int y, int w, int h, ButtonGlyph glyph){
+    // test case: fill rect with green
+    final int index = glyph.ordinal();
+
+    if(index < GLYPH_PATHS.size()) {
+      // fillRect(c, x, y, w, h, ColorCodes.green); // DEBUG!!!
+
+      Path path = GLYPH_PATHS.get(index);
+      c.save();
+      c.translate(x, y);
+      c.scale(w, h);
+
+      c.drawPath(path, _buttonGlyphFillPainter);
+      c.drawPath(path, _buttonGlyphStrokePainter);
+      c.restore();
+    }
   }
 }
 

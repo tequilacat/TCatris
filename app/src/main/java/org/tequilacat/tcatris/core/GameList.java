@@ -1,8 +1,16 @@
 package org.tequilacat.tcatris.core;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -131,7 +139,7 @@ public class GameList {
       //Debug.print("Create game: class = "+gameClass+", '"+ gameName +"', -> "+gameDesc);
       game = (Tetris) Class.forName( descriptor.getGameClassName()).newInstance();
       game.setId(descriptor.getId());
-      game.init(descriptor.getLabel(), descriptor.getGameParameters(), getGameData(descriptor));
+      game.init(descriptor.getLabel(), descriptor.getGameParameters());
 
     } catch (Exception e) {
       // TODO process error when creating a game
@@ -282,4 +290,220 @@ public class GameList {
     }
     */
   }
+
+  public class ScoreEntry {
+    private String _userName;
+    private int _score;
+    private long _time;
+
+    public String getUserName() {
+      return _userName;
+    }
+
+    public void setUserName(String userName) {
+      _userName = userName;
+    }
+
+    public int getScore() {
+      return _score;
+    }
+
+    public void setScore(int score) {
+      _score = score;
+    }
+
+    public long getTime() {
+      return _time;
+    }
+
+    public void setTime(long time) {
+      _time = time;
+    }
+
+    public String getDateStr(){
+      return new SimpleDateFormat().format(new Date(getTime()));
+    }
+  }
+
+  public int getMaxScore(String gameId) {
+    return 0;
+  }
+
+  public List<ScoreEntry> getScores(String gameId) {
+    return null;
+  }
+
+  public void saveScore(String gameId, String userName, long time) {
+  }
+
+  private class GameScores {
+    private int[] myScores;
+    private long[] myScoreDates;
+
+    /**************************************************
+     * save format:
+     * <p/>
+     * nTopScores(int),
+     * topscore (*nTopScores):  int scores, long timeMillis, UTF label
+     * <p/>
+     * converted : int[] scores, long[] millis, String[] chars;
+     **************************************************/
+    private void parseHiScores(byte[] data) {
+      try {
+        myScores = new int[5];
+        myScoreDates = new long[myScores.length];
+
+        if (data != null && data.length > 0) {
+          DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data));
+          int scoreTableSize = dis.readInt();
+
+//                Debug.print(">>> Read score table ["+scoreTableSize+"]");
+
+          for (int i = 0; i < scoreTableSize; i++) {
+            int score = dis.readInt();
+            long date = dis.readLong();
+            String title = dis.readUTF();
+            if (i < myScores.length) {
+              myScores[i] = score;
+              myScoreDates[i] = date;
+            }
+          }
+        }
+      } catch (IOException ioe) { // it cant happen, lets pretend
+      }
+    }
+
+    /**
+     */
+    protected int getScoreTableSize() {
+      int nScores = 0;
+      while (nScores < myScores.length && myScores[nScores] > 0) {
+        nScores++;
+      }
+      return nScores;
+    }
+
+    /**
+     */
+    protected int findScorePosition(int score) {
+      if (score > 0) {
+        for (int i = 0; i < myScores.length; i++) {
+          if (myScores[i] == score) {
+            return i;
+          }
+        }
+      }
+      return -1;
+    }
+
+    /**
+     */
+    protected boolean insertTopScore(int score) {
+      boolean scoreInserted = false;
+      if (score > 0) {
+        int i = myScores.length - 1;
+        while (i >= -1) {
+          if (i == -1 || score < myScores[i]) { // add under it
+            i++;
+            if (i < myScores.length) {
+              myScores[i] = score;
+              myScoreDates[i] = System.currentTimeMillis();
+//                        Debug.print("!!!  Added @ pos "+ (i+1));
+              scoreInserted = true;
+            }
+            break;
+          } else { // i >= 0, score >= myScores[i]
+            if (i + 1 < myScores.length) {
+              myScores[i + 1] = myScores[i];
+              myScoreDates[i + 1] = myScoreDates[i];
+            }
+          }
+          i--;
+        }
+
+//            Debug.print("AFTER : ");
+//            debugDumpScores();
+
+        if (scoreInserted) {
+          //Debug.print("Score inserted, dump scores to the app props");
+//                debugDumpScores();
+          // TODO record top score in master game code
+          // GameList.storeGameData(encodeTopScores(), GameName);
+        }
+      }
+      return scoreInserted;
+    }
+
+    /**
+     * @return byte array containing earned scores in this game
+     */
+    protected byte[] encodeTopScores() {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      try {
+
+        int nScores = getScoreTableSize();
+
+        DataOutputStream dos = new DataOutputStream(baos);
+        dos.writeInt(nScores);
+        for (int i = 0; i < nScores; i++) {
+          dos.writeInt(myScores[i]);
+          dos.writeLong(myScoreDates[i]);
+          dos.writeUTF("");
+        }
+
+      } catch (IOException ioe) { // it cant happen, lets pretend
+      }
+
+      return baos.toByteArray();
+    }
+  }
+
+
+
+  /**
+   * TODO convert time millis to string somehow simpler
+   * converts timestamp to user-readable time
+   * @param millis
+   * @return
+   */
+  public static String getTimeStr(long millis) {
+    StringBuilder stb = new StringBuilder();
+
+//        TimeZone.getDefault()
+    Calendar curTime = Calendar.getInstance();
+    Calendar scoreTime = curTime;
+    if (millis != 0) {
+      scoreTime = Calendar.getInstance();
+      scoreTime.setTime(new Date(millis));
+    }
+
+        /*
+        Debug.print("Cur time: "+curTime.get(Calendar.YEAR)+"."
+            +curTime.get(Calendar.MONTH)+"."+curTime.get(Calendar.DAY_OF_MONTH));
+
+        Debug.print("Score time ["+ millis +"]: "+scoreTime.get(Calendar.YEAR)+"."
+            +scoreTime.get(Calendar.MONTH)+"."+scoreTime.get(Calendar.DAY_OF_MONTH));
+         */
+//         Debug.print("Current TZ: "+curTime.getTimeZone().getID());
+
+    // today, or if request current time:
+    if (scoreTime == curTime ||
+      (curTime.get(Calendar.YEAR) == scoreTime.get(Calendar.YEAR)
+        && curTime.get(Calendar.MONTH) == scoreTime.get(Calendar.MONTH)
+        && curTime.get(Calendar.DAY_OF_MONTH) == scoreTime.get(Calendar.DAY_OF_MONTH))) {
+
+      // same day, display HH:MM
+      int hh = scoreTime.get(Calendar.HOUR_OF_DAY), mm = scoreTime.get(Calendar.MINUTE);
+
+      stb.append(hh).append(':');
+      if (mm < 10) stb.append('0');
+      stb.append(mm);
+    } else {
+      stb.append(scoreTime.get(Calendar.DAY_OF_MONTH)).append('.')
+        .append(scoreTime.get(Calendar.MONTH)).append('.')
+        .append(scoreTime.get(Calendar.YEAR));
+    }
+    return stb.toString();
+  }
+
 }
