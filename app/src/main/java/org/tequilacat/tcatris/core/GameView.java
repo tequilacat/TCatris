@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.support.v4.view.MotionEventCompat;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -137,73 +138,74 @@ public final class GameView extends SurfaceView {
 
           if (_isRunning) {
             // otherwise just exit from while
+            GameAction curAction = _gameThreadAction;
+            _gameThreadAction = null;
 
-              if (_isPaused) {
-                // show paused screen and wait for next kick
-                Debug.print("PAUSE: show paused screen and wait for next kick");
-                towait = 0;
-                paintScreen(ScreenPaintType.PAUSED);
+            if (_isPaused) {
+              // show paused screen and wait for next kick
+              Debug.print("PAUSE: show paused screen and wait for next kick");
+              towait = 0;
+              paintScreen(ScreenPaintType.PAUSED);
 
-              } else if (getGame().getState() == Tetris.LOST) {
-                // show scores
-                Debug.print("lost, wait for next kick to restart");
-                towait = 0;
-                paintScreen(ScreenPaintType.FAILED);
+            } else if (getGame().getState() == Tetris.LOST) {
+              // show scores
+              Debug.print("lost, wait for next kick to restart");
+              towait = 0;
+              paintScreen(ScreenPaintType.FAILED);
 
-              } else { // ACTIVE: run action, see consequences
-                // normal timing operation, check action and depending on it repaint screen
-                //Debug.print("   woke up [slept=" + sleptTime + "], action = " + _gameThreadAction);
-                GameAction curAction = _gameThreadAction;
-                _gameThreadAction = null;
-                // whether all screen data changed or only field with falling shape
-                //boolean repaintAll = false;
-                //boolean doRepaint = true;
-                ScreenPaintType repaintType = null;
+            } else if (curAction == GameAction.UNPAUSE) {
+              towait = INTERVAL;
+              paintScreen(ScreenPaintType.FULLSCREEN);
 
-                if (curAction == null) {
-                  repaintType = getGame().nextState(false) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
-                  towait = INTERVAL; // getGame().getLevelDelayMS();
+            } else { // ACTIVE: run action, see consequences
+              // normal timing operation, check action and depending on it repaint screen
+              //Debug.print("   woke up [slept=" + sleptTime + "], action = " + _gameThreadAction);
+             ScreenPaintType repaintType = null;
 
-                } else {
-                  // run action
-                  final boolean doRepaint;
+              if (curAction == null) {
+                repaintType = getGame().nextState(false) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
+                towait = INTERVAL; // getGame().getLevelDelayMS();
 
-                  switch (curAction) {
-                    case DROP:
-                      doRepaint = true;
-                      repaintType = getGame().nextState(true) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
-                      break;
-                    case LEFT:
-                      doRepaint = getGame().moveLeft();
-                      break;
-                    case RIGHT:
-                      doRepaint = getGame().moveRight();
-                      break;
-                    case ROTATE_CW:
-                      doRepaint = getGame().rotateClockwise();
-                      break;
-                    case ROTATE_CCW:
-                      doRepaint = getGame().rotateAntiClockwise();
-                      break;
-                    default:
-                      doRepaint = false;
-                      break;
-                  }
+              } else {
+                // run action
+                final boolean doRepaint;
 
-                  if(doRepaint && repaintType == null) {
-                    repaintType = ScreenPaintType.FIELD_ONLY;
-                  }
-
-                  towait = INTERVAL - sleptTime;
-                  if (towait <= 0) {
-                    // slept or worked too long, next cycle very soon
-                    towait = 1;
-                  }
-                  //Debug.print("... User action, sleep remaining ");
+                switch (curAction) {
+                  case DROP:
+                    doRepaint = true;
+                    repaintType = getGame().nextState(true) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
+                    break;
+                  case LEFT:
+                    doRepaint = getGame().moveLeft();
+                    break;
+                  case RIGHT:
+                    doRepaint = getGame().moveRight();
+                    break;
+                  case ROTATE_CW:
+                    doRepaint = getGame().rotateClockwise();
+                    break;
+                  case ROTATE_CCW:
+                    doRepaint = getGame().rotateAntiClockwise();
+                    break;
+                  default:
+                    doRepaint = false;
+                    break;
                 }
 
-                paintScreen(repaintType);
+                if (doRepaint && repaintType == null) {
+                  repaintType = ScreenPaintType.FIELD_ONLY;
+                }
+
+                towait = INTERVAL - sleptTime;
+                if (towait <= 0) {
+                  // slept or worked too long, next cycle very soon
+                  towait = 1;
+                }
+                //Debug.print("... User action, sleep remaining ");
               }
+
+              paintScreen(repaintType);
+            }
           }
         }
       } catch (InterruptedException e) {
@@ -227,29 +229,32 @@ public final class GameView extends SurfaceView {
       // TODO catch Interruption
     }
   }
-
-  private void showPauseDialog() {
+  /*
+ private void showPauseDialog() {
     AlertDialog.Builder dlgAlert  = new AlertDialog.Builder(getContext());
-    dlgAlert.setMessage(R.string.msg_app_paused);
-    dlgAlert.setTitle(R.string.app_name);
-    dlgAlert.setCancelable(true);
-    dlgAlert.setPositiveButton(R.string.btn_ok,
-            new DialogInterface.OnClickListener() {
-              public void onClick(DialogInterface dialog, int which) {
-                //dismiss the dialog
-                Debug.print("unpause");
-                _isPaused = false;
-                sendAction(null); // just kick the waiter
-              }
-            });
+   dlgAlert.setMessage(R.string.msg_app_paused);
+   dlgAlert.setTitle(R.string.app_name);
+   dlgAlert.setCancelable(true);
+   dlgAlert.setPositiveButton(R.string.btn_ok,
+           new DialogInterface.OnClickListener() {
+             public void onClick(DialogInterface dialog, int which) {
+               //dismiss the dialog
+               Debug.print("unpause");
+               _isPaused = false;
+               sendAction(null); // just kick the waiter
+             }
+           });
 
-    _isPaused = true;
-    sendAction(null);
-    dlgAlert.create().show();
-  }
+   _isPaused = true;
+   sendAction(null);
+   dlgAlert.create().show();
 
+   _isPaused = true;
+   sendAction(null);
+ }
+ */
   enum GameAction {
-    LEFT, RIGHT, ROTATE_CW, ROTATE_CCW, DROP,
+    LEFT, RIGHT, ROTATE_CW, ROTATE_CCW, DROP, UNPAUSE,
   }
 
   /**
@@ -271,28 +276,67 @@ public final class GameView extends SurfaceView {
     GameAction.LEFT, GameAction.ROTATE_CCW, GameAction.DROP, GameAction.ROTATE_CW, GameAction.RIGHT
   };
 
+  private void trackDrag(MotionEvent event) {
+    int action = event.getAction();
+    if(action == MotionEvent.ACTION_DOWN){
+      // see index
+      //event.poi
+    }
+  }
+
   @Override
   public boolean onTouchEvent(MotionEvent event) {
     //int scrWidth = getWidth(), scrHeight = getHeight();
 
-    if (event.getAction() == MotionEvent.ACTION_DOWN) {
-      GameAction clickedAction = null;
+//    trackDrag(event);
+//    if(true) {
+//      return true;
+//    }
+    int action = MotionEventCompat.getActionMasked(event);
+    // int action = event.getAction();
+    //Debug.print("Mouse action " + action + " (" + event.getAction() + ")");
 
-      if (_buttonArea.contains((int) event.getX(), (int) event.getY())) {
-        // compute by
-        int buttonId = (int) (event.getX() - _buttonArea.left) / (_buttonArea.width() / BUTTON_ACTIONS.length);
-        if (buttonId >= 0 && buttonId < BUTTON_ACTIONS.length) {
-          clickedAction = BUTTON_ACTIONS[buttonId];
+    //if(true)return true;
+
+    if (action == MotionEvent.ACTION_DOWN) {
+      if(_isPaused) {
+        setPaused(false);
+
+      }else {
+
+        GameAction clickedAction = null;
+        int eventX = (int) event.getX(), eventY = (int) event.getY();
+
+        if (_buttonArea.contains(eventX, eventY)) {
+          // compute by
+          int buttonId = (int) (event.getX() - _buttonArea.left) / (_buttonArea.width() / BUTTON_ACTIONS.length);
+          if (buttonId >= 0 && buttonId < BUTTON_ACTIONS.length) {
+            clickedAction = BUTTON_ACTIONS[buttonId];
+          }
         }
-      }
 
-      if(clickedAction != null){
-        sendAction(clickedAction);
-      }else{
-        showPauseDialog();
+        if (clickedAction != null) {
+          sendAction(clickedAction);
+
+        } else if (getGame().getGameScreenLayout().getFieldRect().contains(
+                eventX - _gameArea.left, eventY - _gameArea.top)) {
+          // check field click - set pause
+          setPaused(true);
+        }
+
       }
     }
+
     return super.onTouchEvent(event);
+  }
+
+  /**
+   * sets paused mode and updates screen
+   * @param isPaused
+   */
+  private  void  setPaused(boolean isPaused) {
+    _isPaused = isPaused;
+    sendAction(_isPaused ? null : GameAction.UNPAUSE);
   }
 
   /**************************************************
@@ -331,7 +375,7 @@ public final class GameView extends SurfaceView {
 
     _scoreBarArea.set(0, 0, w, scoreHeight);
     _gameArea.set(0, _scoreBarArea.bottom, w, h - buttonHeight - scoreHeight);
-    _buttonArea.set(0, _gameArea.bottom, w, h - scoreHeight);
+    _buttonArea.set(0, _gameArea.bottom, w, h);
 
     getGame().layout(_gameArea.width(), _gameArea.height());
     Rect fieldRect = getGame().getGameScreenLayout().getFieldRect();
