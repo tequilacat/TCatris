@@ -11,7 +11,9 @@ import android.view.SurfaceView;
 
 import org.tequilacat.tcatris.R;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public final class GameView extends SurfaceView {
@@ -26,7 +28,7 @@ public final class GameView extends SurfaceView {
 
   //boolean myDisplayIconsVertically;
 
-  private Object _gameChangeLock = new Object();
+  private final Object _gameChangeLock = new Object();
   //private int _screenWidth;
   //private int _screenHeight;
   //private SurfaceHolder _holder;
@@ -156,11 +158,11 @@ public final class GameView extends SurfaceView {
             } else { // ACTIVE: run action, see consequences
               // normal timing operation, check action and depending on it repaint screen
               //Debug.print("   woke up [slept=" + sleptTime + "], action = " + _gameThreadAction);
-             ScreenPaintType repaintType = null;
+              ScreenPaintType repaintType = null;
 
               if (curAction == null) {
-                repaintType = ScreenPaintType.FULLSCREEN;
-                // repaintType = getGame().nextState(false) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
+                //repaintType = ScreenPaintType.FULLSCREEN;
+                repaintType = getGame().nextState(false) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
                 towait = INTERVAL; // getGame().getLevelDelayMS();
 
               } else {
@@ -171,6 +173,7 @@ public final class GameView extends SurfaceView {
                   case DROP:
                     doRepaint = true;
                     repaintType = getGame().nextState(true) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
+                    // TODO on drop reset timer
                     break;
                   case LEFT:
                     doRepaint = getGame().moveLeft();
@@ -214,6 +217,7 @@ public final class GameView extends SurfaceView {
 
   private void gameStart() {
     Debug.print("game start");
+    initTracks();
     _gameThread.start();
   }
 
@@ -281,30 +285,82 @@ public final class GameView extends SurfaceView {
   /**
    * stores info on dragged direction button
    */
-  class DragTrack {
-    public DragType dragType;
+  static class DragTrack {
+    private final GameAction _positiveOffsetAction;
+    private final GameAction _negativeOffsetAction;
+    public final DragType dragType;
+    private final int _stepDistance;
+
+    // pointer id for which this track currently registers offset
     public int pointerId;
 
     // start coordinates
-    int x0, y0;
+    //private int x0, y0;
     // last coordinates
-    int lastX, lastY;
+    private int lastX, lastY;
 
-    public DragTrack(DragType dragType, int x, int y, int pointerId) {
+    GameAction _lastAction;
+    int _lastActionCount;
+
+    public DragTrack(DragType dragType, GameAction onPositive, GameAction onNegative, int distance) {
       this.dragType = dragType;
-      this.pointerId = pointerId;
+      _positiveOffsetAction = onPositive;
+      _negativeOffsetAction = onNegative;
+      _stepDistance = distance;
+      pointerId = -1;
+    }
 
-      x0 = x;
-      y0 = y;
+    public void start(int x, int y, int pointerId) {
+      this.pointerId = pointerId;
       lastX = x;
       lastY = y;
     }
+
+    public boolean isStarted() {
+      return pointerId >= 0;
+    }
+
+    public void stop() {
+      pointerId = -1;
+    }
+
+    public GameAction dragTo(int newX, int newY) {
+      // only X is currently processed
+      _lastAction = null;
+      _lastActionCount = 0;
+      int moveCount = (newX - lastX) / _stepDistance;
+
+      if(moveCount != 0) {
+        _lastAction = moveCount > 0 ? _positiveOffsetAction : _negativeOffsetAction;
+        // update lastX, set action to
+        //dragAction = LE
+        _lastActionCount = Math.abs(moveCount);
+        // fix lastX so it's round , so next movement will add its delta to remaining diff
+        lastX += moveCount * _stepDistance;
+      }
+
+      return _lastAction;
+    }
+
+    public int getLastActionCount() {
+      return _lastActionCount;
+    }
+
+    public GameAction getLastAction() {
+      return _lastAction;
+    }
   }
 
-  /**
-   * currently active draags
-   */
-  private List<DragTrack> _dragTrackList = new ArrayList<>();
+  private DragTrack[] _tracksByType;
+
+  private void initTracks() {
+    // dragging half screen (approx button width) should drag shape across whole field width twice
+    int distance = getWidth() / 4 / getGame().getWidth();
+    _tracksByType = new DragTrack[]{
+            new DragTrack(DragType.MOVE_LEFTRIGHT, GameAction.RIGHT, GameAction.LEFT, distance),
+            new DragTrack(DragType.ROTATE, GameAction.ROTATE_CW, GameAction.ROTATE_CCW, distance)
+    };
+  }
 
   private int _lastDragActionCount;
 
@@ -320,14 +376,13 @@ public final class GameView extends SurfaceView {
   private GameAction trackDrag(MotionEvent event) {
     GameAction dragAction = null;
     int action = MotionEventCompat.getActionMasked(event);
-    int index = MotionEventCompat.getActionIndex(event);
-    int pointerId = MotionEventCompat.getPointerId(event, index);
-
-    // Debug.print("action " + action + " (" + event.getAction() + ")");
-    int x = (int) MotionEventCompat.getX(event, index), y = (int) MotionEventCompat.getY(event, index);
 
     if(action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN){
+      int index = MotionEventCompat.getActionIndex(event);
+      int pointerId = MotionEventCompat.getPointerId(event, index);
       Debug.print(">>> Event AD/APD #" + action + " (" + event.getAction() + "): index = " + index + " of " + MotionEventCompat.getPointerCount(event));
+      int x = (int) MotionEventCompat.getX(event, index), y = (int) MotionEventCompat.getY(event, index);
+
 
       //int x = (int)event.getX(), y = (int) event.getY();
       //Debug.print("DOWN X = " + x + " (" + xx + "), Y = " + y + " (" + yy + ") ");
@@ -344,47 +399,47 @@ public final class GameView extends SurfaceView {
         // find drag type (button ID) in currently tracked list,
         // if does not exist we remember it, if the button is already dragged we ignore it
         // that's all for ACTION_DOWN
-        boolean found = false;
+        DragTrack found = null;
 
-        for (DragTrack track : _dragTrackList) {
-          if (track.dragType == dragType) {
-            found = true;
+        for (DragTrack track : _tracksByType) {
+          if (track.dragType == dragType && !track.isStarted()) {
+            found = track;
             break;
           }
         }
 
-        if (!found) {
-          Debug.print("  ++ " + dragType);
-
-          _dragTrackList.add(new DragTrack(dragType, x, y, pointerId));
+        if (found != null) {
+          Debug.print("  ++ " + dragType + ", id = " + pointerId + " [index = " + index + "]");
+          found.start(x, y, pointerId);
         }
       }
+
     } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP || action == MotionEvent.ACTION_CANCEL) {
-      Debug.print(">>> Event AU/APU/AC #" + action + " (" + event.getAction() + "): index = " + index + " of " + MotionEventCompat.getPointerCount(event));
+      Debug.print(">>> Event AU/APU/AC #" + action + " (" + event.getAction() + ")");//: index = " + index + " of " + MotionEventCompat.getPointerCount(event));
+      int pointerId = MotionEventCompat.getPointerId(event, MotionEventCompat.getActionIndex(event));
 
       // find drag for this index,
-      for (DragTrack track : _dragTrackList) {
+      for (DragTrack track : _tracksByType) {
         if(track.pointerId == pointerId){
-          _dragTrackList.remove(track);
+          track.stop();
           Debug.print("   -- " + track.dragType);
           break;
         }
       }
+
     } else if (action == MotionEvent.ACTION_MOVE) {
-      for (DragTrack track : _dragTrackList) {
-        if (track.pointerId == pointerId) {
-          // Debug.print("MOVE " + track.dragType);
-          int dragDistance = getWidth() / 20;
+      for(DragTrack track : _tracksByType) {
+        // check if is dragging, get its pointer ID,
+        if(track.isStarted()) {
+          int pointerIndex = MotionEventCompat.findPointerIndex(event, track.pointerId);
+          int x = (int) MotionEventCompat.getX(event, pointerIndex), y = (int) MotionEventCompat.getY(event, pointerIndex);
+          dragAction = track.dragTo(x, y);
 
-          int delta = Math.abs(track.lastX - x);
-          int moveCount = delta / dragDistance;
-          if(moveCount  > 0) {
-            // update lastX, set action to
-            //dragAction = LE
-            _lastDragActionCount = moveCount;
+          if (dragAction != null) {
+            _lastDragActionCount = track.getLastActionCount();
+            Debug.print("Dragging: " + dragAction + "[" + _lastDragActionCount + "]");
+            break;
           }
-
-          break;
         }
       }
     }
@@ -395,47 +450,33 @@ public final class GameView extends SurfaceView {
   @Override
   public boolean onTouchEvent(MotionEvent event) {
 
-    trackDrag(event);
-    if(true) {
-      return true;
-    }
+    GameAction gameAction = trackDrag(event);
+    // if(true) return true;
 
-    int action = MotionEventCompat.getActionMasked(event);
-    // int action = event.getAction();
-    //Debug.print("Mouse action " + action + " (" + event.getAction() + ")");
+    if(gameAction != null) {
+      sendAction(gameAction);
 
-    //if(true)return true;
+    }else {
+      int actionId = MotionEventCompat.getActionMasked(event);
 
-    if (action == MotionEvent.ACTION_DOWN) {
-      if(_isPaused) {
-        setPaused(false);
+      if (actionId == MotionEvent.ACTION_DOWN || actionId == MotionEvent.ACTION_POINTER_DOWN) {
+        if (_isPaused) {
+          setPaused(false);
 
-      }else {
+        } else {
+          int index = MotionEventCompat.getActionIndex(event);
+          int eventX = (int) MotionEventCompat.getX(event, index), eventY = (int) MotionEventCompat.getY(event, index);
 
-        GameAction clickedAction = null;
-        int eventX = (int) event.getX(), eventY = (int) event.getY();
-
-        if (_buttonArea.contains(eventX, eventY)) {
-          // compute by
-          int buttonId = (int) (event.getX() - _buttonArea.left) / (_buttonArea.width() / BUTTON_ACTIONS.length);
-          if (buttonId >= 0 && buttonId < BUTTON_ACTIONS.length) {
-            clickedAction = BUTTON_ACTIONS[buttonId];
+          if (getGame().getGameScreenLayout().getFieldRect().contains(
+                  eventX - _gameArea.left, eventY - _gameArea.top)) {
+            // check field click - set pause
+            setPaused(true);
           }
         }
-
-        if (clickedAction != null) {
-          sendAction(clickedAction);
-
-        } else if (getGame().getGameScreenLayout().getFieldRect().contains(
-                eventX - _gameArea.left, eventY - _gameArea.top)) {
-          // check field click - set pause
-          setPaused(true);
-        }
-
       }
     }
 
-    return super.onTouchEvent(event);
+    return true;
   }
 
   /**
