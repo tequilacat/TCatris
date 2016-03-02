@@ -15,8 +15,10 @@ import android.view.SurfaceView;
 
 import org.tequilacat.tcatris.R;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 public final class GameView extends SurfaceView {
 
@@ -163,7 +165,8 @@ public final class GameView extends SurfaceView {
              ScreenPaintType repaintType = null;
 
               if (curAction == null) {
-                repaintType = getGame().nextState(false) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
+                repaintType = ScreenPaintType.FULLSCREEN;
+                // repaintType = getGame().nextState(false) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
                 towait = INTERVAL; // getGame().getLevelDelayMS();
 
               } else {
@@ -276,22 +279,124 @@ public final class GameView extends SurfaceView {
     GameAction.LEFT, GameAction.ROTATE_CCW, GameAction.DROP, GameAction.ROTATE_CW, GameAction.RIGHT
   };
 
-  private void trackDrag(MotionEvent event) {
-    int action = event.getAction();
-    if(action == MotionEvent.ACTION_DOWN){
-      // see index
-      //event.poi
+
+  enum DragType {
+    MOVE_LEFTRIGHT, ROTATE
+  }
+
+  /**
+   * stores info on dragged direction button
+   */
+  class DragTrack {
+    public DragType dragType;
+    public int pointerId;
+
+    // start coordinates
+    int x0, y0;
+    // last coordinates
+    int lastX, lastY;
+
+    public DragTrack(DragType dragType, int x, int y, int pointerId) {
+      this.dragType = dragType;
+      this.pointerId = pointerId;
+
+      x0 = x;
+      y0 = y;
+      lastX = x;
+      lastY = y;
     }
+  }
+
+  /**
+   * currently active draags
+   */
+  private List<DragTrack> _dragTrackList = new ArrayList<>();
+
+
+  /**
+   * for drag event returns the action for this drag gesture,
+   * e.g. dragging specific button left or right will return LEFT or RIGHT actions
+   * after dragging for certain distance
+   * @param event
+   * @return
+   */
+  private GameAction trackDrag(MotionEvent event) {
+    GameAction dragAction = null;
+    int action = MotionEventCompat.getActionMasked(event);
+    int index = MotionEventCompat.getActionIndex(event);
+    int pointerId = MotionEventCompat.getPointerId(event, index);
+
+    // Debug.print("action " + action + " (" + event.getAction() + ")");
+
+    if(action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN){
+      // first reset if the index is 0
+      //
+      if(index == 0) {
+        // first pinter pressed is always @0 so clear the list for foolproofness
+        _dragTrackList.clear();
+      }
+
+      //int x = (int)event.getX(), y = (int) event.getY();
+      int x = (int) MotionEventCompat.getX(event, index), y = (int) MotionEventCompat.getY(event, index);
+      //Debug.print("DOWN X = " + x + " (" + xx + "), Y = " + y + " (" + yy + ") ");
+
+      if (_buttonArea.contains(x, y)) {
+        DragType dragType;
+        if (x < _buttonArea.left + _buttonArea.width() / 2) {
+          dragType = DragType.ROTATE;
+        } else {
+          dragType = DragType.MOVE_LEFTRIGHT;
+        }
+
+        Debug.print("  ACTION_DOWN @" + dragType);
+        // find drag type (button ID) in currently tracked list,
+        // if does not exist we remember it, if the button is already dragged we ignore it
+        // that's all for ACTION_DOWN
+        boolean found = false;
+
+        for (DragTrack track : _dragTrackList) {
+          if (track.dragType == dragType) {
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) {
+          Debug.print("add track for " + dragType);
+
+          _dragTrackList.add(new DragTrack(dragType, x, y, pointerId));
+        }
+      }
+    } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) {
+      // find drag for this index,
+      for (DragTrack track : _dragTrackList) {
+        if(track.pointerId == pointerId){
+          _dragTrackList.remove(track);
+          Debug.print("removed track for " + track.dragType);
+          break;
+        }
+      }
+    } else if (action == MotionEvent.ACTION_MOVE) {
+      for (DragTrack track : _dragTrackList) {
+        if (track.pointerId == pointerId) {
+          // Debug.print("MOVE " + track.dragType);
+
+          break;
+        }
+      }
+    }
+
+    return dragAction;
   }
 
   @Override
   public boolean onTouchEvent(MotionEvent event) {
-    //int scrWidth = getWidth(), scrHeight = getHeight();
 
-//    trackDrag(event);
-//    if(true) {
-//      return true;
-//    }
+    trackDrag(event);
+    if(true) {
+      return true;
+    }
+
     int action = MotionEventCompat.getActionMasked(event);
     // int action = event.getAction();
     //Debug.print("Mouse action " + action + " (" + event.getAction() + ")");
