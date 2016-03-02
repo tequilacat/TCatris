@@ -1,11 +1,7 @@
 package org.tequilacat.tcatris.core;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.Rect;
 import android.support.v4.view.MotionEventCompat;
 import android.util.AttributeSet;
@@ -16,8 +12,6 @@ import android.view.SurfaceView;
 import org.tequilacat.tcatris.R;
 
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 public final class GameView extends SurfaceView {
@@ -312,11 +306,14 @@ public final class GameView extends SurfaceView {
    */
   private List<DragTrack> _dragTrackList = new ArrayList<>();
 
+  private int _lastDragActionCount;
 
   /**
    * for drag event returns the action for this drag gesture,
    * e.g. dragging specific button left or right will return LEFT or RIGHT actions
-   * after dragging for certain distance
+   * after dragging for certain distance.
+   *
+   * If drag resulted in action, returns this action and _lastDragActionCount is set to number of actions to take
    * @param event
    * @return
    */
@@ -327,17 +324,12 @@ public final class GameView extends SurfaceView {
     int pointerId = MotionEventCompat.getPointerId(event, index);
 
     // Debug.print("action " + action + " (" + event.getAction() + ")");
+    int x = (int) MotionEventCompat.getX(event, index), y = (int) MotionEventCompat.getY(event, index);
 
     if(action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN){
-      // first reset if the index is 0
-      //
-      if(index == 0) {
-        // first pinter pressed is always @0 so clear the list for foolproofness
-        _dragTrackList.clear();
-      }
+      Debug.print(">>> Event AD/APD #" + action + " (" + event.getAction() + "): index = " + index + " of " + MotionEventCompat.getPointerCount(event));
 
       //int x = (int)event.getX(), y = (int) event.getY();
-      int x = (int) MotionEventCompat.getX(event, index), y = (int) MotionEventCompat.getY(event, index);
       //Debug.print("DOWN X = " + x + " (" + xx + "), Y = " + y + " (" + yy + ") ");
 
       if (_buttonArea.contains(x, y)) {
@@ -348,7 +340,7 @@ public final class GameView extends SurfaceView {
           dragType = DragType.MOVE_LEFTRIGHT;
         }
 
-        Debug.print("  ACTION_DOWN @" + dragType);
+        //Debug.print("  ACTION_DOWN @" + dragType);
         // find drag type (button ID) in currently tracked list,
         // if does not exist we remember it, if the button is already dragged we ignore it
         // that's all for ACTION_DOWN
@@ -362,17 +354,19 @@ public final class GameView extends SurfaceView {
         }
 
         if (!found) {
-          Debug.print("add track for " + dragType);
+          Debug.print("  ++ " + dragType);
 
           _dragTrackList.add(new DragTrack(dragType, x, y, pointerId));
         }
       }
-    } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) {
+    } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP || action == MotionEvent.ACTION_CANCEL) {
+      Debug.print(">>> Event AU/APU/AC #" + action + " (" + event.getAction() + "): index = " + index + " of " + MotionEventCompat.getPointerCount(event));
+
       // find drag for this index,
       for (DragTrack track : _dragTrackList) {
         if(track.pointerId == pointerId){
           _dragTrackList.remove(track);
-          Debug.print("removed track for " + track.dragType);
+          Debug.print("   -- " + track.dragType);
           break;
         }
       }
@@ -380,6 +374,15 @@ public final class GameView extends SurfaceView {
       for (DragTrack track : _dragTrackList) {
         if (track.pointerId == pointerId) {
           // Debug.print("MOVE " + track.dragType);
+          int dragDistance = getWidth() / 20;
+
+          int delta = Math.abs(track.lastX - x);
+          int moveCount = delta / dragDistance;
+          if(moveCount  > 0) {
+            // update lastX, set action to
+            //dragAction = LE
+            _lastDragActionCount = moveCount;
+          }
 
           break;
         }
