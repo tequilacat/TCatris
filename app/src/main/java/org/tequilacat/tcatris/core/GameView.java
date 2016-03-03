@@ -277,18 +277,13 @@ public final class GameView extends SurfaceView {
     GameAction.LEFT, GameAction.ROTATE_CCW, GameAction.DROP, GameAction.ROTATE_CW, GameAction.RIGHT
   };
 
-
-  enum DragType {
-    MOVE_LEFTRIGHT, ROTATE
-  }
-
   /**
    * stores info on dragged direction button
    */
   static class DragTrack {
     private final GameAction _positiveOffsetAction;
     private final GameAction _negativeOffsetAction;
-    public final DragType dragType;
+    public final Button.ButtonType dragType;
     private final int _stepDistance;
 
     // pointer id for which this track currently registers offset
@@ -302,7 +297,7 @@ public final class GameView extends SurfaceView {
     GameAction _lastAction;
     int _lastActionCount;
 
-    public DragTrack(DragType dragType, GameAction onPositive, GameAction onNegative, int distance) {
+    public DragTrack(Button.ButtonType dragType, GameAction onPositive, GameAction onNegative, int distance) {
       this.dragType = dragType;
       _positiveOffsetAction = onPositive;
       _negativeOffsetAction = onNegative;
@@ -355,14 +350,28 @@ public final class GameView extends SurfaceView {
 
   private void initTracks() {
     // dragging half screen (approx button width) should drag shape across whole field width twice
-    int distance = getWidth() / 4 / getGame().getWidth();
     _tracksByType = new DragTrack[]{
-            new DragTrack(DragType.MOVE_LEFTRIGHT, GameAction.RIGHT, GameAction.LEFT, distance),
-            new DragTrack(DragType.ROTATE, GameAction.ROTATE_CW, GameAction.ROTATE_CCW, distance)
+
+            new DragTrack(Button.ButtonType.ROTATE, GameAction.ROTATE_CW, GameAction.ROTATE_CCW,
+                    (int)(getWidth() *0.4 / 10)), // 10 rotations per btn
+
+            new DragTrack(Button.ButtonType.HORIZONTAL, GameAction.RIGHT, GameAction.LEFT,
+                    (int)(getWidth() * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
     };
   }
 
-  private int _lastDragActionCount;
+  private Button.ButtonType getButtonTypeAt( int x, int y){
+    Button.ButtonType type = null;
+
+    for(Button btn  : _buttons) {
+      if (btn.rect.contains(x, y)) {
+        type = btn.type;
+        break;
+      }
+    }
+
+    return type;
+  }
 
   /**
    * for drag event returns the action for this drag gesture,
@@ -380,49 +389,43 @@ public final class GameView extends SurfaceView {
     if(action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN){
       int index = MotionEventCompat.getActionIndex(event);
       int pointerId = MotionEventCompat.getPointerId(event, index);
-      Debug.print(">>> Event AD/APD #" + action + " (" + event.getAction() + "): index = " + index + " of " + MotionEventCompat.getPointerCount(event));
+//      Debug.print(">>> Event AD/APD #" + action + " (" + event.getAction() + "): index = " + index + " of " + MotionEventCompat.getPointerCount(event));
       int x = (int) MotionEventCompat.getX(event, index), y = (int) MotionEventCompat.getY(event, index);
 
+      Button.ButtonType buttonType = getButtonTypeAt(x, y);
+      //DragType dragType = buttonType==null ? null : (buttonType== Button.ButtonType.HORIZONTAL ? DragType.MOVE_LEFTRIGHT : )
+      if(buttonType== Button.ButtonType.DROP) {
+        dragAction = GameAction.DROP;
 
-      //int x = (int)event.getX(), y = (int) event.getY();
-      //Debug.print("DOWN X = " + x + " (" + xx + "), Y = " + y + " (" + yy + ") ");
+      }else if (buttonType != null) {
 
-      if (_buttonArea.contains(x, y)) {
-        DragType dragType;
-        if (x < _buttonArea.left + _buttonArea.width() / 2) {
-          dragType = DragType.ROTATE;
-        } else {
-          dragType = DragType.MOVE_LEFTRIGHT;
-        }
-
-        //Debug.print("  ACTION_DOWN @" + dragType);
         // find drag type (button ID) in currently tracked list,
         // if does not exist we remember it, if the button is already dragged we ignore it
         // that's all for ACTION_DOWN
         DragTrack found = null;
 
         for (DragTrack track : _tracksByType) {
-          if (track.dragType == dragType && !track.isStarted()) {
+          if (track.dragType == buttonType && !track.isStarted()) {
             found = track;
             break;
           }
         }
 
         if (found != null) {
-          Debug.print("  ++ " + dragType + ", id = " + pointerId + " [index = " + index + "]");
+          Debug.print("  ++ " + buttonType + ", id = " + pointerId + " [index = " + index + "]");
           found.start(x, y, pointerId);
         }
       }
 
     } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP || action == MotionEvent.ACTION_CANCEL) {
-      Debug.print(">>> Event AU/APU/AC #" + action + " (" + event.getAction() + ")");//: index = " + index + " of " + MotionEventCompat.getPointerCount(event));
+      //Debug.print(">>> Event AU/APU/AC #" + action + " (" + event.getAction() + ")");//: index = " + index + " of " + MotionEventCompat.getPointerCount(event));
       int pointerId = MotionEventCompat.getPointerId(event, MotionEventCompat.getActionIndex(event));
 
       // find drag for this index,
       for (DragTrack track : _tracksByType) {
         if(track.pointerId == pointerId){
           track.stop();
-          Debug.print("   -- " + track.dragType);
+          //Debug.print("   -- " + track.dragType);
           break;
         }
       }
@@ -436,8 +439,8 @@ public final class GameView extends SurfaceView {
           dragAction = track.dragTo(x, y);
 
           if (dragAction != null) {
-            _lastDragActionCount = track.getLastActionCount();
-            Debug.print("Dragging: " + dragAction + "[" + _lastDragActionCount + "]");
+//            _lastDragActionCount = track.getLastActionCount();
+            //Debug.print("Dragging: " + dragAction + "[" + _lastDragActionCount + "]");
             break;
           }
         }
@@ -447,11 +450,15 @@ public final class GameView extends SurfaceView {
     return dragAction;
   }
 
+  /**
+   * detects game action from touch event and sends it to game thread
+   * @param event
+   * @return
+   */
   @Override
   public boolean onTouchEvent(MotionEvent event) {
 
     GameAction gameAction = trackDrag(event);
-    // if(true) return true;
 
     if(gameAction != null) {
       sendAction(gameAction);
@@ -500,8 +507,26 @@ public final class GameView extends SurfaceView {
   }
 
 
+  static class Button {
+    enum ButtonType {
+      HORIZONTAL, ROTATE, DROP
+    }
+
+    public final Ui.ButtonGlyph glyph;
+    public final Rect rect;
+    public final ButtonType type;
+
+    public Button(ButtonType type, Ui.ButtonGlyph glyph, int x, int y, int w, int h) {
+      this.type = type;
+      this.glyph = glyph;
+      rect = new Rect(x, y, x + w, y + h);
+    }
+  }
+
+  private final List<Button> _buttons = new ArrayList<>();
+
   private Rect _gameArea = new Rect();
-  private Rect _buttonArea = new Rect();
+  //private Rect _buttonArea = new Rect();
   private Rect _scoreBarArea = new Rect();
 
   private int _fontSize;
@@ -524,7 +549,13 @@ public final class GameView extends SurfaceView {
 
     _scoreBarArea.set(0, 0, w, scoreHeight);
     _gameArea.set(0, _scoreBarArea.bottom, w, h - buttonHeight - scoreHeight);
-    _buttonArea.set(0, _gameArea.bottom, w, h);
+    //_buttonArea.set(0, _gameArea.bottom, w, h);
+
+    int buttonH = h - _gameArea.bottom, buttonW = w / 5, buttonX = 0, buttonY = _gameArea.bottom;
+    _buttons.clear();
+    _buttons.add(new Button(Button.ButtonType.ROTATE, Ui.ButtonGlyph.RCCW, buttonX, buttonY, buttonW * 2, buttonH));
+    _buttons.add(new Button(Button.ButtonType.DROP, Ui.ButtonGlyph.DROP, buttonX + buttonW * 2, buttonY, buttonW, buttonH));
+    _buttons.add(new Button(Button.ButtonType.HORIZONTAL, Ui.ButtonGlyph.RIGHT, buttonX + buttonW * 3, buttonY, buttonW * 2, buttonH));
 
     getGame().layout(_gameArea.width(), _gameArea.height());
     Rect fieldRect = getGame().getGameScreenLayout().getFieldRect();
@@ -621,7 +652,15 @@ public final class GameView extends SurfaceView {
         _scoreBarArea.left, _scoreBarArea.top, _fontSize, ColorCodes.yellow);
 
       // paint buttons
-      int bX = _buttonArea.left, bW = _buttonArea.width() / BUTTON_ACTIONS.length,
+      for(Button btn : _buttons) {
+        Ui.draw3dRect(c, btn.rect);
+        int side = Math.min(btn.rect.width(), btn.rect.height());
+        Ui.drawGlyph(c, btn.rect.left + (btn.rect.width() - side) / 2,
+                btn.rect.top + (btn.rect.height() - side) / 2,
+                side, side, btn.glyph);
+      }
+
+      /*int bX = _buttonArea.left, bW = _buttonArea.width() / BUTTON_ACTIONS.length,
         bY = _buttonArea.top, bH = _buttonArea.height();
 
       for (int i = 0; i < BUTTON_ACTIONS.length; i++) {
@@ -630,7 +669,7 @@ public final class GameView extends SurfaceView {
         Ui.drawGlyph(c, bX, bY, bW, bH, BTN_GLYPHS[i]);
 
         bX += bW;
-      }
+      } */
     }
 
     int dx = fieldRect.left + _gameArea.left, dy = fieldRect.top + _gameArea.top;
