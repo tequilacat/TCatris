@@ -111,16 +111,6 @@ public abstract class Tetris {
 
   public abstract void paintField(Canvas g, int fieldPixHeight);
 
-  private static final int[] sCellColors = new int[]{
-    ColorCodes.lightGray,
-    ColorCodes.red, ColorCodes.blue, ColorCodes.purple, ColorCodes.orange, ColorCodes.green,
-    ColorCodes.darkRed, ColorCodes.darkGreen, ColorCodes.blue, ColorCodes.cyan, ColorCodes.magenta, ColorCodes.orange, ColorCodes.lightBrown
-  };
-
-  public static int getTypeColor(int cellType) {
-    return sCellColors[cellType];
-  }
-
   private synchronized int nextRandom(int i) {
     seed = seed * 0x5deece66dL + 11L & 0xffffffffffffL;
     return (int) (seed >>> 48 - i);

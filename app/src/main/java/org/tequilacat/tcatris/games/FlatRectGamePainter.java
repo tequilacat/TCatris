@@ -13,26 +13,83 @@ import org.tequilacat.tcatris.core.Ui;
 public class FlatRectGamePainter extends AbstractFlatGamePainter {
   private Paint _cellPainter = new Paint();
 
+  private final boolean _paintFieldBg = true;
+
+  private static final int[] _distinctiveColors = new int[]{
+          ColorCodes.lightGray,
+          ColorCodes.red, ColorCodes.blue, ColorCodes.purple, ColorCodes.orange, ColorCodes.green,
+          ColorCodes.darkRed, ColorCodes.darkGreen, ColorCodes.blue, ColorCodes.cyan, ColorCodes.magenta, ColorCodes.orange, ColorCodes.lightBrown
+  };
+
+  private static final int[] _darkerColors;
+
+  static {
+    _darkerColors = new int[_distinctiveColors.length];
+
+    for(int i = 0; i < _darkerColors.length; i++){
+      _darkerColors[i] = ColorCodes.darken(_distinctiveColors[i], 0.2f);
+    }
+  }
+
+  public static int getTypeColor(int cellType) {
+    return _distinctiveColors[cellType];
+  }
+
+  @Override
+  public int getFieldBackground() {
+    return getTypeColor(0);
+  }
+
   @Override
   public void paintCellPix(Canvas c, int x, int y, int state, Tetris.CellState cellState) {
     final int cellSize = getGameScreenLayout().getCellSize();
+    int cellColor = getTypeColor(state);
 
-    int cellColor = Tetris.getTypeColor(state);
+    if (state == FlatGame.EMPTY) {
+      // nothing
 
-    if (state == FlatGame.EMPTY || cellState == Tetris.CellState.FALLING) {
+    } else if (cellState == Tetris.CellState.FALLING) {
       Ui.fillRect(c, x, y, cellSize - 1, cellSize - 1, cellColor);
-      //Debug.print("Falling:");
+
     } else if (cellState == Tetris.CellState.SQUEEZED) {
       Ui.drawRect(c, x, y, cellSize - 1, cellSize - 1, cellColor);
       Ui.fillRect(c, x + 1, y + 1, cellSize - 3, cellSize - 3, getFieldBackground());
+
     } else { // settled
       Ui.fillRect(c, x, y, cellSize - 1, cellSize - 1, cellColor);
 
-      _cellPainter.setColor(ColorCodes.black);
-      x += 3;
-      y += 3;
-      c.drawLine(x, y, x + cellSize - 8, y, _cellPainter);
-      c.drawLine(x, y, x, y + cellSize - 8, _cellPainter);
+      int innerSize = cellSize * 6 / 10;
+      int margin = (cellSize - innerSize) >> 1;// fast /2
+      Ui.fillRect(c, x+margin, y+margin, innerSize, innerSize, _darkerColors[state]);
+
+//      _cellPainter.setColor(ColorCodes.black);
+//      x += 3;
+//      y += 3;
+//      c.drawLine(x, y, x + cellSize - 8, y, _cellPainter);
+//      c.drawLine(x, y, x, y + cellSize - 8, _cellPainter);
     }
+  }
+
+  @Override
+  public void paintFieldBackground(Canvas g) {
+    // do nothing or fill the rect
+    if (_paintFieldBg) {
+      final int fieldWidth = getGameScreenLayout().getFieldRect().width(),
+              fieldHeight = getGameScreenLayout().getFieldRect().height();
+
+      Ui.fillRect(g, 0, 0, fieldWidth, fieldHeight, getFieldBackground());
+
+      _cellPainter.setColor(ColorCodes.black);
+      final int cellSize = getGameScreenLayout().getCellSize();
+
+      for (int x = cellSize; x < fieldWidth; x += cellSize) {
+        g.drawLine(x, 0, x, fieldHeight, _cellPainter);
+      }
+
+      for (int y = cellSize; y < fieldHeight; y += cellSize) {
+        g.drawLine(0, y, fieldWidth, y, _cellPainter);
+      }
+    }
+
   }
 }

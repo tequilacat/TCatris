@@ -173,7 +173,7 @@ public final class GameView extends SurfaceView {
                   case DROP:
                     doRepaint = true;
                     repaintType = getGame().nextState(true) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
-                    // TODO on drop reset timer
+                    sleptTime = 0;
                     break;
                   case LEFT:
                     doRepaint = getGame().moveLeft();
@@ -637,7 +637,6 @@ public final class GameView extends SurfaceView {
     c.translate(dx, dy);
     getGame().paintField(c, fieldRect.height());
     c.translate(-dx, -dy);
-
   }
 
 /*

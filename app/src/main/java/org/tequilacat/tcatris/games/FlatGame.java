@@ -312,15 +312,18 @@ public abstract class FlatGame extends Tetris {
     int cellSize = getGameScreenLayout().getCellSize();
     int pixX, pixY = fieldPixHeight - cellSize;
 
+    _fieldPainter.paintFieldBackground(g);
+
     for (int y = 0; y < getHeight(); y++) {
       pixX = 0;
+
       for (int x = 0; x < getWidth(); x++) {
         // settled
-
         _fieldPainter.paintCellPix(g, pixX, pixY, getCellValue(x, y),
           isSqueezable(x, y) ? CellState.SQUEEZED : CellState.SETTLED);
         pixX += cellSize;
       }
+
       pixY -= cellSize;
     }
 

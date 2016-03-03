@@ -31,16 +31,6 @@ public abstract class AbstractFlatGamePainter {
 //  }
 
   /**
-   * Returns color of field.
-   * Defaults to color of cell type #0, Tetris.getTypeColor(0),
-   * may be overwritten in implementations
-   * @return color of field
-   */
-  public int getFieldBackground() {
-    return Tetris.getTypeColor(0);
-  }
-
-  /**
    * draws cell of state on canvas
    * @param c
    * @param x
@@ -49,6 +39,13 @@ public abstract class AbstractFlatGamePainter {
    * @param cellState
    */
   public abstract void paintCellPix(Canvas c, int x, int y, int state, Tetris.CellState cellState);
+
+
+  /**
+   * paints background of field if needed
+   * @param g
+   */
+  public abstract void paintFieldBackground(Canvas g);
 
   /**
    * paints next shape in specified bounds
@@ -79,4 +76,13 @@ public abstract class AbstractFlatGamePainter {
         shape.getCellType(i), Tetris.CellState.FALLING);
     }
   }
+
+  /**
+   * Returns color of field.
+   * Defaults to color of cell type #0, Tetris.getTypeColor(0),
+   * may be overwritten in implementations
+   * @return color of field
+   */
+  protected abstract int getFieldBackground();
+
 }
