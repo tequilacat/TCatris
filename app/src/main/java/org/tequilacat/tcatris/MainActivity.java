@@ -7,20 +7,25 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.ViewFlipper;
 
 import org.tequilacat.tcatris.core.GameList;
+import org.tequilacat.tcatris.core.GameView;
+import org.tequilacat.tcatris.core.Tetris;
 
 import java.util.List;
 
-public class GameSelectorActivity extends Activity {
+public class MainActivity extends Activity {
+
+  private ViewFlipper _viewFlipper;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
+    _viewFlipper = (ViewFlipper) findViewById(R.id.viewflipper);
 
-    setContentView(R.layout.activity_gameselector);
-
-    // TODO read states of games into game list, or init with accessor to state
+    // fill game list
     GameList.init();
 
     final List<GameList.GameDescriptor> gameTypes = GameList.instance().getGameDescriptors();
@@ -40,8 +45,19 @@ public class GameSelectorActivity extends Activity {
 
 
   private void runGame(GameList.GameDescriptor gameDescriptor) {
-    Intent intent = new Intent(this, GameActivity.class);
-    intent.putExtra(GameActivity.GAME_DESCRIPTOR, gameDescriptor.getId());
-    startActivity(intent);
+    //Intent intent = new Intent(this, GameActivity.class);
+    //intent.putExtra(GameActivity.GAME_DESCRIPTOR, gameDescriptor.getId());
+    //startActivity(intent);
+/*
+GameView gameView = (GameView) findViewById(R.id.gameView);
+    String gameId = getIntent().getStringExtra(GAME_DESCRIPTOR);
+    Tetris game = GameList.instance().createGame(GameList.instance().findDescriptor(gameId));
+    gameView.setGame(game);
+ */
+
+    Tetris game = GameList.instance().createGame(gameDescriptor);
+    GameView gameView = (GameView) findViewById(R.id.gameView);
+    gameView.setGame(game);
+    _viewFlipper.showNext();
   }
 }

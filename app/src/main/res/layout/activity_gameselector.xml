@@ -20,8 +20,15 @@
               tools:context=".GameSelectorActivity" >
 
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/select_game"
+        android:layout_margin="10dp"/>
+
     <ListView
         android:id="@+id/lvMainOptionList"
+        android:layout_margin="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
     </ListView>

@@ -123,18 +123,13 @@ public final class GameView extends SurfaceView {
     _gameThreadAction = null;
     _isRunning = true;
     _isPaused = false;
+    long sleptTime = 0;
+
     getGame().initGame();
 
     synchronized (_gameChangeLock) {
       try {
         while(_isRunning) {
-
-          //Debug.print("Sleep " + towait);
-          long time0 = System.currentTimeMillis();
-          _gameChangeLock.wait(towait);
-          long sleptTime = System.currentTimeMillis() - time0;
-
-          if (_isRunning) {
             // otherwise just exit from while
             GameAction curAction = _gameThreadAction;
             _gameThreadAction = null;
@@ -206,8 +201,12 @@ public final class GameView extends SurfaceView {
 
               paintScreen(repaintType);
             }
+
+            //Debug.print("Sleep " + towait);
+            long time0 = System.currentTimeMillis();
+            _gameChangeLock.wait(towait);
+            sleptTime = System.currentTimeMillis() - time0;
           }
-        }
       } catch (InterruptedException e) {
         // TODO process exception
         Debug.print("Thread interrupted: "+e);
@@ -222,14 +221,18 @@ public final class GameView extends SurfaceView {
   }
 
   private void gameStop() {
-    try {
-      _isRunning = false;
-      sendAction(null);
-      _gameThread.join();
-    } catch (InterruptedException e) {
-      // TODO catch Interruption
+    sendAction(null);
+    boolean stopped = false;
+
+    while(!stopped) {
+      try {
+        _isRunning = false;
+        _gameThread.join();
+        stopped = true;
+      } catch (InterruptedException e) { }
     }
   }
+
   /*
  private void showPauseDialog() {
     AlertDialog.Builder dlgAlert  = new AlertDialog.Builder(getContext());

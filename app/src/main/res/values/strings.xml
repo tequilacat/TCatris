@@ -6,4 +6,6 @@
     <string name="btn_ok">Ok</string>
 
     <string name="msg_score">score</string>
+    <string name="select_game">Select game</string>
+    <string name="title_activity_main">MainActivity</string>
 </resources>
