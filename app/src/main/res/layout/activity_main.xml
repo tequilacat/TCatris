@@ -28,36 +28,77 @@
         android:layout_height="fill_parent">
 
         <LinearLayout
+            android:id="@+id/gameSelectorContainer"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:gravity="center"
             android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="10dp"
+                android:textSize="@dimen/title_font_size"
                 android:text="@string/select_game"/>
 
             <ListView
+                android:layout_weight="1"
                 android:id="@+id/lvMainOptionList"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_margin="10dp">
             </ListView>
         </LinearLayout>
 
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:context="org.tequilacat.tcatris.GameActivity">
+        <org.tequilacat.tcatris.core.GameView
+            android:id="@+id/gameView"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"/>
 
-            <org.tequilacat.tcatris.core.GameView
-                android:id="@+id/gameView"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"/>
-        </RelativeLayout>
 
+        <LinearLayout
+            android:id="@+id/scoreView"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:textSize="@dimen/title_font_size"
+                android:text="@string/top_scores"/>
+
+            <ListView
+                android:id="@+id/lvScoreList"
+                android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="10dp">
+            </ListView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                >
+
+                <Button
+                    android:id="@+id/scoreBackBtn"
+                    android:layout_height="wrap_content"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/btn_back"
+                    android:onClick="onScoreBackButtonClick" />
+
+                <Button
+                    android:layout_height="wrap_content"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/btn_select_game"
+                    android:onClick="onScoreSelectGameButtonClick" />
+
+            </LinearLayout>
+        </LinearLayout>
     </ViewFlipper>
 </LinearLayout>

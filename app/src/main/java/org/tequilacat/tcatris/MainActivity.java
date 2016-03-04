@@ -6,9 +6,11 @@ import android.app.Activity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ViewFlipper;
 
+import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.GameList;
 import org.tequilacat.tcatris.core.GameView;
 import org.tequilacat.tcatris.core.Tetris;
@@ -60,4 +62,85 @@ GameView gameView = (GameView) findViewById(R.id.gameView);
     gameView.setGame(game);
     _viewFlipper.showNext();
   }
+
+  /**
+   * shows view specified by ID in the flipper if it's a child of the flipper
+   * @param id
+   */
+  private void showFlipperViewById(int id) {
+    for (int i = 0, n = _viewFlipper.getChildCount(); i < n; i++) {
+      View child = _viewFlipper.getChildAt(i);
+
+      if (child.getId() == id) {
+        _viewFlipper.setDisplayedChild(i);
+        break;
+      }
+    }
+  }
+
+  /**
+   * on back button if current is gamelist we finish it by calling base,
+   * if current is game we set paused mode
+   *
+   */
+  @Override
+  public void onBackPressed() {
+    View currentView = _viewFlipper.getCurrentView();
+
+    if(currentView instanceof GameView) {
+      showScores();
+
+    }else if(currentView.getId() == R.id.gameSelectorContainer) {
+      // let the system process back button
+      super.onBackPressed();
+
+    }else if(currentView.getId() == R.id.scoreView ) {
+      backFromScores();
+    }
+  }
+
+  public void onScoreBackButtonClick(View btn) {
+    backFromScores();
+  }
+
+  public void onScoreSelectGameButtonClick(View btn) {
+    Debug.print("select game from score screen");
+    showFlipperViewById(R.id.gameSelectorContainer);
+  }
+
+
+  /**
+   * Called on pause, or when game is lost.
+   * Shows scores screen.
+   */
+  public void showScores() {
+    View currentView = _viewFlipper.getCurrentView();
+
+    if(currentView instanceof GameView) {
+      // fill scores with current score
+      Debug.print("showScores: ");
+      GameView gameView = (GameView) currentView;
+
+      Button scoreBackButton = (Button) findViewById(R.id.scoreBackBtn);
+      scoreBackButton.setText(getString(
+                      gameView.getGame().getState() == Tetris.LOST ?
+                              R.string.btn_play_again : R.string.btn_continue)
+      );
+
+      gameView.setPaused(true);
+      showFlipperViewById(R.id.scoreView);
+    }
+  }
+
+  private void backFromScores() {
+    Debug.print("restart/continue after scores");
+
+    GameView gameView = (GameView) findViewById(R.id.gameView);
+
+    if(gameView.getGame().getState() == Tetris.LOST) {
+      gameView.restartGame();
+    }
+    showFlipperViewById(R.id.gameView);
+  }
+
 }

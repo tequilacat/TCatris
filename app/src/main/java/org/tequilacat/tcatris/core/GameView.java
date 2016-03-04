@@ -9,6 +9,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import org.tequilacat.tcatris.MainActivity;
 import org.tequilacat.tcatris.R;
 
 import java.lang.reflect.Array;
@@ -77,42 +78,48 @@ public final class GameView extends SurfaceView {
     _holder.addCallback(new SurfaceHolder.Callback() {
       @Override
       public void surfaceCreated(SurfaceHolder holder) {
+        Debug.print("surfaceCreated");
         // start game
         gameStart();
       }
 
       @Override
-      public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) { }
+      public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        Debug.print("surfaceChanged");
+        layoutGameScreen(width, height);
+      }
 
       @Override
       public void surfaceDestroyed(SurfaceHolder holder) {
+        Debug.print("surfaceDestroyed");
         gameStop();
       }
     });
-
-    _gameThread = new Thread() {
-      @Override
-      public void run() {
-        runGame();
-      }
-    };
 
     setFocusable(true);
     setFocusableInTouchMode(true);
   }
 
-  @Override
-  protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-    super.onSizeChanged(w, h, oldw, oldh);
-    layoutGameScreen(w, h);
-  }
+//  @Override
+//  protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+//    super.onSizeChanged(w, h, oldw, oldh);
+//    layoutGameScreen(w, h);
+//  }
 
   public void setGame(Tetris game) {
     _currentGame = game;
+    restartGame();
+  }
+
+  /**
+   * Just reinit current game , no thread work here
+   */
+  public void restartGame() {
+    getGame().initGame();
     //GameList.instance().getMaxScore(_currentGame.getGameLabel())
   }
 
-  private Tetris getGame() {
+  public Tetris getGame() {
     return _currentGame;
   }
 
@@ -120,12 +127,12 @@ public final class GameView extends SurfaceView {
     // runs
     long INTERVAL = 500; // 300 millis per step
     long towait = INTERVAL;
-    _gameThreadAction = null;
+
+    // on 1st iteration just display screen
+    _gameThreadAction = GameAction.UNPAUSE;
     _isRunning = true;
     _isPaused = false;
     long sleptTime = 0;
-
-    getGame().initGame();
 
     synchronized (_gameChangeLock) {
       try {
@@ -138,13 +145,21 @@ public final class GameView extends SurfaceView {
               // show paused screen and wait for next kick
               Debug.print("PAUSE: show paused screen and wait for next kick");
               towait = 0;
-              paintScreen(ScreenPaintType.PAUSED);
+              //paintScreen(ScreenPaintType.PAUSED);
 
             } else if (getGame().getState() == Tetris.LOST) {
               // show scores
               Debug.print("lost, wait for next kick to restart");
               towait = 0;
-              paintScreen(ScreenPaintType.FAILED);
+              //paintScreen(ScreenPaintType.FAILED);
+
+              final MainActivity mainActivity = (MainActivity) getContext();
+              mainActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                  mainActivity.showScores();
+                }
+              });
 
             } else if (curAction == GameAction.UNPAUSE) {
               towait = INTERVAL;
@@ -216,47 +231,30 @@ public final class GameView extends SurfaceView {
 
   private void gameStart() {
     Debug.print("game start");
+    _gameThread = new Thread() {
+      @Override
+      public void run() {
+        runGame();
+      }
+    };
     initTracks();
     _gameThread.start();
   }
 
   private void gameStop() {
+    _isRunning = false;
     sendAction(null);
     boolean stopped = false;
 
     while(!stopped) {
       try {
-        _isRunning = false;
         _gameThread.join();
+        _gameThread = null;
         stopped = true;
       } catch (InterruptedException e) { }
     }
   }
 
-  /*
- private void showPauseDialog() {
-    AlertDialog.Builder dlgAlert  = new AlertDialog.Builder(getContext());
-   dlgAlert.setMessage(R.string.msg_app_paused);
-   dlgAlert.setTitle(R.string.app_name);
-   dlgAlert.setCancelable(true);
-   dlgAlert.setPositiveButton(R.string.btn_ok,
-           new DialogInterface.OnClickListener() {
-             public void onClick(DialogInterface dialog, int which) {
-               //dismiss the dialog
-               Debug.print("unpause");
-               _isPaused = false;
-               sendAction(null); // just kick the waiter
-             }
-           });
-
-   _isPaused = true;
-   sendAction(null);
-   dlgAlert.create().show();
-
-   _isPaused = true;
-   sendAction(null);
- }
- */
   enum GameAction {
     LEFT, RIGHT, ROTATE_CW, ROTATE_CCW, DROP, UNPAUSE,
   }
@@ -480,7 +478,8 @@ public final class GameView extends SurfaceView {
           if (getGame().getGameScreenLayout().getFieldRect().contains(
                   eventX - _gameArea.left, eventY - _gameArea.top)) {
             // check field click - set pause
-            setPaused(true);
+            // setPaused(true);
+            ((MainActivity)getContext()).showScores();
           }
         }
       }
@@ -493,13 +492,19 @@ public final class GameView extends SurfaceView {
    * sets paused mode and updates screen
    * @param isPaused
    */
-  private  void  setPaused(boolean isPaused) {
+  public void setPaused(boolean isPaused) {
     _isPaused = isPaused;
     sendAction(_isPaused ? null : GameAction.UNPAUSE);
   }
 
-  /**************************************************
-   **************************************************/
+  /**
+   * checks if current game is paused
+   * @return
+   */
+  public boolean isPaused() {
+    return _isPaused;
+  }
+
   public void stopGame() {
     //myTickerThread = null;
     //myStop = true;
@@ -544,7 +549,7 @@ public final class GameView extends SurfaceView {
    * @param h
    */
   private void layoutGameScreen(int w, int h) {
-    _fontSize = getResources().getDimensionPixelSize(R.dimen.gamescreen_font_size);
+    _fontSize = getResources().getDimensionPixelSize(R.dimen.gameinfo_font_size);
     //setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimensionPixelSize(R.dimen.typo14));
 
     final int scoreHeight = getLineHeight();
@@ -589,6 +594,8 @@ public final class GameView extends SurfaceView {
    */
   private void paintScreen(ScreenPaintType paintType) {
     if (paintType != null) {
+      long start = System.currentTimeMillis();
+
       synchronized (getHolder()) {
         Canvas c = null;
 
@@ -609,7 +616,8 @@ public final class GameView extends SurfaceView {
           }
 
           if (paintType == ScreenPaintType.PAUSED) {
-            c.drawColor(ColorCodes.blue);
+            // c.drawColor(ColorCodes.blue); // not shown anymore
+
 //            Ui.drawGlyph(c, 10, 10, 100, 100, Ui.ButtonGlyph.LEFT);
 //            Ui.drawGlyph(c, 300, 300, 100, 100, Ui.ButtonGlyph.RIGHT);
 
@@ -626,6 +634,9 @@ public final class GameView extends SurfaceView {
           }
         }
       }
+
+      long end = System.currentTimeMillis();
+      Debug.print("Repaint [" + paintType + "] took " + (end - start) + " ms");
     }
   }
 
