@@ -15,7 +15,11 @@ import org.tequilacat.tcatris.core.GameList;
 import org.tequilacat.tcatris.core.GameView;
 import org.tequilacat.tcatris.core.Tetris;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends Activity {
 
@@ -109,6 +113,10 @@ GameView gameView = (GameView) findViewById(R.id.gameView);
   }
 
 
+  private static java.text.DateFormat TIMESTAMP_FORMAT =
+          DateFormat.getDateTimeInstance();
+          //new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+
   /**
    * Called on pause, or when game is lost.
    * Shows scores screen.
@@ -116,9 +124,13 @@ GameView gameView = (GameView) findViewById(R.id.gameView);
   public void showScores() {
     View currentView = _viewFlipper.getCurrentView();
 
+//    Date d = new Date();
+//    d.setTime(0);
+//    String s = TIMESTAMP_FORMAT.format(d);
+
+    //TIMESTAMP_FORMAT.format()
     if(currentView instanceof GameView) {
       // fill scores with current score
-      Debug.print("showScores: ");
       GameView gameView = (GameView) currentView;
 
       Button scoreBackButton = (Button) findViewById(R.id.scoreBackBtn);

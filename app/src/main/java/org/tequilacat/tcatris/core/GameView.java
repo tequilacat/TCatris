@@ -116,7 +116,8 @@ public final class GameView extends SurfaceView {
    */
   public void restartGame() {
     getGame().initGame();
-    //GameList.instance().getMaxScore(_currentGame.getGameLabel())
+    // create new slot
+    GameList.instance().getGameScores(getGame().getId()).setScore(0);
   }
 
   public Tetris getGame() {
@@ -622,7 +623,7 @@ public final class GameView extends SurfaceView {
 //            Ui.drawGlyph(c, 300, 300, 100, 100, Ui.ButtonGlyph.RIGHT);
 
           } else if (paintType == ScreenPaintType.FAILED) {
-            c.drawColor(ColorCodes.red);
+            // c.drawColor(ColorCodes.red);
 
           } else if (paintType == ScreenPaintType.FULLSCREEN || paintType == ScreenPaintType.FIELD_ONLY) {
             //Debug.print("PGS: " + paintType);
