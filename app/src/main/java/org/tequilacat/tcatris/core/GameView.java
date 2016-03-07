@@ -137,95 +137,97 @@ public final class GameView extends SurfaceView {
 
     synchronized (_gameChangeLock) {
       try {
-        while(_isRunning) {
-            // otherwise just exit from while
-            GameAction curAction = _gameThreadAction;
-            _gameThreadAction = null;
+        while (_isRunning) {
+          // otherwise just exit from while
+          GameAction curAction = _gameThreadAction;
+          _gameThreadAction = null;
 
-            if (_isPaused) {
-              // show paused screen and wait for next kick
-              Debug.print("PAUSE: show paused screen and wait for next kick");
-              towait = 0;
-              //paintScreen(ScreenPaintType.PAUSED);
+          if (_isPaused) {
+            // show paused screen and wait for next kick
+            Debug.print("PAUSE: show paused screen and wait for next kick");
+            towait = 0;
+            //paintScreen(ScreenPaintType.PAUSED);
 
-            } else if (getGame().getState() == Tetris.LOST) {
-              // show scores
-              Debug.print("lost, wait for next kick to restart");
-              towait = 0;
-              //paintScreen(ScreenPaintType.FAILED);
+          } else if (getGame().getState() == Tetris.LOST) {
+            // show scores
+            Debug.print("lost, wait for next kick to restart");
+            towait = 0;
+            //paintScreen(ScreenPaintType.FAILED);
 
-              final MainActivity mainActivity = (MainActivity) getContext();
-              mainActivity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                  mainActivity.showScores();
-                }
-              });
+            final MainActivity mainActivity = (MainActivity) getContext();
+            mainActivity.runOnUiThread(new Runnable() {
+              @Override
+              public void run() {
+                mainActivity.showScores();
+              }
+            });
 
-            } else if (curAction == GameAction.UNPAUSE) {
-              towait = INTERVAL;
-              paintScreen(ScreenPaintType.FULLSCREEN);
+          } else if (curAction == GameAction.UNPAUSE) {
+            towait = INTERVAL;
+            paintScreen(ScreenPaintType.FULLSCREEN);
 
-            } else { // ACTIVE: run action, see consequences
-              // normal timing operation, check action and depending on it repaint screen
-              //Debug.print("   woke up [slept=" + sleptTime + "], action = " + _gameThreadAction);
-              ScreenPaintType repaintType = null;
+          } else { // ACTIVE: run action, see consequences
+            // normal timing operation, check action and depending on it repaint screen
+            //Debug.print("   woke up [slept=" + sleptTime + "], action = " + _gameThreadAction);
+            ScreenPaintType repaintType = null;
 
-              if (curAction == null) {
-                //repaintType = ScreenPaintType.FULLSCREEN;
-                repaintType = getGame().nextState(false) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
-                towait = INTERVAL; // getGame().getLevelDelayMS();
+            if (curAction == null) {
+              //repaintType = ScreenPaintType.FULLSCREEN;
+              repaintType = getGame().nextState(false) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
+              towait = INTERVAL; // getGame().getLevelDelayMS();
 
-              } else {
-                // run action
-                final boolean doRepaint;
+            } else {
+              // run action
+              final boolean doRepaint;
 
-                switch (curAction) {
-                  case DROP:
-                    doRepaint = true;
-                    repaintType = getGame().nextState(true) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
-                    sleptTime = 0;
-                    break;
-                  case LEFT:
-                    doRepaint = getGame().moveLeft();
-                    break;
-                  case RIGHT:
-                    doRepaint = getGame().moveRight();
-                    break;
-                  case ROTATE_CW:
-                    doRepaint = getGame().rotateClockwise();
-                    break;
-                  case ROTATE_CCW:
-                    doRepaint = getGame().rotateAntiClockwise();
-                    break;
-                  default:
-                    doRepaint = false;
-                    break;
-                }
-
-                if (doRepaint && repaintType == null) {
-                  repaintType = ScreenPaintType.FIELD_ONLY;
-                }
-
-                towait = INTERVAL - sleptTime;
-                if (towait <= 0) {
-                  // slept or worked too long, next cycle very soon
-                  towait = 1;
-                }
-                //Debug.print("... User action, sleep remaining ");
+              switch (curAction) {
+                case DROP:
+                  doRepaint = true;
+                  repaintType = getGame().nextState(true) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
+                  sleptTime = 0;
+                  break;
+                case LEFT:
+                  doRepaint = getGame().moveLeft();
+                  break;
+                case RIGHT:
+                  doRepaint = getGame().moveRight();
+                  break;
+                case ROTATE_CW:
+                  doRepaint = getGame().rotateClockwise();
+                  break;
+                case ROTATE_CCW:
+                  doRepaint = getGame().rotateAntiClockwise();
+                  break;
+                default:
+                  doRepaint = false;
+                  break;
               }
 
-              paintScreen(repaintType);
+              if (doRepaint && repaintType == null) {
+                repaintType = ScreenPaintType.FIELD_ONLY;
+              }
+
+              towait = INTERVAL - sleptTime;
+              if (towait <= 0) {
+                // slept or worked too long, next cycle very soon
+                towait = 1;
+              }
+              //Debug.print("... User action, sleep remaining ");
             }
 
-            //Debug.print("Sleep " + towait);
-            long time0 = System.currentTimeMillis();
-            _gameChangeLock.wait(towait);
-            sleptTime = System.currentTimeMillis() - time0;
+            paintScreen(repaintType);
           }
+
+          Scoreboard.instance().getGameScores(getGame().getId()).setScore(getGame().getScore());
+
+          //Debug.print("Sleep " + towait);
+          long time0 = System.currentTimeMillis();
+          _gameChangeLock.wait(towait);
+          sleptTime = System.currentTimeMillis() - time0;
+        }
       } catch (InterruptedException e) {
         // TODO process exception
-        Debug.print("Thread interrupted: "+e);
+        Debug.print("Thread interrupted: " + e);
       }
     }
   }

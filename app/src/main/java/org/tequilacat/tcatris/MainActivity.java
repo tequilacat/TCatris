@@ -36,7 +36,9 @@ public class MainActivity extends Activity {
 
     // fill game list
     GameList.init();
-    Scoreboard.setState((Scoreboard) savedInstanceState.getParcelable(SCOREBOARD_PARCEL_KEY));
+    // init scores
+    Scoreboard.setState(savedInstanceState == null ? null :
+            (Scoreboard) savedInstanceState.getParcelable(SCOREBOARD_PARCEL_KEY));
 
     final List<GameList.GameDescriptor> gameTypes = GameList.instance().getGameDescriptors();
     final ArrayAdapter<GameList.GameDescriptor> adapter = new ArrayAdapter<>(this,
@@ -47,29 +49,20 @@ public class MainActivity extends Activity {
     gameListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
       @Override
       public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        // Toast.makeText(GameSelectorActivity.this, gameTypes.get(position).getLabel(), Toast.LENGTH_SHORT).show();
         runGame(gameTypes.get(position));
       }
     });
   }
 
+  // Toast.makeText(GameSelectorActivity.this, gameTypes.get(position).getLabel(), Toast.LENGTH_SHORT).show();
+
   @Override
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
-    // outState.putParcelable(SCOREBOARD_PARCEL_KEY, Scoreboard.instance());
+    outState.putParcelable(SCOREBOARD_PARCEL_KEY, Scoreboard.instance());
   }
 
   private void runGame(GameList.GameDescriptor gameDescriptor) {
-    //Intent intent = new Intent(this, GameActivity.class);
-    //intent.putExtra(GameActivity.GAME_DESCRIPTOR, gameDescriptor.getId());
-    //startActivity(intent);
-/*
-GameView gameView = (GameView) findViewById(R.id.gameView);
-    String gameId = getIntent().getStringExtra(GAME_DESCRIPTOR);
-    Tetris game = GameList.instance().createGame(GameList.instance().findDescriptor(gameId));
-    gameView.setGame(game);
- */
-
     Tetris game = GameList.instance().createGame(gameDescriptor);
     GameView gameView = (GameView) findViewById(R.id.gameView);
     gameView.setGame(game);

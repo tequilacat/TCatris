@@ -49,11 +49,9 @@ public class GameListTest {
     Scoreboard.setState(null);
     GameScores gs = Scoreboard.instance().getGameScores("1");
 
-    // adding to
-    ScoreEntry entry;
-    entry = new ScoreEntry(); entry.setScore(50); gs.getEntries().add(entry);
-    entry = new ScoreEntry(); entry.setScore(40); gs.getEntries().add(entry);
-    entry = new ScoreEntry(); entry.setScore(30); gs.getEntries().add(entry);
+    gs.getEntries().add(new ScoreEntry(50, 0));
+    gs.getEntries().add(new ScoreEntry(40, 0));
+    gs.getEntries().add(new ScoreEntry(30, 0));
 
     gs.setScore(0);
     assertThat(gs.getEntries(), hasSize(3));
@@ -74,12 +72,11 @@ public class GameListTest {
     GameScores gs = Scoreboard.instance().getGameScores("1");
 
     // adding to
-    ScoreEntry entry;
-    entry = new ScoreEntry(); entry.setScore(50); gs.getEntries().add(entry);
-    entry = new ScoreEntry(); entry.setScore(40); gs.getEntries().add(entry);
-    entry = new ScoreEntry(); entry.setScore(30); gs.getEntries().add(entry);
-    entry = new ScoreEntry(); entry.setScore(20); gs.getEntries().add(entry);
-    entry = new ScoreEntry(); entry.setScore(10); gs.getEntries().add(entry);
+    gs.getEntries().add(new ScoreEntry(50, 0));
+    gs.getEntries().add(new ScoreEntry(40, 0));
+    gs.getEntries().add(new ScoreEntry(30, 0));
+    gs.getEntries().add(new ScoreEntry(20, 0));
+    gs.getEntries().add(new ScoreEntry(10, 0));
 
     // now init , must be same
     gs.setScore(0);
@@ -174,7 +171,7 @@ public class GameListTest {
     assertThat(gs.getEntries().get(0).getScore(), is(20));
     assertThat(gs.getEntries().get(0).getTime(), is(greaterThan(t0)));
 
-    
+
     // consider this game finished, and start another game, add another score
     gs.setScore(0);
     // now top is the same and current is -1
