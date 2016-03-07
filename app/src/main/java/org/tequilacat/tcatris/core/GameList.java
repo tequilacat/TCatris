@@ -10,6 +10,7 @@ import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -335,17 +336,21 @@ public class GameList {
   }
 
 
+  public static final int MAX_SCORE_LENGTH = 5;
+
   public static class GameScores {
     private List<ScoreEntry> _entries = new ArrayList<>();
-    public ScoreEntry _currentEntry = null;
-    private static final int MAX_SCORE_LENGTH = 5;
-
+    private ScoreEntry _currentEntry = null;
     public int getMaxScore() {
       return _entries.isEmpty() ? 0 : _entries.get(0).getScore();
     }
 
     public boolean isCurrent(ScoreEntry entry) {
       return entry == _currentEntry;
+    }
+
+    public List<ScoreEntry> getEntries() {
+      return _entries;
     }
 
     /**
@@ -362,9 +367,36 @@ public class GameList {
           _currentEntry = new ScoreEntry();
           _currentEntry.setScore(score);
         }
-      } else {
+      } else if(score > _currentEntry.getScore()){ //foolproof - usually must be greater than last invocation
         // current entry is non null, see if it fits scoreboard
-        // check if 
+
+        // if less than last, and not 0, we add it to last if we have slots
+        int scorePos = _entries.size() - 1;
+        // find scorePos with score >= added one
+
+        while(scorePos >= 0) {
+          if(score <= _entries.get(scorePos).getScore()) {
+            break;
+          }
+          scorePos--;
+        }
+//        while (scorePos >= 0 && score > _entries.get(scorePos).getScore()) {
+//          scorePos--;
+//        }
+
+        // now scorePos is next higher score.
+        // add if new pos is within LE maxcount
+        if(scorePos + 1 < MAX_SCORE_LENGTH) {
+          _entries.remove(_currentEntry);
+          _entries.add(scorePos + 1, _currentEntry);
+        }
+
+        while(_entries.size() > MAX_SCORE_LENGTH) {
+          _entries.remove(_entries.size() - 1);
+        }
+
+        _currentEntry.setScore(score);
+        _currentEntry.setTime(System.currentTimeMillis());
       }
     }
 
