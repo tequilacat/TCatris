@@ -117,7 +117,7 @@ public final class GameView extends SurfaceView {
   public void restartGame() {
     getGame().initGame();
     // create new slot
-    GameList.instance().getGameScores(getGame().getId()).setScore(0);
+    Scoreboard.instance().getGameScores(getGame().getId()).setScore(0);
   }
 
   public Tetris getGame() {

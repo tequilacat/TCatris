@@ -1,9 +1,9 @@
 package org.tequilacat.tcatris.core;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-//import static org.hamcrest.CoreMatchers.*;
+import org.tequilacat.tcatris.core.Scoreboard.*;
+
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
@@ -19,16 +19,16 @@ import static org.junit.Assert.fail;
  */
 public class GameListTest {
 
-  private int getCurrentScoreIndex(GameList.GameScores gameScores) {
+  private int getCurrentScoreIndex(GameScores gameScores) {
     int index = -1;
-    List<GameList.ScoreEntry> entries = gameScores.getEntries();
+    List<ScoreEntry> entries = gameScores.getEntries();
 
-    if(entries.size()> GameList.MAX_SCORE_LENGTH) {
+    if(entries.size()> Scoreboard.MAX_SCORE_LENGTH) {
       fail("Too much entries");
     }
 
     for(int i = 0; i < entries.size(); i++) {
-      GameList.ScoreEntry entry = entries.get(i);
+      ScoreEntry entry = entries.get(i);
       if (gameScores.isCurrent(entry)) {
         if(index != -1) {
           fail("met current entry twice");
@@ -46,14 +46,14 @@ public class GameListTest {
    */
   @Test
   public void testScoreBoardFromHalfFilled() throws Exception {
-    GameList.init();
-    GameList.GameScores gs = GameList.instance().getGameScores("1");
+    Scoreboard.setState(null);
+    GameScores gs = Scoreboard.instance().getGameScores("1");
 
     // adding to
-    GameList.ScoreEntry entry;
-    entry = new GameList.ScoreEntry(); entry.setScore(50); gs.getEntries().add(entry);
-    entry = new GameList.ScoreEntry(); entry.setScore(40); gs.getEntries().add(entry);
-    entry = new GameList.ScoreEntry(); entry.setScore(30); gs.getEntries().add(entry);
+    ScoreEntry entry;
+    entry = new ScoreEntry(); entry.setScore(50); gs.getEntries().add(entry);
+    entry = new ScoreEntry(); entry.setScore(40); gs.getEntries().add(entry);
+    entry = new ScoreEntry(); entry.setScore(30); gs.getEntries().add(entry);
 
     gs.setScore(0);
     assertThat(gs.getEntries(), hasSize(3));
@@ -70,16 +70,16 @@ public class GameListTest {
 
   @Test
   public void testScoreBoardFromFilled() throws Exception {
-    GameList.init();
-    GameList.GameScores gs = GameList.instance().getGameScores("1");
+    Scoreboard.setState(null);
+    GameScores gs = Scoreboard.instance().getGameScores("1");
 
     // adding to
-    GameList.ScoreEntry entry;
-    entry = new GameList.ScoreEntry(); entry.setScore(50); gs.getEntries().add(entry);
-    entry = new GameList.ScoreEntry(); entry.setScore(40); gs.getEntries().add(entry);
-    entry = new GameList.ScoreEntry(); entry.setScore(30); gs.getEntries().add(entry);
-    entry = new GameList.ScoreEntry(); entry.setScore(20); gs.getEntries().add(entry);
-    entry = new GameList.ScoreEntry(); entry.setScore(10); gs.getEntries().add(entry);
+    ScoreEntry entry;
+    entry = new ScoreEntry(); entry.setScore(50); gs.getEntries().add(entry);
+    entry = new ScoreEntry(); entry.setScore(40); gs.getEntries().add(entry);
+    entry = new ScoreEntry(); entry.setScore(30); gs.getEntries().add(entry);
+    entry = new ScoreEntry(); entry.setScore(20); gs.getEntries().add(entry);
+    entry = new ScoreEntry(); entry.setScore(10); gs.getEntries().add(entry);
 
     // now init , must be same
     gs.setScore(0);
@@ -109,8 +109,9 @@ public class GameListTest {
    */
   @Test
   public void testScoreBoardFromEmpty() throws Exception {
-    GameList.init();
-    GameList.GameScores gs = GameList.instance().getGameScores("1");
+    Scoreboard.setState(null);
+
+    GameScores gs = Scoreboard.instance().getGameScores("1");
     gs.setScore(0);
     assertTrue(gs.getEntries().isEmpty());
     gs.setScore(0);
@@ -146,9 +147,9 @@ public class GameListTest {
 
   @Test
   public void testScoreBoardReplaceCurrent() throws Exception {
+    Scoreboard.setState(null);
 
-    GameList.init();
-    GameList.GameScores gs = GameList.instance().getGameScores("1");
+    GameScores gs = Scoreboard.instance().getGameScores("1");
     assertThat(gs, not(is(nullValue())));
 
     long t0 = System.currentTimeMillis();
@@ -173,8 +174,22 @@ public class GameListTest {
     assertThat(gs.getEntries().get(0).getScore(), is(20));
     assertThat(gs.getEntries().get(0).getTime(), is(greaterThan(t0)));
 
-    // originally empty,
-    // add 1st 0 should be empty
-    //
+    
+    // consider this game finished, and start another game, add another score
+    gs.setScore(0);
+    // now top is the same and current is -1
+    assertThat(gs.getEntries(), hasSize(1));
+    assertEquals(-1, getCurrentScoreIndex(gs));
+    assertThat(gs.getEntries().get(0).getScore(), is(20));
+
+    gs.setScore(10); // this one gets second
+    assertThat(gs.getEntries(), hasSize(2));
+    assertEquals(1, getCurrentScoreIndex(gs));
+    assertThat(gs.getEntries().get(1).getScore(), is(10));
+
+    gs.setScore(100); // this one gets second
+    assertThat(gs.getEntries(), hasSize(2));
+    assertEquals(0, getCurrentScoreIndex(gs));
+    assertThat(gs.getEntries().get(0).getScore(), is(100));
   }
 }

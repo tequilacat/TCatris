@@ -13,6 +13,7 @@ import android.widget.ViewFlipper;
 import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.GameList;
 import org.tequilacat.tcatris.core.GameView;
+import org.tequilacat.tcatris.core.Scoreboard;
 import org.tequilacat.tcatris.core.Tetris;
 
 import java.text.DateFormat;
@@ -22,6 +23,8 @@ import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends Activity {
+
+  private static final String SCOREBOARD_PARCEL_KEY = "scoreboard_parcel_key";
 
   private ViewFlipper _viewFlipper;
 
@@ -33,6 +36,7 @@ public class MainActivity extends Activity {
 
     // fill game list
     GameList.init();
+    Scoreboard.setState((Scoreboard) savedInstanceState.getParcelable(SCOREBOARD_PARCEL_KEY));
 
     final List<GameList.GameDescriptor> gameTypes = GameList.instance().getGameDescriptors();
     final ArrayAdapter<GameList.GameDescriptor> adapter = new ArrayAdapter<>(this,
@@ -49,6 +53,11 @@ public class MainActivity extends Activity {
     });
   }
 
+  @Override
+  protected void onSaveInstanceState(Bundle outState) {
+    super.onSaveInstanceState(outState);
+    // outState.putParcelable(SCOREBOARD_PARCEL_KEY, Scoreboard.instance());
+  }
 
   private void runGame(GameList.GameDescriptor gameDescriptor) {
     //Intent intent = new Intent(this, GameActivity.class);
