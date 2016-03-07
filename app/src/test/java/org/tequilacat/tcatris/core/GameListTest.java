@@ -1,5 +1,7 @@
 package org.tequilacat.tcatris.core;
 
+import com.google.gson.Gson;
+
 import org.junit.Test;
 
 import org.tequilacat.tcatris.core.Scoreboard.*;
@@ -188,5 +190,43 @@ public class GameListTest {
     assertThat(gs.getEntries(), hasSize(2));
     assertEquals(0, getCurrentScoreIndex(gs));
     assertThat(gs.getEntries().get(0).getScore(), is(100));
+  }
+
+  @Test
+  public void testPersistence() {
+    Scoreboard.setState(null);
+    GameScores gs = Scoreboard.instance().getGameScores("1");
+    gs.setScore(0);
+    gs.setScore(10);
+    // record first
+    gs.setScore(0);
+    gs.setScore(20);
+    // now have 2
+    assertThat(gs.getEntries(), hasSize(2));
+
+
+    gs = Scoreboard.instance().getGameScores("2");
+    gs.setScore(0);
+    gs.setScore(100);
+    assertThat(gs.getEntries(), hasSize(1));
+
+    // now savfe and restore
+    String saved = Scoreboard.getState();
+    Scoreboard.setState(null);
+
+    assertThat(Scoreboard.instance().getGameScores("1").getEntries(), hasSize(0));
+    assertThat(Scoreboard.instance().getGameScores("2").getEntries(), hasSize(0));
+
+    // restore from string
+    Scoreboard.setState(saved);
+    gs = Scoreboard.instance().getGameScores("1");
+    assertThat(gs.getEntries(), hasSize(2));
+    // now getcurrent is -1 after reload - current entry must not persist
+    assertEquals(-1, getCurrentScoreIndex(gs));
+
+    gs = Scoreboard.instance().getGameScores("2");
+    assertThat(gs.getEntries(), hasSize(1));
+    // now getcurrent is -1 after reload - current entry must not persist
+    assertEquals(-1, getCurrentScoreIndex(gs));
   }
 }

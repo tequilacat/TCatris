@@ -1,6 +1,7 @@
 package org.tequilacat.tcatris;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.View;
@@ -18,6 +19,7 @@ import org.tequilacat.tcatris.core.Tetris;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -36,9 +38,9 @@ public class MainActivity extends Activity {
 
     // fill game list
     GameList.init();
-    // init scores
-    Scoreboard.setState(savedInstanceState == null ? null :
-            (Scoreboard) savedInstanceState.getParcelable(SCOREBOARD_PARCEL_KEY));
+    // init scores from saved preferences
+    SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+    Scoreboard.setState(prefs.getString(SCOREBOARD_PARCEL_KEY, null));
 
     final List<GameList.GameDescriptor> gameTypes = GameList.instance().getGameDescriptors();
     final ArrayAdapter<GameList.GameDescriptor> adapter = new ArrayAdapter<>(this,
@@ -56,10 +58,16 @@ public class MainActivity extends Activity {
 
   // Toast.makeText(GameSelectorActivity.this, gameTypes.get(position).getLabel(), Toast.LENGTH_SHORT).show();
 
+  /**
+   * stores game scores for all games
+   */
   @Override
-  protected void onSaveInstanceState(Bundle outState) {
-    super.onSaveInstanceState(outState);
-    outState.putParcelable(SCOREBOARD_PARCEL_KEY, Scoreboard.instance());
+  protected void onPause() {
+    super.onPause();
+
+    SharedPreferences.Editor prefEditor = getPreferences(MODE_PRIVATE).edit();
+    prefEditor.putString(SCOREBOARD_PARCEL_KEY, Scoreboard.getState());
+    prefEditor.commit();
   }
 
   private void runGame(GameList.GameDescriptor gameDescriptor) {
@@ -134,6 +142,33 @@ public class MainActivity extends Activity {
     if(currentView instanceof GameView) {
       // fill scores with current score
       GameView gameView = (GameView) currentView;
+
+      List<String> scores = new ArrayList<>();
+      StringBuilder stb = new StringBuilder();
+      Scoreboard.GameScores gs = Scoreboard.instance().getGameScores(gameView.getGame().getId());
+      boolean isInTable = false;
+
+      for (Scoreboard.ScoreEntry scoreEntry : gs.getEntries()) {
+        stb.setLength(0);
+        stb.append(scores.size()+1).append(": ").append(scoreEntry.getScore());
+
+        if(gs.isCurrent(scoreEntry)) {
+          stb.append(" YOU");
+          isInTable = true;
+        }else{
+          stb.append(" (").append(TIMESTAMP_FORMAT.format(new Date(scoreEntry.getTime()))).append(")");
+        }
+
+        scores.add(stb.toString());
+      }
+
+      if(!isInTable) {
+        scores.add("Your score (" + gameView.getGame().getScore() + ") isn't high enough");
+      }
+
+      ListView scoreListView = (ListView) findViewById(R.id.lvScoreList);
+      scoreListView.setAdapter(new ArrayAdapter<String>(this,
+              android.R.layout.simple_list_item_1, android.R.id.text1, scores));
 
       Button scoreBackButton = (Button) findViewById(R.id.scoreBackBtn);
       scoreBackButton.setText(getString(
