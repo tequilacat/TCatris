@@ -56,8 +56,6 @@ public class MainActivity extends Activity {
     });
   }
 
-  // Toast.makeText(GameSelectorActivity.this, gameTypes.get(position).getLabel(), Toast.LENGTH_SHORT).show();
-
   /**
    * stores game scores for all games
    */
