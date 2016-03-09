@@ -356,7 +356,7 @@ public final class GameView extends SurfaceView {
     // dragging half screen (approx button width) should drag shape across whole field width twice
     _tracksByType = new DragTrack[]{
 
-            new DragTrack(Button.ButtonType.ROTATE, GameAction.ROTATE_CW, GameAction.ROTATE_CCW,
+            new DragTrack(Button.ButtonType.ROTATE, GameAction.ROTATE_CCW, GameAction.ROTATE_CW,
                     (int)(getWidth() *0.4 / 10)), // 10 rotations per btn
 
             new DragTrack(Button.ButtonType.HORIZONTAL, GameAction.RIGHT, GameAction.LEFT,
@@ -613,6 +613,9 @@ public final class GameView extends SurfaceView {
           }
 
           c = getHolder().lockCanvas(updateRect);
+          if(c == null){
+            return; // just if view is not displayed
+          }
 
           if (updateRect != null && !updateRect.equals(_fieldRect)) {
             updateRect = null;
