@@ -12,9 +12,7 @@ import android.view.SurfaceView;
 import org.tequilacat.tcatris.MainActivity;
 import org.tequilacat.tcatris.R;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public final class GameView extends SurfaceView {
@@ -38,6 +36,8 @@ public final class GameView extends SurfaceView {
   private boolean _isPaused;
   private boolean _isRunning;
   private Thread _gameThread;
+
+  private DragStates _dragStates;
 
   /**
    * override for visual constructor
@@ -115,6 +115,8 @@ public final class GameView extends SurfaceView {
    * Just reinit current game , no thread work here
    */
   public void restartGame() {
+    _dragStates = new DragStates();// now no info on current drag state available to game thread
+
     getGame().initGame();
     // create new slot
     Scoreboard.instance().getGameScores(getGame().getId()).setScore(0);
@@ -124,36 +126,35 @@ public final class GameView extends SurfaceView {
     return _currentGame;
   }
 
+  /** reset timer to wait whole cycle */
+  final static long WAIT_CYCLE = -1;
+
+  /** wait until a next action is sent from UI thread */
+  // final static long WAIT_TILL_NEXT_EVENT = 0;
+
   private void runGame() {
     // runs
     long INTERVAL = 500; // 300 millis per step
-    long towait = INTERVAL;
 
     // on 1st iteration just display screen
     _gameThreadAction = GameAction.UNPAUSE;
     _isRunning = true;
     _isPaused = false;
-    long sleptTime = 0;
+    long nextTickMoment = WAIT_CYCLE;
 
     synchronized (_gameChangeLock) {
       try {
         while (_isRunning) {
-          // otherwise just exit from while
           GameAction curAction = _gameThreadAction;
           _gameThreadAction = null;
 
           if (_isPaused) {
-            // show paused screen and wait for next kick
-            Debug.print("PAUSE: show paused screen and wait for next kick");
-            towait = 0;
-            //paintScreen(ScreenPaintType.PAUSED);
+            Debug.print("Paused: exit game thread");
+            break;
+          }
 
-          } else if (getGame().getState() == Tetris.LOST) {
-            // show scores
-            Debug.print("lost, wait for next kick to restart");
-            towait = 0;
-            //paintScreen(ScreenPaintType.FAILED);
-
+          if (getGame().getState() == Tetris.LOST) {
+            Debug.print("Lost: show scores, exit game thread");
             final MainActivity mainActivity = (MainActivity) getContext();
             mainActivity.runOnUiThread(new Runnable() {
               @Override
@@ -161,69 +162,70 @@ public final class GameView extends SurfaceView {
                 mainActivity.showScores();
               }
             });
-
-          } else if (curAction == GameAction.UNPAUSE) {
-            towait = INTERVAL;
-            paintScreen(ScreenPaintType.FULLSCREEN);
-
-          } else { // ACTIVE: run action, see consequences
-            // normal timing operation, check action and depending on it repaint screen
-            //Debug.print("   woke up [slept=" + sleptTime + "], action = " + _gameThreadAction);
-            ScreenPaintType repaintType = null;
-
-            if (curAction == null) {
-              //repaintType = ScreenPaintType.FULLSCREEN;
-              repaintType = getGame().nextState(false) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
-              towait = INTERVAL; // getGame().getLevelDelayMS();
-
-            } else {
-              // run action
-              final boolean doRepaint;
-
-              switch (curAction) {
-                case DROP:
-                  doRepaint = true;
-                  repaintType = getGame().nextState(true) ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
-                  sleptTime = 0;
-                  break;
-                case LEFT:
-                  doRepaint = getGame().moveLeft();
-                  break;
-                case RIGHT:
-                  doRepaint = getGame().moveRight();
-                  break;
-                case ROTATE_CW:
-                  doRepaint = getGame().rotateClockwise();
-                  break;
-                case ROTATE_CCW:
-                  doRepaint = getGame().rotateAntiClockwise();
-                  break;
-                default:
-                  doRepaint = false;
-                  break;
-              }
-
-              if (doRepaint && repaintType == null) {
-                repaintType = ScreenPaintType.FIELD_ONLY;
-              }
-
-              towait = INTERVAL - sleptTime;
-              if (towait <= 0) {
-                // slept or worked too long, next cycle very soon
-                towait = 1;
-              }
-              //Debug.print("... User action, sleep remaining ");
-            }
-
-            paintScreen(repaintType);
+            break;
           }
 
-          Scoreboard.instance().getGameScores(getGame().getId()).setScore(getGame().getScore());
+          ScreenPaintType repaintType;
 
-          //Debug.print("Sleep " + towait);
-          long time0 = System.currentTimeMillis();
-          _gameChangeLock.wait(towait);
-          sleptTime = System.currentTimeMillis() - time0;
+          if (curAction == null) {
+            repaintType = ScreenPaintType.FULLSCREEN;
+            nextTickMoment = WAIT_CYCLE;
+
+          } else if (curAction == GameAction.UNPAUSE) {
+            nextTickMoment = WAIT_CYCLE;
+            repaintType = ScreenPaintType.FULLSCREEN;
+
+          } else { // ACTIVE: run action, see consequences
+
+            Debug.print(String.format("Move: %s Rotate: %s",
+              (_dragStates.isActive(Button.ButtonType.HORIZONTAL) ?
+                ("" + _dragStates.getValue(Button.ButtonType.HORIZONTAL)) : "NONE"),
+              (_dragStates.isActive(Button.ButtonType.ROTATE) ?
+                ("" + _dragStates.getValue(Button.ButtonType.ROTATE)) : "NONE")
+            ));
+
+            // run action
+            switch (curAction) {
+              case ADVANCE:
+              case DROP:
+                boolean gameStateChanged = getGame().nextState(curAction == GameAction.DROP);
+                Scoreboard.instance().getGameScores(getGame().getId()).setScore(getGame().getScore());
+                repaintType = gameStateChanged ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
+                nextTickMoment = WAIT_CYCLE; // reset timer to wait next
+                break;
+
+              case LEFT:
+                repaintType = getGame().moveLeft() ? ScreenPaintType.FIELD_ONLY : null;
+                break;
+              case RIGHT:
+                repaintType = getGame().moveRight() ? ScreenPaintType.FIELD_ONLY : null;
+                break;
+              case ROTATE_CW:
+                repaintType = getGame().rotateClockwise() ? ScreenPaintType.FIELD_ONLY : null;
+                break;
+              case ROTATE_CCW:
+                repaintType = getGame().rotateAntiClockwise() ? ScreenPaintType.FIELD_ONLY : null;
+                break;
+              default:
+                repaintType = null;
+                break;
+            }
+          }
+
+          long now = System.currentTimeMillis();
+          paintScreen(repaintType);
+
+          if(nextTickMoment == WAIT_CYCLE) {
+            nextTickMoment = now + INTERVAL;// after debug use
+          }
+          if (nextTickMoment <= now) {
+            nextTickMoment = now + 1;
+          }
+
+          Debug.print("Sleep " + (nextTickMoment - now));
+
+          _gameThreadAction = GameAction.ADVANCE;
+          _gameChangeLock.wait(nextTickMoment - now);
         }
       } catch (InterruptedException e) {
         // TODO process exception
@@ -240,7 +242,6 @@ public final class GameView extends SurfaceView {
         runGame();
       }
     };
-    initTracks();
     _gameThread.start();
   }
 
@@ -259,7 +260,7 @@ public final class GameView extends SurfaceView {
   }
 
   enum GameAction {
-    LEFT, RIGHT, ROTATE_CW, ROTATE_CCW, DROP, UNPAUSE,
+    LEFT, RIGHT, ROTATE_CW, ROTATE_CCW, DROP, UNPAUSE, DRAG, ADVANCE,
   }
 
   /**
@@ -267,11 +268,38 @@ public final class GameView extends SurfaceView {
    * @param action
    */
   private void sendAction(GameAction action){
+
     synchronized (_gameChangeLock) {
       _gameThreadAction = action;
+      // copy to drag control instance from existing drag types
+
+      for (DragTrack dt : _tracksByType) {
+        _dragStates.setState(dt.getDragType(), dt.isStarted(), dt.isStarted()? dt.getDragValue() : 0);
+      }
+
       _gameChangeLock.notify();
     }
   }
+
+  public static class DragStates {
+    private final boolean[] _dragStatuses = new boolean[Button.ButtonType.values().length];
+    private final double[] _dragDeltas = new double[Button.ButtonType.values().length];
+
+    public void setState(final Button.ButtonType type, boolean newState, double value) {
+      final int pos = type.ordinal();
+      _dragDeltas[pos] = value;
+      _dragStatuses[pos] = newState;
+    }
+
+    public boolean isActive(final Button.ButtonType type) {
+      return _dragStatuses[type.ordinal()];
+    }
+
+    public double getValue(final Button.ButtonType type) {
+      return _dragStatuses[type.ordinal()] ? _dragDeltas[type.ordinal()] : 0;
+    }
+  }
+
 
   private static Ui.ButtonGlyph[] BTN_GLYPHS = new Ui.ButtonGlyph[] {
     Ui.ButtonGlyph.LEFT, Ui.ButtonGlyph.RCCW, Ui.ButtonGlyph.DROP, Ui.ButtonGlyph.RCW, Ui.ButtonGlyph.RIGHT
@@ -287,7 +315,8 @@ public final class GameView extends SurfaceView {
   static class DragTrack {
     private final GameAction _positiveOffsetAction;
     private final GameAction _negativeOffsetAction;
-    public final Button.ButtonType dragType;
+
+    private final Button.ButtonType _dragType;
     private final int _stepDistance;
 
     // pointer id for which this track currently registers offset
@@ -301,8 +330,13 @@ public final class GameView extends SurfaceView {
     GameAction _lastAction;
     int _lastActionCount;
 
+    private int _startX;
+    private int _startY;
+    private int _lastStoredX;
+    private int _lastStoredY;
+
     public DragTrack(Button.ButtonType dragType, GameAction onPositive, GameAction onNegative, int distance) {
-      this.dragType = dragType;
+      this._dragType = dragType;
       _positiveOffsetAction = onPositive;
       _negativeOffsetAction = onNegative;
       _stepDistance = distance;
@@ -311,6 +345,8 @@ public final class GameView extends SurfaceView {
 
     public void start(int x, int y, int pointerId) {
       this.pointerId = pointerId;
+      _startX = x;
+      _startY = y;
       lastX = x;
       lastY = y;
     }
@@ -324,6 +360,9 @@ public final class GameView extends SurfaceView {
     }
 
     public GameAction dragTo(int newX, int newY) {
+      _lastStoredX = newX;
+      _lastStoredY = newY;
+
       // only X is currently processed
       _lastAction = null;
       _lastActionCount = 0;
@@ -341,28 +380,34 @@ public final class GameView extends SurfaceView {
       return _lastAction;
     }
 
+    public Button.ButtonType getDragType() {
+      return _dragType;
+    }
+
+    public double getDragValue() {
+      // consider
+      final double value;
+
+      if(!isStarted()){
+        value=0;
+      }else {
+        // consider x only, may be reimplemented to be vertical otherwise
+        value = (_lastStoredX - _startX) / (double) _stepDistance;
+      }
+      return value;
+    }
+
+    /*
     public int getLastActionCount() {
       return _lastActionCount;
     }
 
     public GameAction getLastAction() {
       return _lastAction;
-    }
+    }*/
   }
 
   private DragTrack[] _tracksByType;
-
-  private void initTracks() {
-    // dragging half screen (approx button width) should drag shape across whole field width twice
-    _tracksByType = new DragTrack[]{
-
-            new DragTrack(Button.ButtonType.ROTATE, GameAction.ROTATE_CCW, GameAction.ROTATE_CW,
-                    (int)(getWidth() *0.4 / 10)), // 10 rotations per btn
-
-            new DragTrack(Button.ButtonType.HORIZONTAL, GameAction.RIGHT, GameAction.LEFT,
-                    (int)(getWidth() * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
-    };
-  }
 
   private Button.ButtonType getButtonTypeAt( int x, int y){
     Button.ButtonType type = null;
@@ -397,7 +442,7 @@ public final class GameView extends SurfaceView {
       int x = (int) MotionEventCompat.getX(event, index), y = (int) MotionEventCompat.getY(event, index);
 
       Button.ButtonType buttonType = getButtonTypeAt(x, y);
-      //DragType dragType = buttonType==null ? null : (buttonType== Button.ButtonType.HORIZONTAL ? DragType.MOVE_LEFTRIGHT : )
+      //DragType _dragType = buttonType==null ? null : (buttonType== Button.ButtonType.HORIZONTAL ? DragType.MOVE_LEFTRIGHT : )
       if(buttonType== Button.ButtonType.DROP) {
         dragAction = GameAction.DROP;
 
@@ -409,7 +454,7 @@ public final class GameView extends SurfaceView {
         DragTrack found = null;
 
         for (DragTrack track : _tracksByType) {
-          if (track.dragType == buttonType && !track.isStarted()) {
+          if (track.getDragType() == buttonType && !track.isStarted()) {
             found = track;
             break;
           }
@@ -429,7 +474,7 @@ public final class GameView extends SurfaceView {
       for (DragTrack track : _tracksByType) {
         if(track.pointerId == pointerId){
           track.stop();
-          //Debug.print("   -- " + track.dragType);
+          //Debug.print("   -- " + track._dragType);
           break;
         }
       }
@@ -440,13 +485,15 @@ public final class GameView extends SurfaceView {
         if(track.isStarted()) {
           int pointerIndex = MotionEventCompat.findPointerIndex(event, track.pointerId);
           int x = (int) MotionEventCompat.getX(event, pointerIndex), y = (int) MotionEventCompat.getY(event, pointerIndex);
+
+          track.dragTo(x, y);
+          dragAction = GameAction.DRAG;
+          /*
           dragAction = track.dragTo(x, y);
 
           if (dragAction != null) {
-//            _lastDragActionCount = track.getLastActionCount();
-            //Debug.print("Dragging: " + dragAction + "[" + _lastDragActionCount + "]");
             break;
-          }
+          }*/
         }
       }
     }
@@ -552,6 +599,16 @@ public final class GameView extends SurfaceView {
    * @param h
    */
   private void layoutGameScreen(int w, int h) {
+
+    // define drag factors (pixels to cell movements) as fraction of screen dimensions
+    _tracksByType = new DragTrack[]{
+      new DragTrack(Button.ButtonType.ROTATE, GameAction.ROTATE_CCW, GameAction.ROTATE_CW,
+        (int)(w *0.4 / 10)), // 10 rotations per btn
+      new DragTrack(Button.ButtonType.HORIZONTAL, GameAction.RIGHT, GameAction.LEFT,
+        (int)(h * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
+    };
+
+    // compute proportional sizes of painted screen components
     _fontSize = getResources().getDimensionPixelSize(R.dimen.gameinfo_font_size);
     //setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimensionPixelSize(R.dimen.typo14));
 
@@ -698,193 +755,5 @@ public final class GameView extends SurfaceView {
     c.translate(-dx, -dy);
   }
 
-/*
-
-// TODO implement message() or use combobox
-    protected void message(Graphics g, String msg) {
-        int nStrings = 0;
-        int width = 0, fromPos = 0;
-        float fHeight = Ui.getLineHeight();
-
-        for (int i = 0; i <= msg.length(); i++) {
-            if (i == msg.length() || msg.charAt(i) == '\n') {
-                nStrings++;
-                int w = f.substringWidth(msg, fromPos, i - fromPos);
-                if (width < w) width = w;
-                fromPos = i + 1;
-            }
-        }
-
-        float height = nStrings * fHeight;
-
-        width += 4;
-        height += 2;
-        //int scrWidth = getWidth(), scrHeight = getHeight();
-        float x = (getWidth() - width) / 2, y = (getHeight() - height) / 2;
-
-        g.setColor(ColorCodes.white);
-        g.fillRect(x, y, width, height);
-
-        g.setColor(ColorCodes.black);
-        g.drawRect(x, y, width, height);
-
-        fromPos = 0;
-        int centerX = getWidth() / 2;
-
-        for (int i = 0; i <= msg.length(); i++) {
-            if (i == msg.length() || msg.charAt(i) == '\n') {
-                g.drawSubstring(msg, fromPos, i - fromPos, centerX, y + 1, g.HCENTER | g.TOP);
-                y += fHeight;
-                fromPos = i + 1;
-            }
-        }
-    }
-
-  private void showInGameScores(Canvas c) {
-    GameScreenLayout layout = getGame().getGameScreenLayout();
-    int curScore = getGame().getScore();
-    float fontHeight = getLineHeight();
-
-    int[] hiScores = getGame().getHiScores();
-    // along right side, draw
-
-    // DEBUG
-//                    hiScores[0] = 0;
-//                    curScore = 15;
-
-    int scoreWidth = _scoreBarArea.width();
-    int scoreHeight = _scoreBarArea.height();
-
-    int scoreX = MARGIN_LEFT + layout.getFieldRect().width() + SPACING_VERT;
-    scoreWidth = scoreWidth - scoreX - MARGIN_RIGHT;
-    int scoreY = layout.getNextShapeRect().top + layout.getNextShapeRect().height() + MARGIN_LEFT;
-    //int scoreHeight = layout.getFieldRect().top + layout.getFieldRect().height() - scoreY;
-    //layout.getGlassClipY() + layout.getGlassClipHeight() - scoreY;
-
-//        g.setColor(ColorCodes.green);
-//        g.fillRect(scoreX, scoreY, scoreWidth, scoreHeight);
-//        Ui.draw3dRect(g, scoreX, scoreY, scoreWidth, scoreHeight);
-
-    //Debug.print("display score : is icon Vert? "+myDisplayIconsVertically);
-
-    /// SCORES AND LEVEL
-    //c.setColor(ColorCodes.black);
-    //int fontX = scoreX, fontY = scoreY;
-    float dY;
-    int playerIconHeight = PlayerIcon == null ? 50 : PlayerIcon.getHeight();
-    boolean myDisplayIconsVertically = true;// historical, to be removed completely
-    if (myDisplayIconsVertically) {
-      scoreX += (scoreWidth - MARGIN_RIGHT - scoreX) / 2;
-      dY = fontHeight + playerIconHeight;
-    } else {
-      dY = (fontHeight > playerIconHeight) ? fontHeight : playerIconHeight;
-    }
-
-    displayEntry(c, LevelIcon, getGame().getLevel(), scoreX, scoreY);
-    scoreY += dY;
-
-    //fontY = scoreY + 3*fontHeight;
-
-
-    if (hiScores[0] == 0) { // only my scores
-      displayEntry(c, PlayerIcon, curScore, scoreX, scoreY);
-    } else if (hiScores[0] > curScore) { // player competes, below
-      displayEntry(c, WinnerIcon, hiScores[0], scoreX, scoreY);
-      displayEntry(c, PlayerIcon, curScore, scoreX, scoreY + (int) dY);
-    } else { // player wins
-      displayEntry(c, PlayerIcon, curScore, scoreX, scoreY);
-      displayEntry(c, WinnerIcon, hiScores[0], scoreX, scoreY + (int) dY);
-    }
-
-    /////////// SCORE BAR (AS PLAYER COMPETES HISCORE)
-    if (hiScores[0] > 0) {
-      int barColor = (curScore >= hiScores[0]) ? ColorCodes.green : ColorCodes.yellow;
-      int sbX, sbY, sbWidth, sbHeight;
-
-
-      // assume horizontal score bar
-      sbHeight = scoreHeight - 2;
-      sbWidth = scoreWidth - MARGIN_LEFT - MARGIN_RIGHT;
-      sbX = MARGIN_LEFT;
-      sbY = _scoreBarArea.top;
-
-      Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, ColorCodes.black);
-      Ui.drawRect(c, sbX, sbY, sbWidth, sbHeight, ColorCodes.black);
-
-      if (curScore >= hiScores[0]) { // win
-        int newPos = sbWidth * hiScores[0] / curScore;
-        Ui.drawRect(c, sbX + newPos, sbY, sbWidth - newPos, sbHeight, barColor);
-      } else { // compete
-        Ui.drawRect(c, sbX, sbY, sbWidth * curScore / hiScores[0], sbHeight, barColor);
-      }
-
-      // 3d bevel around score bar
-      Ui.draw3dRect(c, sbX, sbY, sbWidth, sbHeight);
-    }
-  }
-
-  private void showScoreTable(Canvas c) {
-    int scrWidth = getWidth(), scrHeight = getHeight();
-    Paint p = new Paint();
-    float fontHeight = getLineHeight();
-
-    int curScore = getGame().getScore();
-
-    c.drawColor(ColorCodes.white);
-
-    p.setColor(ColorCodes.black);
-    // display game name
-    c.drawText(_currentGame.getGameLabel(), 0, 0, p);
-    p.setTextAlign(Paint.Align.RIGHT);
-    c.drawText(getTimeStr(0), scrWidth, 0, p);
-    p.setTextAlign(Paint.Align.LEFT);
-    c.drawText("press any key", 0, scrHeight - 1 - fontHeight, p);
-
-    c.drawRect(0, fontHeight, scrWidth, scrHeight - fontHeight * 2, p);
-
-    int nScores = _currentGame.getScoreTableSize();
-
-    if (nScores > 0) {
-      int pos = 0, curScorePosition = _currentGame.findScorePosition(curScore);
-      float yPos = fontHeight;
-      float entryHeight = (scrHeight - fontHeight * 2) / nScores;
-
-      if (entryHeight > fontHeight * 2) {
-        entryHeight = fontHeight * 2;
-      }
-
-//            String label;
-      //Font curFont = g.getFont();
-      //Font boldFont = Font.getFont(curFont.getFace(), curFont.getStyle() | Font.STYLE_BOLD, curFont.getSize());
-      long recordDate;
-      while ((recordDate = _currentGame.getScoreTableEntry(pos)) >= 0) {
-
-        if (pos == curScorePosition) {
-          p.setColor(ColorCodes.yellow);
-        } else {
-          p.setColor(ColorCodes.white);
-        }
-
-        //g.drawRect(1, yPos+1, scrWidth-3, entryHeight - 2);
-
-        String posAndScore = "" + (pos + 1) + ". " + _currentGame.getHiScores()[pos];
-
-        //g.setFont(boldFont);
-        c.drawText(posAndScore, 3, yPos + 2 + (entryHeight - fontHeight) / 2, p);
-        //g.setFont(curFont);
-        p.setTextAlign(Paint.Align.RIGHT);
-        c.drawText(getTimeStr(recordDate),
-          scrWidth - 3, yPos + 2 + (entryHeight - fontHeight) / 2 - fontHeight, p);
-        p.setTextAlign(Paint.Align.LEFT);
-
-        yPos += entryHeight;
-        pos++;
-      }
-
-      p.setColor(ColorCodes.black);
-
-    }
-  }
-*/
 
 }
