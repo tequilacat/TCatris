@@ -17,20 +17,12 @@ import java.util.List;
 
 public final class GameView extends SurfaceView {
 
-  private Tetris _currentGame;
-
-  //boolean myDisplayIconsVertically;
-
   private final Object _gameChangeLock = new Object();
-  //private int _screenWidth;
-  //private int _screenHeight;
-  //private SurfaceHolder _holder;
-  //private int _scorebarHeight;
+  private Tetris _currentGame;
   private GameAction _gameThreadAction;
   private boolean _isPaused;
   private boolean _isRunning;
   private Thread _gameThread;
-
   private DragStates _dragStates;
 
   /**
@@ -122,9 +114,6 @@ public final class GameView extends SurfaceView {
 
   /** reset timer to wait whole cycle */
   final static long WAIT_CYCLE = -1;
-
-  /** wait until a next action is sent from UI thread */
-  // final static long WAIT_TILL_NEXT_EVENT = 0;
 
   private void runGame() {
     // runs
@@ -316,8 +305,6 @@ public final class GameView extends SurfaceView {
     // pointer id for which this track currently registers offset
     public int pointerId;
 
-    // start coordinates
-    //private int x0, y0;
     // last coordinates
     private int lastX, lastY;
 
@@ -390,15 +377,6 @@ public final class GameView extends SurfaceView {
       }
       return value;
     }
-
-    /*
-    public int getLastActionCount() {
-      return _lastActionCount;
-    }
-
-    public GameAction getLastAction() {
-      return _lastAction;
-    }*/
   }
 
   private DragTrack[] _tracksByType;
@@ -519,8 +497,7 @@ public final class GameView extends SurfaceView {
           int index = MotionEventCompat.getActionIndex(event);
           int eventX = (int) MotionEventCompat.getX(event, index), eventY = (int) MotionEventCompat.getY(event, index);
 
-          if (getGame().getGameScreenLayout().getFieldRect().contains(
-                  eventX - _gameArea.left, eventY - _gameArea.top)) {
+          if (getGame().getGameScreenLayout().getFieldRect().contains(eventX, eventY)) {
             // check field click - set pause
             // setPaused(true);
             ((MainActivity)getContext()).showScores();
@@ -549,16 +526,6 @@ public final class GameView extends SurfaceView {
     return _isPaused;
   }
 
-  public void stopGame() {
-    //myTickerThread = null;
-    //myStop = true;
-    if (_currentGame != null) {
-      Debug.print("Stop game");
-      //_currentGame.insertTopScore(_currentGame.getScore());
-    }
-  }
-
-
   static class Button {
     enum ButtonType {
       HORIZONTAL, ROTATE, DROP
@@ -577,10 +544,7 @@ public final class GameView extends SurfaceView {
 
   private final List<Button> _buttons = new ArrayList<>();
 
-  private Rect _gameArea = new Rect();
-  //private Rect _buttonArea = new Rect();
   private Rect _scoreBarArea = new Rect();
-
   private int _fontSize;
 
   private int getLineHeight() {
@@ -604,16 +568,14 @@ public final class GameView extends SurfaceView {
 
     // compute proportional sizes of painted screen components
     _fontSize = getResources().getDimensionPixelSize(R.dimen.gameinfo_font_size);
-    //setTextSize(TypedValue.COMPLEX_UNIT_PX, getResources().getDimensionPixelSize(R.dimen.typo14));
-
     final int scoreHeight = getLineHeight();
     final int buttonHeight = h / 10;
 
     _scoreBarArea.set(0, 0, w, scoreHeight);
-    _gameArea.set(0, _scoreBarArea.bottom, w, h - buttonHeight - scoreHeight);
-    //_buttonArea.set(0, _gameArea.bottom, w, h);
+    int buttonAreaTop = h - buttonHeight - scoreHeight;
 
-    int buttonH = h - _gameArea.bottom, buttonW = w / 5, buttonX = 0, buttonY = _gameArea.bottom;
+    int buttonH = h - buttonAreaTop, buttonW = w / 5, buttonX = 0, buttonY = buttonAreaTop;
+
     _buttons.clear();
     _buttons.add(new Button(Button.ButtonType.ROTATE, Ui.ButtonGlyph.RCCW, buttonX, buttonY, buttonW * 2, buttonH));
     _buttons.add(new Button(Button.ButtonType.DROP, Ui.ButtonGlyph.DROP, buttonX + buttonW * 2, buttonY, buttonW, buttonH));
@@ -623,14 +585,9 @@ public final class GameView extends SurfaceView {
     layoutParams.MARGIN_BOTTOM = layoutParams.MARGIN_LEFT
       = layoutParams.MARGIN_RIGHT = layoutParams.MARGIN_TOP = layoutParams.SPACING_VERT
       = w / 30;
-    layoutParams.GameArea = new Rect(_gameArea);
+    layoutParams.GameArea = new Rect(0, _scoreBarArea.bottom, w, h - buttonHeight - scoreHeight);
 
     getGame().layout(layoutParams);
-
-    /*Rect fieldRect = getGame().getGameScreenLayout().getFieldRect();
-    _fieldRect.set(_gameArea.left + fieldRect.left, _gameArea.top + fieldRect.top,
-      _gameArea.left + fieldRect.right, _gameArea.top + fieldRect.bottom);
-      */
   }
 
   /**
@@ -719,7 +676,7 @@ public final class GameView extends SurfaceView {
       c.drawColor(Ui.UI_COLOR_PANEL);
 
       Rect next = layout.getNextShapeRect();
-      getGame().paintNext(c, _gameArea.left + next.left, _gameArea.top + next.top, next.width(), next.height());
+      getGame().paintNext(c, next.left, next.top, next.width(), next.height());
 
       // TODO paint scores as bar
       Ui.fillRect(c, _scoreBarArea, ColorCodes.black);

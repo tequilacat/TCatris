@@ -263,10 +263,10 @@ public abstract class FlatGame extends Tetris {
 
 
     setGameScreenLayout(new GameScreenLayout(cellSize,
-      layoutParams.GameArea.left + fieldX0, layoutParams.GameArea.top + fieldY0,
-      myFieldWidth, myFieldHeight,
-      myNextShapeX0, myNextShapeY0,
-      this.getMaxShapeWidth() * cellSize, this.getMaxShapeHeight() * cellSize));
+        layoutParams.GameArea.left + fieldX0, layoutParams.GameArea.top + fieldY0,
+        myFieldWidth, myFieldHeight,
+        layoutParams.GameArea.left + myNextShapeX0, layoutParams.GameArea.top + myNextShapeY0,
+        this.getMaxShapeWidth() * cellSize, this.getMaxShapeHeight() * cellSize));
 
     _fieldPainter.init(getGameScreenLayout());
   }
@@ -284,7 +284,7 @@ public abstract class FlatGame extends Tetris {
     _fieldPainter.paintFieldBackground(g);
 
     for (int y = 0; y < getHeight(); y++) {
-      int pixX = 0;
+      int pixX = fieldRect.left;
 
       for (int x = 0; x < getWidth(); x++) {
         // settled
@@ -302,7 +302,8 @@ public abstract class FlatGame extends Tetris {
       for (int i = 0; i < shape.size(); i++) {
         int x = shape.getX(i), y = shape.getY(i);
         if (x >= 0 && x < getWidth() && y >= 0 && y < getHeight()) {
-          _fieldPainter.paintCellPix(g, x * cellSize, fieldRect.bottom - (y + 1) * cellSize, shape.getCellType(i), CellState.FALLING);
+          _fieldPainter.paintCellPix(g, fieldRect.left + x * cellSize,
+                  fieldRect.bottom - (y + 1) * cellSize, shape.getCellType(i), CellState.FALLING);
         }
       }
     }
