@@ -2,8 +2,10 @@ package org.tequilacat.tcatris.games;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Rect;
 
 import org.tequilacat.tcatris.core.ColorCodes;
+import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.Tetris;
 import org.tequilacat.tcatris.core.Ui;
 
@@ -74,20 +76,25 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
   public void paintFieldBackground(Canvas g) {
     // do nothing or fill the rect
     if (_paintFieldBg) {
-      final int fieldWidth = getGameScreenLayout().getFieldRect().width(),
-              fieldHeight = getGameScreenLayout().getFieldRect().height();
+      final GameScreenLayout layout = getGameScreenLayout();
+      final Rect fieldRect = layout.getFieldRect();
+      final int fieldWidth = fieldRect.width(), fieldHeight = fieldRect.height(),
+        right = fieldRect.right, left = fieldRect.left,
+        top = fieldRect.top, bottom = fieldRect.bottom;
+      //final int fieldWidth = getGameScreenLayout().getFieldRect().width(),
+      //        fieldHeight = getGameScreenLayout().getFieldRect().height();
 
-      Ui.fillRect(g, 0, 0, fieldWidth, fieldHeight, getFieldBackground());
+      Ui.fillRect(g, layout.getFieldRect(), getFieldBackground());
 
       _cellPainter.setColor(ColorCodes.black);
       final int cellSize = getGameScreenLayout().getCellSize();
 
-      for (int x = cellSize; x < fieldWidth; x += cellSize) {
-        g.drawLine(x, 0, x, fieldHeight, _cellPainter);
+      for (int x = left + cellSize; x < right; x += cellSize) {
+        g.drawLine(x, top, x, bottom, _cellPainter);
       }
 
-      for (int y = cellSize; y < fieldHeight; y += cellSize) {
-        g.drawLine(0, y, fieldWidth, y, _cellPainter);
+      for (int y = top + cellSize; y < bottom; y += cellSize) {
+        g.drawLine(left, y, right, y, _cellPainter);
       }
     }
 

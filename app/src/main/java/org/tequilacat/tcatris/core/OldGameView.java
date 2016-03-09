@@ -108,7 +108,7 @@ public final class OldGameView extends SurfaceView implements Runnable {
     Debug.print("onSizeChanged " + w + " x " + h);
 
     if (getGame() != null) {
-      getGame().layout(_screenWidth, _screenHeight);
+      //getGame().layout(_screenWidth, _screenHeight);
     }
   }
 
@@ -387,7 +387,7 @@ public final class OldGameView extends SurfaceView implements Runnable {
 
     // paint field
     c.translate(layout.getFieldRect().left, layout.getFieldRect().top);
-    getGame().paintField(c, layout.getFieldRect().height());
+    getGame().paintField(c);
     c.translate(-layout.getFieldRect().left, -layout.getFieldRect().top);
     c.clipRect(0, 0, _screenWidth, _screenHeight, Region.Op.REPLACE);
 

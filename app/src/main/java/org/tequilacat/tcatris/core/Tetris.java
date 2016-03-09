@@ -105,11 +105,11 @@ public abstract class Tetris {
   /**************************************************
    **************************************************/
   //protected abstract void initGameGraphics(int fieldPixWidth, int fieldPixHeight);
-  public abstract void layout(int screenWidth, int screenHeight);
+  public abstract void layout(LayoutParameters layoutParams);
 
   public abstract void paintNext(Canvas g, int nextFigX, int nextFigY, int nextFigWidth, int nextFigHeight);
 
-  public abstract void paintField(Canvas g, int fieldPixHeight);
+  public abstract void paintField(Canvas g);
 
   private synchronized int nextRandom(int i) {
     seed = seed * 0x5deece66dL + 11L & 0xffffffffffffL;

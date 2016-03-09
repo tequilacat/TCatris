@@ -17,12 +17,6 @@ import java.util.List;
 
 public final class GameView extends SurfaceView {
 
-  public static final int MARGIN_LEFT = 5;
-  public static final int MARGIN_RIGHT = 5;
-  public static final int MARGIN_TOP = 5;
-  public static final int MARGIN_BOTTOM = 5;
-  public static final int SPACING_VERT = 5;
-
   private Tetris _currentGame;
 
   //boolean myDisplayIconsVertically;
@@ -100,11 +94,11 @@ public final class GameView extends SurfaceView {
     setFocusableInTouchMode(true);
   }
 
-//  @Override
-//  protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-//    super.onSizeChanged(w, h, oldw, oldh);
-//    layoutGameScreen(w, h);
-//  }
+  @Override
+  protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+    super.onSizeChanged(w, h, oldw, oldh);
+    layoutGameScreen(w, h);
+  }
 
   public void setGame(Tetris game) {
     _currentGame = game;
@@ -625,10 +619,18 @@ public final class GameView extends SurfaceView {
     _buttons.add(new Button(Button.ButtonType.DROP, Ui.ButtonGlyph.DROP, buttonX + buttonW * 2, buttonY, buttonW, buttonH));
     _buttons.add(new Button(Button.ButtonType.HORIZONTAL, Ui.ButtonGlyph.RIGHT, buttonX + buttonW * 3, buttonY, buttonW * 2, buttonH));
 
-    getGame().layout(_gameArea.width(), _gameArea.height());
-    Rect fieldRect = getGame().getGameScreenLayout().getFieldRect();
+    LayoutParameters layoutParams = new LayoutParameters();
+    layoutParams.MARGIN_BOTTOM = layoutParams.MARGIN_LEFT
+      = layoutParams.MARGIN_RIGHT = layoutParams.MARGIN_TOP = layoutParams.SPACING_VERT
+      = w / 30;
+    layoutParams.GameArea = new Rect(_gameArea);
+
+    getGame().layout(layoutParams);
+
+    /*Rect fieldRect = getGame().getGameScreenLayout().getFieldRect();
     _fieldRect.set(_gameArea.left + fieldRect.left, _gameArea.top + fieldRect.top,
       _gameArea.left + fieldRect.right, _gameArea.top + fieldRect.bottom);
+      */
   }
 
   /**
@@ -644,11 +646,6 @@ public final class GameView extends SurfaceView {
   private Rect _fieldUpdateRect = new Rect();
 
   /**
-   * game field in absolute screen coordinates
-   * */
-  private Rect _fieldRect = new Rect();
-
-  /**
    * paints app screen according to expected info to be displayed
    * @param paintType type of info to be displayed
    */
@@ -662,11 +659,13 @@ public final class GameView extends SurfaceView {
         try {
           Rect updateRect;
 
+          Rect fieldRect = getGame().getGameScreenLayout().getFieldRect();
+
           if (paintType != ScreenPaintType.FIELD_ONLY) {
             updateRect = null;
           } else {
             updateRect = _fieldUpdateRect;
-            updateRect.set(_fieldRect);
+            updateRect.set(fieldRect);
           }
 
           c = getHolder().lockCanvas(updateRect);
@@ -674,7 +673,7 @@ public final class GameView extends SurfaceView {
             return; // just if view is not displayed
           }
 
-          if (updateRect != null && !updateRect.equals(_fieldRect)) {
+          if (updateRect != null && !updateRect.equals(fieldRect)) {
             updateRect = null;
           }
 
@@ -709,7 +708,7 @@ public final class GameView extends SurfaceView {
    * @param repaintAll
    */
   private void paintGameStateScreen(Canvas c, boolean repaintAll) {
-    //repaintAll = true;
+    repaintAll = true; Debug.print("paint all (debug)");
 
     final GameScreenLayout layout = getGame().getGameScreenLayout();
     Rect fieldRect = layout.getFieldRect();
@@ -749,10 +748,10 @@ public final class GameView extends SurfaceView {
       } */
     }
 
-    int dx = fieldRect.left + _gameArea.left, dy = fieldRect.top + _gameArea.top;
-    c.translate(dx, dy);
-    getGame().paintField(c, fieldRect.height());
-    c.translate(-dx, -dy);
+    //int dx = fieldRect.left + _gameArea.left, dy = fieldRect.top + _gameArea.top;
+    //c.translate(dx, dy);
+    getGame().paintField(c);
+    //c.translate(-dx, -dy);
   }
 
 
