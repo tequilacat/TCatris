@@ -4,9 +4,12 @@
 
 package org.tequilacat.tcatris.games;
 
+import org.tequilacat.tcatris.core.GameDescriptor;
+
 public class ClassicGame extends FlatGame {
 
   boolean mySqueezable[];
+
   private final FlatShape shapes[] = {
     new FlatShape(new int[]{
       0, 0, 1, 1, 0, 1, 1, -1, 1, 0, 1, 1
@@ -25,27 +28,21 @@ public class ClassicGame extends FlatGame {
   })
   };
 
-  /**************************************************
-   **************************************************/
-  public ClassicGame() {
-    super(new FlatRectGamePainter());
+  public ClassicGame(GameDescriptor descriptor) {
+    super(descriptor, new FlatRectGamePainter());
   }
 
-  /**************************************
-   * @returns if cell is squeezable
-   **************************************/
+  @Override
   protected boolean isSqueezable(int x, int y) {
     return (mySqueezable != null) && canSqueeze() && mySqueezable[y];
   }
 
-
+  @Override
   protected FlatShape createNext() {
     return new FlatShape(shapes[getRandomInt(shapes.length)]);
   }
 
-  /********************************
-   * @returns if can be squeezed
-   ******************************/
+  @Override
   public boolean computeCanSqueeze() {
     if (mySqueezable == null) {
       mySqueezable = new boolean[getHeight()];
@@ -70,6 +67,7 @@ public class ClassicGame extends FlatGame {
   /****************************************
    * @returns if squeeze leads to next squeeze
    ****************************************/
+  @Override
   public boolean squeeze() {
     if (mySqueezable == null || mySqueezable.length != getHeight()) return false;
 

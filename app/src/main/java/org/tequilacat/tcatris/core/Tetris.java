@@ -2,7 +2,7 @@ package org.tequilacat.tcatris.core;
 
 import android.graphics.Canvas;
 
-import java.io.*;
+import java.util.EnumSet;
 
 /**
  * implements game logic
@@ -12,8 +12,6 @@ public abstract class Tetris {
   public enum CellState {
     FALLING, SQUEEZED, SETTLED
   }
-
-  private String _gameLabel;
 
   //private boolean myShowNext;
   private int myState = NOTINIT;
@@ -25,56 +23,48 @@ public abstract class Tetris {
 
   protected int myLastScored;
 
-  private int[] myScores;
-  private long[] myScoreDates;
-
   private int myFieldWidth;
   private int myFieldHeight;
   private int myNextWidth;
   private int myNextHeight;
 
-  /**
-   * uniquely identifies game type
-   */
-  private String _id;
-
   private GameScreenLayout _gameScreenLayout;
-
-  public Tetris() {
-  }
-
-  public String getGameLabel() {
-    return _gameLabel;
-  }
-
-  public String getId() {
-    return _id;
-  }
-
-  public void setId(String id) {
-    _id = id;
-  }
+  private GameDescriptor _descriptor;
 
   /**************************************************
    **************************************************/
-  public void init(String gameLabel, String gameDescriptor) {
+  public Tetris(GameDescriptor descriptor) {
+    //String gameLabel, String gameDescriptor
     // byte[] gameData, String gameLabel, int fWidth, int fHeight, int nextWidth, int nextHeight){
     // example:
     // 5:13:1:3
+    _descriptor = descriptor;
+    String gameParams = descriptor.getGameParameters();
+    int sep1 = gameParams.indexOf(':'),
+        sep2 = gameParams.indexOf(':', sep1 + 1),
+        sep3 = gameParams.indexOf(':', sep2 + 1),
+        sep4 = gameParams.indexOf(':', sep3 + 1);
 
-    _gameLabel = gameLabel;
-//        Debug.print("Game data: '"+ gameDescriptor +"'");
-    int sep1 = gameDescriptor.indexOf(':'),
-      sep2 = gameDescriptor.indexOf(':', sep1 + 1),
-      sep3 = gameDescriptor.indexOf(':', sep2 + 1),
-      sep4 = gameDescriptor.indexOf(':', sep3 + 1);
+    myFieldWidth = Integer.parseInt(gameParams.substring(0, sep1));
+    myFieldHeight = Integer.parseInt(gameParams.substring(sep1 + 1, sep2));
+    myNextWidth = Integer.parseInt(gameParams.substring(sep2 + 1, sep3));
+    myNextHeight = Integer.parseInt(gameParams.substring(sep3 + 1, (sep4 > 0) ? sep4 : gameParams.length()));
 
-    myFieldWidth = Integer.parseInt(gameDescriptor.substring(0, sep1));
-    myFieldHeight = Integer.parseInt(gameDescriptor.substring(sep1 + 1, sep2));
-    myNextWidth = Integer.parseInt(gameDescriptor.substring(sep2 + 1, sep3));
-    myNextHeight = Integer.parseInt(gameDescriptor.substring(sep3 + 1, (sep4 > 0) ? sep4 : gameDescriptor.length()));
+    configure((sep4 < 0) ? null : gameParams.substring(sep4 + 1));
+  }
 
-    configure((sep4 < 0) ? null : gameDescriptor.substring(sep4 + 1));
+  public GameDescriptor getDescriptor() {
+    return _descriptor;
+  }
+
+  public void initGame() {
+    myState = 0;
+    myCanSqueeze = false;
+    myLastScored = 0;
+    _allowedImpulses.clear();
+
+    init();
+    internalThrowInNewShape();
   }
 
   /**
@@ -102,9 +92,6 @@ public abstract class Tetris {
     return myNextHeight;
   }
 
-  /**************************************************
-   **************************************************/
-  //protected abstract void initGameGraphics(int fieldPixWidth, int fieldPixHeight);
   public abstract void layout(LayoutParameters layoutParams);
 
   public abstract void paintNext(Canvas g);
@@ -137,13 +124,12 @@ public abstract class Tetris {
 
   public abstract void init();
 
-  void initGame() {
-    myState = 0;
-    myCanSqueeze = false;
-    myLastScored = 0;
-
-    init();
+  private void internalThrowInNewShape() {
     myState = throwInNewShape() ? ACTIVE : LOST;
+
+    if(myState == ACTIVE) {
+      checkEffectiveImpulses();
+    }
   }
 
   /**************************************************
@@ -172,8 +158,16 @@ public abstract class Tetris {
 
   protected abstract boolean dropCurrent(boolean tillBottom);
 
+  /**
+   * copies fallen shape into field
+   * @return if all of shape cells are within field (and game can continue)
+   */
   protected abstract boolean acquireFallenShape();
 
+  /**
+   *
+   * @return whether this squeeze leads to next possible squeezes
+   */
   protected abstract boolean squeeze();
 
   protected abstract boolean throwInNewShape();
@@ -194,10 +188,44 @@ public abstract class Tetris {
     return squeeze();
   }
 
+  private EnumSet<GameImpulse> _allowedImpulses = EnumSet.noneOf(GameImpulse.class);
+
+  /**
+   *
+   * @return whether given impulse is understood by the game type
+   * and whether it's allowed by field configuration in current state
+   * @param impulse action affecting game state
+   */
+  public boolean isEffective(GameImpulse impulse) {
+    return _allowedImpulses.contains(impulse);
+  }
+
+  /**
+   * Called after modification of field.
+   * Queries implementation for allowed impulses in new configuration
+   */
+  private void checkEffectiveImpulses() {
+    _allowedImpulses.clear();
+    addEffectiveImpulses(_allowedImpulses);
+  }
+
+  /**
+   * Implementors must return all impulses
+   * @return list of
+   */
+  public abstract void addEffectiveImpulses(EnumSet<GameImpulse> actionSet);
+
+  /**
+   * tries to change game state by issuing impulse affecting it.
+   * @param impulse
+   * @return whether the state has changed
+   */
+  public abstract boolean doAction(GameImpulse impulse);
+
   /**
    *
    * @param doDrop if falling shape must be dropped to bottom
-   * @return whether state changes globally (true) and whole screen to be repainted
+   * @return whether state changes globally and whole screen to be repainted
    */
   public final boolean nextState(boolean doDrop) {
     boolean repaintAll;
@@ -206,7 +234,7 @@ public abstract class Tetris {
       myCanSqueeze = internalSqueeze() && computeCanSqueeze();
 
       if (!myCanSqueeze) {
-        myState = throwInNewShape() ? ACTIVE : LOST;
+        internalThrowInNewShape();
       }
 
       repaintAll = true;
@@ -226,7 +254,7 @@ public abstract class Tetris {
       if (myCanSqueeze) {
         repaintAll = false;
       } else {
-        myState = throwInNewShape() ? ACTIVE : LOST;
+        internalThrowInNewShape();
         repaintAll = true;
       }
     }

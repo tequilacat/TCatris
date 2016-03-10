@@ -107,7 +107,7 @@ public final class GameView extends SurfaceView {
 
     getGame().initGame();
     // create new slot
-    Scoreboard.instance().getGameScores(getGame().getId()).setScore(0);
+    Scoreboard.instance().getGameScores(getGame().getDescriptor().getId()).setScore(0);
   }
 
   public Tetris getGame() {
@@ -178,7 +178,7 @@ public final class GameView extends SurfaceView {
               case ADVANCE:
               case DROP:
                 boolean gameStateChanged = getGame().nextState(curAction == GameAction.DROP);
-                Scoreboard.instance().getGameScores(getGame().getId()).setScore(getGame().getScore());
+                Scoreboard.instance().getGameScores(getGame().getDescriptor().getId()).setScore(getGame().getScore());
                 repaintType = gameStateChanged ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
                 nextTickMoment = WAIT_CYCLE; // reset timer to wait next
                 break;
@@ -464,20 +464,27 @@ public final class GameView extends SurfaceView {
           int pointerIndex = MotionEventCompat.findPointerIndex(event, track.pointerId);
           int x = (int) MotionEventCompat.getX(event, pointerIndex), y = (int) MotionEventCompat.getY(event, pointerIndex);
 
-          track.dragTo(x, y);
-          dragAction = GameAction.DRAG;
-          /*
+          //track.dragTo(x, y);
           dragAction = track.dragTo(x, y);
 
-          if (dragAction != null) {
-            break;
-          }*/
+          if(COMPUTE_DRAGS) {
+            dragAction = GameAction.DRAG;
+
+          }else {
+            // this code is for old style
+
+            if (dragAction != null) {
+              break;
+            }
+          }
         }
       }
     }
 
     return dragAction;
   }
+
+  private static final boolean COMPUTE_DRAGS = false;
 
   /**
    * detects game action from touch event and sends it to game thread
@@ -687,7 +694,7 @@ public final class GameView extends SurfaceView {
       // TODO paint scores as bar
       Ui.fillRect(c, _scoreBarArea, ColorCodes.black);
       Ui.drawText(c,
-        String.format("%s %s: %d", getGame().getGameLabel(), getContext().getString(R.string.msg_score), getGame().getScore()),
+        String.format("%s %s: %d", getGame().getDescriptor().getLabel(), getContext().getString(R.string.msg_score), getGame().getScore()),
         _scoreBarArea.left, _scoreBarArea.top, _fontSize, ColorCodes.yellow);
 
       // paint buttons

@@ -1,6 +1,5 @@
 package org.tequilacat.tcatris;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.app.Activity;
@@ -12,17 +11,16 @@ import android.widget.ListView;
 import android.widget.ViewFlipper;
 
 import org.tequilacat.tcatris.core.Debug;
+import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameList;
 import org.tequilacat.tcatris.core.GameView;
 import org.tequilacat.tcatris.core.Scoreboard;
 import org.tequilacat.tcatris.core.Tetris;
 
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 public class MainActivity extends Activity {
 
@@ -42,8 +40,8 @@ public class MainActivity extends Activity {
     SharedPreferences prefs = getPreferences(MODE_PRIVATE);
     Scoreboard.setState(prefs.getString(SCOREBOARD_PARCEL_KEY, null));
 
-    final List<GameList.GameDescriptor> gameTypes = GameList.instance().getGameDescriptors();
-    final ArrayAdapter<GameList.GameDescriptor> adapter = new ArrayAdapter<>(this,
+    final List<GameDescriptor> gameTypes = GameList.instance().getGameDescriptors();
+    final ArrayAdapter<GameDescriptor> adapter = new ArrayAdapter<>(this,
       android.R.layout.simple_list_item_1, gameTypes);
 
     ListView gameListView = (ListView) findViewById(R.id.lvMainOptionList);
@@ -68,7 +66,7 @@ public class MainActivity extends Activity {
     prefEditor.commit();
   }
 
-  private void runGame(GameList.GameDescriptor gameDescriptor) {
+  private void runGame(GameDescriptor gameDescriptor) {
     Tetris game = GameList.instance().createGame(gameDescriptor);
     GameView gameView = (GameView) findViewById(R.id.gameView);
     gameView.setGame(game);
@@ -143,7 +141,8 @@ public class MainActivity extends Activity {
 
       List<String> scores = new ArrayList<>();
       StringBuilder stb = new StringBuilder();
-      Scoreboard.GameScores gs = Scoreboard.instance().getGameScores(gameView.getGame().getId());
+      Scoreboard.GameScores gs = Scoreboard.instance().getGameScores(
+          gameView.getGame().getDescriptor().getId());
       boolean isInTable = false;
 
       for (Scoreboard.ScoreEntry scoreEntry : gs.getEntries()) {

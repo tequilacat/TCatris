@@ -1,20 +1,9 @@
 package org.tequilacat.tcatris.core;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by avo on 24.02.2016.
@@ -28,40 +17,6 @@ public class GameList {
   private static GameList _instance;
 
   private List<GameDescriptor> _descriptors = new ArrayList<>();
-
-  /**
-   * stores parameters of certain game type
-   */
-  public static class GameDescriptor {
-    private final String _gameClassName;
-    private final String _label;
-    private final String _gameParameters;
-
-    public GameDescriptor(String gameClassName, String label, String gameParams) {
-      _gameClassName = gameClassName;
-      _label = label;
-      _gameParameters = gameParams;
-    }
-
-    public String getGameClassName() {
-      return _gameClassName;
-    }
-
-    public String getLabel() {
-      return _label;
-    }
-
-    public String getGameParameters() {
-      return _gameParameters;
-    }
-
-    public String getId() { return getGameClassName()+"/"+getLabel(); }
-
-    @Override
-    public String toString() {
-      return getLabel();
-    }
-  }
 
   public static GameList instance() {
     return _instance;
@@ -136,12 +91,8 @@ public class GameList {
     Tetris game = null;
 
     try {
-
-      //Debug.print("Create game: class = "+gameClass+", '"+ gameName +"', -> "+gameDesc);
-      game = (Tetris) Class.forName( descriptor.getGameClassName()).newInstance();
-      game.setId(descriptor.getId());
-      game.init(descriptor.getLabel(), descriptor.getGameParameters());
-
+      Class<?> gameClass = Class.forName(descriptor.getGameClassName());
+      game = (Tetris)gameClass.getDeclaredConstructor(GameDescriptor.class).newInstance(descriptor);
     } catch (Exception e) {
       // TODO process error when creating a game
       Debug.print("Error creating game: " + e);

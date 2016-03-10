@@ -12,10 +12,14 @@ import android.graphics.RectF;
 import org.tequilacat.tcatris.core.ColorCodes;
 import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.DynamicState;
+import org.tequilacat.tcatris.core.GameDescriptor;
+import org.tequilacat.tcatris.core.GameImpulse;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.LayoutParameters;
 import org.tequilacat.tcatris.core.Tetris;
 import org.tequilacat.tcatris.core.Ui;
+
+import java.util.EnumSet;
 
 public abstract class FlatGame extends Tetris {
   // int myCellSize;
@@ -33,7 +37,8 @@ public abstract class FlatGame extends Tetris {
 
   private AbstractFlatGamePainter _fieldPainter;
 
-  protected FlatGame(AbstractFlatGamePainter fieldPainter) {
+  protected FlatGame(GameDescriptor descriptor, AbstractFlatGamePainter fieldPainter) {
+    super(descriptor);
     _fieldPainter = fieldPainter;
   }
 
@@ -53,6 +58,17 @@ public abstract class FlatGame extends Tetris {
 
     }
 
+  }
+
+  @Override
+  public void addEffectiveImpulses(EnumSet<GameImpulse> actionSet) {
+    // TODO add impulses depending on current shape and state
+  }
+
+  @Override
+  public boolean doAction(GameImpulse impulse) {
+    // TODO implement doAction
+    return false;
   }
 
   /**************************************************
@@ -180,9 +196,6 @@ public abstract class FlatGame extends Tetris {
     return dropped;
   }
 
-  /********************************
-   * copies falling shape into field
-   ********************************/
   protected boolean acquireFallenShape() {
     //    System.out.println("Acquire Fallen Shape");
 
