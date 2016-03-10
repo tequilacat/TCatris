@@ -25,6 +25,8 @@ public final class GameView extends SurfaceView {
   private Thread _gameThread;
   private DragStates _dragStates;
 
+  DynamicState _bgThreadDynamicState = new DynamicState(2);
+
   /**
    * override for visual constructor
    * @param context
@@ -160,15 +162,19 @@ public final class GameView extends SurfaceView {
 
           } else { // ACTIVE: run action, see consequences
 
-            Debug.print(String.format("Move: %s Rotate: %s",
-              (_dragStates.isActive(Button.ButtonType.HORIZONTAL) ?
-                ("" + _dragStates.getValue(Button.ButtonType.HORIZONTAL)) : "NONE"),
-              (_dragStates.isActive(Button.ButtonType.ROTATE) ?
-                ("" + _dragStates.getValue(Button.ButtonType.ROTATE)) : "NONE")
-            ));
+//            Debug.print(String.format("Move: %s Rotate: %s",
+//              (_dragStates.isActive(Button.ButtonType.HORIZONTAL) ?
+//                ("" + _dragStates.getValue(Button.ButtonType.HORIZONTAL)) : "NONE"),
+//              (_dragStates.isActive(Button.ButtonType.ROTATE) ?
+//                ("" + _dragStates.getValue(Button.ButtonType.ROTATE)) : "NONE")
+//            ));
 
             // run action
             switch (curAction) {
+              case DRAG:
+                repaintType = ScreenPaintType.FIELD_ONLY;
+                break;
+
               case ADVANCE:
               case DROP:
                 boolean gameStateChanged = getGame().nextState(curAction == GameAction.DROP);
@@ -205,7 +211,7 @@ public final class GameView extends SurfaceView {
             nextTickMoment = now + 1;
           }
 
-          Debug.print("Sleep " + (nextTickMoment - now));
+          //Debug.print("Sleep " + (nextTickMoment - now));
 
           _gameThreadAction = GameAction.ADVANCE;
           _gameChangeLock.wait(nextTickMoment - now);
@@ -665,7 +671,7 @@ public final class GameView extends SurfaceView {
    * @param repaintAll
    */
   private void paintGameStateScreen(Canvas c, boolean repaintAll) {
-    repaintAll = true; Debug.print("paint all (debug)");
+    //repaintAll = true; Debug.print("paint all (debug)");
 
     final GameScreenLayout layout = getGame().getGameScreenLayout();
     Rect fieldRect = layout.getFieldRect();
@@ -676,7 +682,7 @@ public final class GameView extends SurfaceView {
       c.drawColor(Ui.UI_COLOR_PANEL);
 
       Rect next = layout.getNextShapeRect();
-      getGame().paintNext(c, next.left, next.top, next.width(), next.height());
+      getGame().paintNext(c);
 
       // TODO paint scores as bar
       Ui.fillRect(c, _scoreBarArea, ColorCodes.black);
@@ -692,23 +698,23 @@ public final class GameView extends SurfaceView {
                 btn.rect.top + (btn.rect.height() - side) / 2,
                 side, side, btn.glyph);
       }
-
-      /*int bX = _buttonArea.left, bW = _buttonArea.width() / BUTTON_ACTIONS.length,
-        bY = _buttonArea.top, bH = _buttonArea.height();
-
-      for (int i = 0; i < BUTTON_ACTIONS.length; i++) {
-      //for(Ui.ButtonGlyph glyph : Ui.ButtonGlyph.values()) {
-        Ui.draw3dRect(c, bX, bY, bW, bH);
-        Ui.drawGlyph(c, bX, bY, bW, bH, BTN_GLYPHS[i]);
-
-        bX += bW;
-      } */
     }
 
-    //int dx = fieldRect.left + _gameArea.left, dy = fieldRect.top + _gameArea.top;
-    //c.translate(dx, dy);
-    getGame().paintField(c);
-    //c.translate(-dx, -dy);
+    // fill dyn state values
+    // _bgThreadDynamicState.values = new double[2];
+    // #0: horizontal
+    // #1: rotate
+    _bgThreadDynamicState.setState(0,
+      _dragStates.isActive(Button.ButtonType.HORIZONTAL) ?
+        DynamicState.ValueState.VALID : DynamicState.ValueState.NOT_TRACKED,
+        _dragStates.getValue(Button.ButtonType.HORIZONTAL));
+
+    _bgThreadDynamicState.setState(1,
+      _dragStates.isActive(Button.ButtonType.ROTATE) ?
+        DynamicState.ValueState.VALID : DynamicState.ValueState.NOT_TRACKED,
+      _dragStates.getValue(Button.ButtonType.ROTATE));
+
+    getGame().paintField(c, _bgThreadDynamicState);
   }
 
 

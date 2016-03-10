@@ -5,8 +5,13 @@
 package org.tequilacat.tcatris.games;
 
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.RectF;
 
+import org.tequilacat.tcatris.core.ColorCodes;
+import org.tequilacat.tcatris.core.Debug;
+import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.LayoutParameters;
 import org.tequilacat.tcatris.core.Tetris;
@@ -273,10 +278,11 @@ public abstract class FlatGame extends Tetris {
 
   /**
    * paints game field
-   * @param g
+   * @param g canvas to draw to
+   * @param dynamicState props of current move state
    */
   @Override
-  public void paintField(Canvas g) {
+  public void paintField(Canvas g, DynamicState dynamicState) {
     Rect fieldRect = getGameScreenLayout().getFieldRect();
     int cellSize = getGameScreenLayout().getCellSize();
     int pixY = fieldRect.bottom - cellSize;
@@ -306,20 +312,41 @@ public abstract class FlatGame extends Tetris {
                   fieldRect.bottom - (y + 1) * cellSize, shape.getCellType(i), CellState.FALLING);
         }
       }
+
+
+      int centerX0 = fieldRect.left + shape.getX(0) * cellSize;
+      int centerY0 = fieldRect.bottom - (shape.getY(0) + 1) * cellSize;
+
+      // draw state
+      // double rotateValue = dynamicState.values[1];
+
+      int MOVE_ID = 0;
+      int ROTATE_ID = 1;
+      Paint tmpPaint = new Paint();
+
+      float curValue;
+      if(dynamicState.valueStates[ROTATE_ID] != null && (curValue = dynamicState.values[ROTATE_ID]) != 0) {
+//        Debug.print("Draw arc "+ (curValue*360));
+
+        if (dynamicState.valueStates[ROTATE_ID] == DynamicState.ValueState.INVALID) {
+          tmpPaint.setColor(ColorCodes.red);
+        }else if (dynamicState.valueStates[ROTATE_ID] == DynamicState.ValueState.VALID) {
+          tmpPaint.setColor(ColorCodes.blue);
+        }
+        RectF rect = new RectF(centerX0, centerY0, centerX0+cellSize, centerY0 + cellSize);
+        g.drawArc(rect, 0, curValue*360, true, tmpPaint);
+      }
     }
   }
 
   /**
    * paints next figure in given rect
-   * @param g
-   * @param nextFigX
-   * @param nextFigY
-   * @param nextFigWidth
-   * @param nextFigHeight
+   * @param g canwas to draw to
    */
   @Override
-  public void paintNext(Canvas g, int nextFigX, int nextFigY, int nextFigWidth, int nextFigHeight) {
-    Ui.fillRect(g, nextFigX, nextFigY, nextFigWidth, nextFigHeight, _fieldPainter.getFieldBackground());
+  public void paintNext(Canvas g) {
+    Rect nextRect = getGameScreenLayout().getNextShapeRect();
+    Ui.fillRect(g, nextRect, _fieldPainter.getFieldBackground());
 
     int cellSize = getGameScreenLayout().getCellSize();
     FlatShape shape = getNextShape();
@@ -332,11 +359,10 @@ public abstract class FlatGame extends Tetris {
       if (maxUp < y) maxUp = y;
     }
 
-    // int nextX = myNextShapeWindow.x + 2, nextY = myNextShapeWindow.y + 2;
     for (int i = 0; i < shape.size(); i++) {
       int x = shape.getX(i), y = shape.getY(i);
-      _fieldPainter.paintCellPix(g, nextFigX + (x - maxLeft) * cellSize,
-        nextFigY + (maxUp - y) * cellSize,
+      _fieldPainter.paintCellPix(g, nextRect.left + (x - maxLeft) * cellSize,
+        nextRect.top + (maxUp - y) * cellSize,
         shape.getCellType(i), CellState.FALLING);
     }
   }

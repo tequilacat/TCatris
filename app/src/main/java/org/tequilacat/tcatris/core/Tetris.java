@@ -107,9 +107,14 @@ public abstract class Tetris {
   //protected abstract void initGameGraphics(int fieldPixWidth, int fieldPixHeight);
   public abstract void layout(LayoutParameters layoutParams);
 
-  public abstract void paintNext(Canvas g, int nextFigX, int nextFigY, int nextFigWidth, int nextFigHeight);
+  public abstract void paintNext(Canvas g);
 
-  public abstract void paintField(Canvas g);
+  /**
+   * paints game field
+   * @param g canvas to draw to
+   * @param dynamicState props of current move state
+   */
+  public abstract void paintField(Canvas g, DynamicState dynamicState);
 
   private synchronized int nextRandom(int i) {
     seed = seed * 0x5deece66dL + 11L & 0xffffffffffffL;
