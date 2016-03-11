@@ -18,6 +18,19 @@ public class DynamicState {
     valueStates = new ValueState[count];
   }
 
+  public float getValue(int pos) {
+    return values[pos];
+  }
+
+  public boolean isTracking(int position) {
+    ValueState state = valueStates[position];
+    return state == ValueState.VALID || state == ValueState.INVALID;
+  }
+
+  public boolean isValid(int position) {
+    return valueStates[position] == ValueState.VALID;
+  }
+
   public void setState(int position, ValueState valueState, double value) {
     if (position >= 0 && position < values.length) {
       valueStates[position] = valueState;

@@ -19,8 +19,8 @@
     <color name="glyphFill">@color/White</color>
     <color name="glyphStroke">@color/Black</color>
 
-    <color name="validDynaShapeStroke">@color/Blue</color>
-    <color name="invalidDynaShapeStroke">@color/Red</color>
+    <color name="validDynaShapeStroke">#400000ff</color>
+    <color name="invalidDynaShapeStroke">#40ff0000</color>
 
     <!-- X11 colors -->
 

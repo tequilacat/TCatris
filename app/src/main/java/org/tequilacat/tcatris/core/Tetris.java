@@ -237,7 +237,7 @@ public abstract class Tetris {
   protected void checkEffectiveImpulses() {
     _allowedImpulses.clear();
     addEffectiveImpulses(_allowedImpulses);
-    Debug.print(">>> checkEffectiveImpulses: " + _allowedImpulses);
+    //Debug.print(">>> checkEffectiveImpulses: " + _allowedImpulses);
   }
 
   private boolean internalDropCurrent(boolean toBottom) {

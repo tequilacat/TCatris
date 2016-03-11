@@ -1,18 +1,15 @@
 package org.tequilacat.tcatris.core;
 
-import android.app.Activity;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.view.SurfaceHolder;
-
-import org.tequilacat.tcatris.R;
 
 /**
  * Created by avo on 11.03.2016.
  */
 public class GameRunner {
 
-  enum DragType {
+  public enum DragType {
     HORIZONTAL, ROTATE
   }
 
@@ -111,17 +108,6 @@ public class GameRunner {
 
           } else { // ACTIVE: run action, see consequences
 
-//            Debug.print(String.format("Move: %s Rotate: %s",
-//              (_dragStates.isActive(DragType.HORIZONTAL) ?
-//                ("" + _dragStates.getValue(DragType.HORIZONTAL)) : "NONE"),
-//              (_dragStates.isActive(DragType.ROTATE) ?
-//                ("" + _dragStates.getValue(DragType.ROTATE)) : "NONE")
-//            ));
-
-
-            // reset last positions of currently not dragged, make sure it always starts with 0
-            //EnumMap<DragType,> dragged = null;
-
             for (DragType dt : DragType.values()) {
               int pos = dt.ordinal();
 
@@ -129,7 +115,8 @@ public class GameRunner {
                 _dtPositions[pos] = 0;
                 _bgThreadDynamicState.setState(pos, DynamicState.ValueState.NOT_TRACKED, 0);
 
-              }else if (curAction == GameAction.DRAG) {DynamicState.ValueState newState;
+              }else if (curAction == GameAction.DRAG) {
+                DynamicState.ValueState newState;
                 double newValue;
                 double curValue = _dragStates.getValue(dt);
                 newValue = curValue - _dtPositions[pos];
@@ -182,6 +169,15 @@ public class GameRunner {
               case ADVANCE:
               case DROP:
                 boolean gameStateChanged = getGame().nextState(curAction == GameAction.DROP);
+
+                if(gameStateChanged) {
+                  for (DragType dt : DragType.values()) {
+                    int pos = dt.ordinal();
+                    _dtPositions[pos] = _dragStates.getValue(dt);
+                    _bgThreadDynamicState.setState(pos, _bgThreadDynamicState.valueStates[pos], 0);
+                  }
+                }
+
                 Scoreboard.instance().getGameScores(getGame().getDescriptor().getId()).setScore(getGame().getScore());
                 repaintType = gameStateChanged ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
                 nextTickMoment = WAIT_CYCLE; // reset timer to wait next
@@ -304,21 +300,6 @@ public class GameRunner {
       //Debug.print("Repaint [" + paintType + "] took " + (end - start) + " ms");
     }
   }
-
- /* private void paintGameStateScreen(Canvas c, boolean repaintAll) {
-    //repaintAll = true; Debug.print("paint all (debug)");
-
-    final GameScreenLayout layout = getGame().getGameScreenLayout();
-    Rect fieldRect = layout.getFieldRect();
-
-    // Debug.print("paint: " + (repaintAll ? "ALL" : "field only"));
-
-    if(repaintAll) {
-      onPaintGameBackground(c);
-    }
-
-    getGame().paintField(c, _bgThreadDynamicState);
-  }*/
 
   public void onPaintGameScreen(Canvas c, boolean repaintAll, DynamicState dynamicState) { }
 

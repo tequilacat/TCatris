@@ -1,6 +1,5 @@
 package org.tequilacat.tcatris.core;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
@@ -73,6 +72,8 @@ public final class GameView extends SurfaceView {
     initView(context);
   }
 
+  boolean _gameStarted;
+
   /**
    * Real constructor code
    * @param context
@@ -84,13 +85,19 @@ public final class GameView extends SurfaceView {
       public void surfaceCreated(SurfaceHolder holder) {
         Debug.print("surfaceCreated");
         // start game
-        gameStart(holder);
+        _gameStarted = false;
+        //gameStart(holder);
       }
 
       @Override
       public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         Debug.print("surfaceChanged");
         layoutGameScreen(width, height);
+
+        if(!_gameStarted) {
+          _gameStarted = true;
+          gameStart(holder);
+        }
       }
 
       @Override
@@ -170,8 +177,6 @@ public final class GameView extends SurfaceView {
    * stores info on dragged direction button
    */
   static class DragTrack {
-    private final GameAction _positiveOffsetAction;
-    private final GameAction _negativeOffsetAction;
 
     private final DragType _dragType;
     private final int _stepDistance;
@@ -180,20 +185,18 @@ public final class GameView extends SurfaceView {
     public int pointerId;
 
     // last coordinates
-    private int lastX, lastY;
+    //private int lastX, lastY;
 
-    GameAction _lastAction;
-    int _lastActionCount;
+    //GameAction _lastAction;
+    //int _lastActionCount;
 
     private int _startX;
     private int _startY;
     private int _lastStoredX;
     private int _lastStoredY;
 
-    public DragTrack(DragType dragType, GameAction onPositive, GameAction onNegative, int distance) {
+    public DragTrack(DragType dragType, int distance) {
       this._dragType = dragType;
-      _positiveOffsetAction = onPositive;
-      _negativeOffsetAction = onNegative;
       _stepDistance = distance;
       pointerId = -1;
     }
@@ -202,8 +205,8 @@ public final class GameView extends SurfaceView {
       this.pointerId = pointerId;
       _startX = x;
       _startY = y;
-      lastX = x;
-      lastY = y;
+//      lastX = x;
+//      lastY = y;
     }
 
     public boolean isStarted() {
@@ -214,11 +217,12 @@ public final class GameView extends SurfaceView {
       pointerId = -1;
     }
 
-    public GameAction dragTo(int newX, int newY) {
+    public void dragTo(int newX, int newY) {
       _lastStoredX = newX;
       _lastStoredY = newY;
 
       // only X is currently processed
+      /*
       _lastAction = null;
       _lastActionCount = 0;
       int moveCount = (newX - lastX) / _stepDistance;
@@ -233,6 +237,7 @@ public final class GameView extends SurfaceView {
       }
 
       return _lastAction;
+      */
     }
 
     public DragType getDragType() {
@@ -331,6 +336,7 @@ public final class GameView extends SurfaceView {
         if(track.pointerId == pointerId){
           track.stop();
           //Debug.print("   -- " + track._dragType);
+          dragHappened = true;
           break;
         }
       }
@@ -437,11 +443,6 @@ public final class GameView extends SurfaceView {
   private final List<Button> _buttons = new ArrayList<>();
 
   private Rect _scoreBarArea = new Rect();
-  private int _fontSize;
-
-  private int getLineHeight() {
-    return _fontSize;
-  }
 
   /**
    * computes all areas to be displayed on screen
@@ -449,20 +450,15 @@ public final class GameView extends SurfaceView {
    * @param h
    */
   private void layoutGameScreen(int w, int h) {
-
-    // TODO get rid of GameActions in DragTrack - we track dragtype and value only
     // define drag factors (pixels to cell movements) as fraction of screen dimensions
+
     _tracksByType = new DragTrack[]{
-      new DragTrack(DragType.ROTATE, GameAction.ROTATE_CCW, GameAction.ROTATE_CW,
-        (int)(w *0.4 / 10)), // 10 rotations per btn
-      new DragTrack(DragType.HORIZONTAL, GameAction.RIGHT, GameAction.LEFT,
-        (int)(h * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
+      new DragTrack(DragType.ROTATE, (int) (w *0.4 / 20)), // 20 rotations per btn
+      new DragTrack(DragType.HORIZONTAL, (int) (w * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
     };
 
     // compute proportional sizes of painted screen components
-    //_fontSize = getResources().getDimensionPixelSize(R.dimen.gameinfo_font_size);
-    _fontSize = VisualResources.Defaults.HEADER_FONT_SIZE;
-    _scoreBarArea.set(0, 0, w, getLineHeight());
+    _scoreBarArea.set(0, 0, w, VisualResources.Defaults.HEADER_FONT_SIZE);
 
     int buttonHeight = h / 10, buttonY = h - buttonHeight, buttonWidth = w / 5, buttonX = 0;
 
@@ -478,6 +474,7 @@ public final class GameView extends SurfaceView {
     _clickableZones.add(new ClickableZone(ClickableZoneType.DROP_BUTTON, _buttons.get(1).rect));
     _clickableZones.add(new ClickableZone(ClickableZoneType.PAUSE_BUTTON, layoutParams.GameArea));
 
+    Debug.print("do game layout [" + getGame().getDescriptor().getId() + "]");
     getGame().layout(layoutParams);
   }
 
@@ -503,9 +500,9 @@ public final class GameView extends SurfaceView {
 
       // TODO paint scores as bar
       Ui.fillRect(c, _scoreBarArea, VisualResources.Defaults.SCORE_BG_COLOR);
-      Ui.drawText(c,
-        String.format("%s %s: %d", getGame().getDescriptor().getLabel(), getContext().getString(R.string.msg_score), getGame().getScore()),
-        _scoreBarArea.left, _scoreBarArea.top, _fontSize, VisualResources.Defaults.SCORE_TEXT_COLOR);
+      Ui.drawText(c, String.format("%s %s: %d", getGame().getDescriptor().getLabel(), getContext().getString(R.string.msg_score),
+              getGame().getScore()), _scoreBarArea.left, _scoreBarArea.top,
+          VisualResources.Defaults.HEADER_FONT_SIZE, VisualResources.Defaults.SCORE_TEXT_COLOR);
 
       // paint buttons
       for(Button btn : _buttons) {

@@ -48,6 +48,7 @@ public class FlatShape {
 
   /**
    * modifies center of the shape by given offset
+   *
    * @param deltaX
    * @param deltaY
    */
@@ -117,27 +118,65 @@ public class FlatShape {
     return myCenterY;
   }
 
-  /**************************************************
-   **************************************************/
+
+  /**
+   *
+   * @param i
+   * @return absolute cell X coord of i'th cell
+   */
   public int getX(int i) {
-    return myData[i * 3] + myCenterX;
+    return myData[(i << 1) + i] + myCenterX;
   }
 
-  /**************************************************
-   **************************************************/
+  /**
+   *
+   * @param i
+   * * @return absolute cell Y coord of i'th cell
+   */
   public int getY(int i) {
-    return myData[i * 3 + 1] + myCenterY;
+    // quick *3
+    return myData[(i << 1) + i + 1] + myCenterY;
   }
 
   /**************************************************
    **************************************************/
   public void setCellType(int i, int cellType) {
-    myData[i * 3 + 2] = cellType;
+    // quick *3
+    myData[(i << 1) + i + 2] = cellType;
   }
 
   /**************************************************
    **************************************************/
   public int getCellType(int i) {
-    return myData[i * 3 + 2];
+    return myData[(i << 1) + i + 2];
+  }
+
+  public boolean signatureEquals(Object shapeSignature) {
+    boolean equals = false;
+
+    if (shapeSignature != null && shapeSignature instanceof int[] &&
+        ((int[]) shapeSignature).length == myData.length) {
+      final int[] sigArray = (int[]) shapeSignature;
+      equals = true;
+
+      for (int i = 0, len = sigArray.length; i < len; i++) {
+        if (sigArray[i] != myData[i]) {
+          equals = false;
+          break;
+        }
+        i++;
+        if (sigArray[i] != myData[i]) {
+          equals = false;
+          break;
+        }
+        i++; // skip color - does not matter for shape
+      }
+    }
+
+    return equals;
+  }
+
+  public Object generateSignature() {
+    return myData.clone();
   }
 }

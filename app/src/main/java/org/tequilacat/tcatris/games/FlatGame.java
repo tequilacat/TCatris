@@ -5,14 +5,13 @@
 package org.tequilacat.tcatris.games;
 
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.RectF;
 
 import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
+import org.tequilacat.tcatris.core.GameRunner;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.LayoutParameters;
 import org.tequilacat.tcatris.core.Tetris;
@@ -260,37 +259,54 @@ public abstract class FlatGame extends Tetris {
     if (getState() == ACTIVE && !canSqueeze()) {
       FlatShape shape = getCurrentShape();
 
+      int centerX0 = fieldRect.left + shape.getCenterX() * cellSize;
+      int centerY0 = fieldRect.bottom - (shape.getCenterY() + 1) * cellSize;
+
+      double dx = 0;
+      float rotateFactor = 0; // 1 means 90', 0 means no rotate
+      boolean isValid = true;
+      boolean drawContour = false;
+
+      int pos = GameRunner.DragType.HORIZONTAL.ordinal();
+
+      if(dynamicState.isTracking(pos)) {
+        dx = dynamicState.getValue(pos);
+        drawContour = true;
+
+        if(!dynamicState.isValid(pos)) {
+          isValid = false;
+          dx = 0;
+        }
+//        RectF rect = new RectF(centerX0, centerY0, centerX0+cellSize, centerY0 + cellSize);
+        //g.drawArc(rect, 0, curValue*360, true, tmpPaint);
+      }
+
+      pos = GameRunner.DragType.ROTATE.ordinal();
+
+      if(dynamicState.isTracking(pos)) {
+        rotateFactor = dynamicState.getValue(pos);
+        drawContour = true;
+
+        if(!dynamicState.isValid(pos)) {
+          isValid = false;
+          rotateFactor = 0;
+        }
+      }
+
+      if (drawContour) {
+        // TODO only update shape contour when it's thrown in or rotated
+        _fieldPainter.updateCurrentShapeContour(getCurrentShape());
+        _fieldPainter.drawShapeContour(g,
+            centerX0 + cellSize / 2 + (int) (dx * cellSize), centerY0 + cellSize / 2,
+            isValid, rotateFactor * 90);
+      }
+
       for (int i = 0; i < shape.size(); i++) {
         int x = shape.getX(i), y = shape.getY(i);
         if (x >= 0 && x < getWidth() && y >= 0 && y < getHeight()) {
           _fieldPainter.paintCellPix(g, fieldRect.left + x * cellSize,
-                  fieldRect.bottom - (y + 1) * cellSize, shape.getCellType(i), CellState.FALLING);
+              fieldRect.bottom - (y + 1) * cellSize, shape.getCellType(i), CellState.FALLING);
         }
-      }
-
-
-      int centerX0 = fieldRect.left + shape.getCenterX() * cellSize;
-      int centerY0 = fieldRect.bottom - (shape.getCenterY() + 1) * cellSize;
-
-      // draw state
-      // double rotateValue = dynamicState.values[1];
-
-      int MOVE_ID = 0;
-      int ROTATE_ID = 1;
-      Paint tmpPaint = new Paint();
-
-      float curValue;
-      if(dynamicState.valueStates[ROTATE_ID] != null && (curValue = dynamicState.values[ROTATE_ID]) != 0) {
-//        Debug.print("Draw arc "+ (curValue*360));
-
-        if (dynamicState.valueStates[ROTATE_ID] == DynamicState.ValueState.INVALID) {
-          tmpPaint.setColor(VisualResources.Defaults.DYN_SHAPE_STROKE_INVALID);
-
-        }else if (dynamicState.valueStates[ROTATE_ID] == DynamicState.ValueState.VALID) {
-          tmpPaint.setColor(VisualResources.Defaults.DYN_SHAPE_STROKE_VALID);
-        }
-        RectF rect = new RectF(centerX0, centerY0, centerX0+cellSize, centerY0 + cellSize);
-        g.drawArc(rect, 0, curValue*360, true, tmpPaint);
       }
     }
   }
