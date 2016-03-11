@@ -4,6 +4,8 @@
 
 package org.tequilacat.tcatris.games;
 
+import org.tequilacat.tcatris.core.GameImpulse;
+
 public class FlatShape {
   private int myCenterX;
   private int myCenterY;
@@ -35,29 +37,26 @@ public class FlatShape {
     System.arraycopy(other.myData, 0, myData, 0, other.myData.length);
   }
 
-  /**************************************************
-   **************************************************/
   public int size() {
     return myData.length / 3;
   }
 
-  /**************************************************
-   **************************************************/
   public void moveTo(int x, int y) {
     myCenterX = x;
     myCenterY = y;
   }
 
-  /**************************************************
-   **************************************************/
-  public void moveBy(int x, int y) {
-    myCenterX += x;
-    myCenterY += y;
+  /**
+   * modifies center of the shape by given offset
+   * @param deltaX
+   * @param deltaY
+   */
+  public void moveBy(int deltaX, int deltaY) {
+    myCenterX += deltaX;
+    myCenterY += deltaY;
   }
 
-  /**************************************************
-   **************************************************/
-  public void rotate(int rotationDir) {
+  private void rotate(int rotationDir) {
     if (rotationDir != 0) {
 
       for (int i = 0; i < myData.length; i += 3) {
@@ -79,14 +78,41 @@ public class FlatShape {
     }
   }
 
-  /**************************************************
-   **************************************************/
+
+  public FlatShape transformed(GameImpulse impulse) {
+    FlatShape shape = new FlatShape(this);
+    return shape.transform(impulse) ? shape : null;
+  }
+
+  public boolean transform(GameImpulse impulse) {
+    boolean modified = true;
+
+    if (impulse == GameImpulse.ROTATE_CW) {
+      rotate(1);
+    } else if (impulse == GameImpulse.ROTATE_CCW) {
+      rotate(-1);
+    } else if (impulse == GameImpulse.MOVE_LEFT) {
+      moveBy(-1, 0);
+      //transformed.rotate(-1);
+    } else if (impulse == GameImpulse.MOVE_RIGHT) {
+      moveBy(1, 0);
+    } else {
+      modified = false;
+    }
+
+    return modified;
+  }
+
+  /**
+   * @return center X of the shape
+   */
   public int getCenterX() {
     return myCenterX;
   }
 
-  /**************************************************
-   **************************************************/
+  /**
+   * @return center Y of the shape
+   */
   public int getCenterY() {
     return myCenterY;
   }

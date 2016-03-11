@@ -184,16 +184,16 @@ public final class GameView extends SurfaceView {
                 break;
 
               case LEFT:
-                repaintType = getGame().moveLeft() ? ScreenPaintType.FIELD_ONLY : null;
+                repaintType = getGame().doAction(GameImpulse.MOVE_LEFT) ? ScreenPaintType.FIELD_ONLY : null;
                 break;
               case RIGHT:
-                repaintType = getGame().moveRight() ? ScreenPaintType.FIELD_ONLY : null;
+                repaintType = getGame().doAction(GameImpulse.MOVE_RIGHT) ? ScreenPaintType.FIELD_ONLY : null;
                 break;
               case ROTATE_CW:
-                repaintType = getGame().rotateClockwise() ? ScreenPaintType.FIELD_ONLY : null;
+                repaintType = getGame().doAction(GameImpulse.ROTATE_CW) ? ScreenPaintType.FIELD_ONLY : null;
                 break;
               case ROTATE_CCW:
-                repaintType = getGame().rotateAntiClockwise() ? ScreenPaintType.FIELD_ONLY : null;
+                repaintType = getGame().doAction(GameImpulse.ROTATE_CCW) ? ScreenPaintType.FIELD_ONLY : null;
                 break;
               default:
                 repaintType = null;
@@ -668,7 +668,7 @@ public final class GameView extends SurfaceView {
       }
 
       long end = System.currentTimeMillis();
-      Debug.print("Repaint [" + paintType + "] took " + (end - start) + " ms");
+      //Debug.print("Repaint [" + paintType + "] took " + (end - start) + " ms");
     }
   }
 

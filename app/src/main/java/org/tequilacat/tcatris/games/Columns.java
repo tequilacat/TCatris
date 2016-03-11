@@ -8,6 +8,9 @@ package org.tequilacat.tcatris.games;
 //            FlatGame, Shape
 
 import org.tequilacat.tcatris.core.GameDescriptor;
+import org.tequilacat.tcatris.core.GameImpulse;
+
+import java.util.EnumSet;
 
 public class Columns extends FlatGame {
 
@@ -28,6 +31,7 @@ public class Columns extends FlatGame {
   public Columns(GameDescriptor descriptor) {
     super(descriptor, new FlatRectGamePainter());
   }
+
 
   /**************************************************
    **************************************************/
@@ -53,32 +57,51 @@ public class Columns extends FlatGame {
 
     FlatShape fs = new FlatShape(new int[]{0, -1, c1, 0, 0, c2, 0, 1, c3});
     if (myGameType == FIGTYPE_HORZ) {
-      fs.rotate(1);
+      fs.transform(GameImpulse.ROTATE_CW);
     }
     return fs;
   }
 
-  /**************************************************
-   **************************************************/
   @Override
-  protected FlatShape rotate(FlatShape shape, int dir) {
-    if (myGameType == FIGTYPE_ROTATE) {
-      shape = super.rotate(shape, dir);
-    } else {
-      dir = (dir > 0) ? -1 : 1;
-      int i = (dir > 0) ? 0 : shape.size() - 1, count = shape.size(),
-        newPos = i + dir, firstValue = shape.getCellType(i);
-
-      while (--count > 0) {
-        shape.setCellType(i, shape.getCellType(newPos));
-
-        newPos += dir;
-        i += dir;
-      }
-      shape.setCellType(i, firstValue);
+  public void addEffectiveImpulses(EnumSet<GameImpulse> actionSet) {
+    if (myGameType != FIGTYPE_ROTATE) {
+      actionSet.add(GameImpulse.ROTATE_CCW);
+      actionSet.add(GameImpulse.ROTATE_CW);
     }
-    return shape;
+
+    // now test in base class which handles move and rotate
+    super.addEffectiveImpulses(actionSet);
   }
+
+  @Override
+  public boolean doAction(GameImpulse impulse) {
+    boolean modified;
+
+    if (myGameType != FIGTYPE_ROTATE
+      && (impulse == GameImpulse.ROTATE_CW || impulse == GameImpulse.ROTATE_CCW)) {
+      shift(getCurrentShape(), impulse);
+      modified = true;
+    } else {
+      modified = super.doAction(impulse);
+    }
+
+    return modified;
+  }
+
+  private void shift(FlatShape shape, GameImpulse impulse) {
+    int dir = (impulse == GameImpulse.ROTATE_CCW) ? -1 : 1;
+    int i = (dir > 0) ? 0 : shape.size() - 1, count = shape.size(),
+      newPos = i + dir, firstValue = shape.getCellType(i);
+
+    while (--count > 0) {
+      shape.setCellType(i, shape.getCellType(newPos));
+
+      newPos += dir;
+      i += dir;
+    }
+    shape.setCellType(i, firstValue);
+  }
+
 
   @Override
   protected boolean isSqueezable(int x, int y) {
@@ -181,7 +204,7 @@ public class Columns extends FlatGame {
 
   @Override
   public boolean squeeze() {
-    myScore += myLastScores;
+    setScore(getScore() + myLastScores);
     myLastScores = 0;
 
     for (int x = 0; x < getWidth(); x++) {// scan cells in rows

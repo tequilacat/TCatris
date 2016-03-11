@@ -28,6 +28,9 @@ public abstract class Tetris {
   private int myNextWidth;
   private int myNextHeight;
 
+  private int _level;
+  private int _score;
+
   private GameScreenLayout _gameScreenLayout;
   private GameDescriptor _descriptor;
 
@@ -67,19 +70,33 @@ public abstract class Tetris {
     internalThrowInNewShape();
   }
 
-  /**
-   * remaining specs of the gamedef line.
-   * default implementation does nothing.
-   * @param specSettings
-   */
-  protected void configure(String specSettings) {}
 
-  /**************************************************
-   **************************************************/
+  public int getLevel() {
+    return _level;
+  }
+
+  protected void setLevel(int level) {
+    _level = level;
+  }
+
+  public int getScore() {
+    return _score;
+  }
+
+  protected void setScore(int score) {
+    _score = score;
+  }
+
+  /**
+   * @return width of game field in cells
+   */
   public final int getWidth() {
     return myFieldWidth;
   }
 
+  /**
+   * @return height of game field in cells
+   */
   public final int getHeight() {
     return myFieldHeight;
   }
@@ -91,17 +108,6 @@ public abstract class Tetris {
   public final int getMaxShapeHeight() {
     return myNextHeight;
   }
-
-  public abstract void layout(LayoutParameters layoutParams);
-
-  public abstract void paintNext(Canvas g);
-
-  /**
-   * paints game field
-   * @param g canvas to draw to
-   * @param dynamicState props of current move state
-   */
-  public abstract void paintField(Canvas g, DynamicState dynamicState);
 
   private synchronized int nextRandom(int i) {
     seed = seed * 0x5deece66dL + 11L & 0xffffffffffffL;
@@ -122,8 +128,24 @@ public abstract class Tetris {
     return k;
   }
 
-  public abstract void init();
+  /**
+   * Calls implementation of acquireFallenShape() and refreshes available impulses
+   * @return result of called acquireFallenShape()
+   */
+  private boolean internalAcquireFallenShape() {
+    boolean canContinue = acquireFallenShape();
 
+    if(canContinue) {
+      checkEffectiveImpulses();
+    }
+
+    return canContinue;
+  }
+
+  /**
+   * calls implementation of throwInNewShape,
+   * updates game state and available impulses
+   */
   private void internalThrowInNewShape() {
     myState = throwInNewShape() ? ACTIVE : LOST;
 
@@ -138,21 +160,22 @@ public abstract class Tetris {
     return myLastScored;
   }
 
-  public abstract boolean moveLeft();
-
-  public abstract boolean moveRight();
-
-  public abstract boolean rotateClockwise();
-
-  public abstract boolean rotateAntiClockwise();
-
-  public abstract int getLevel();
-
-  public abstract int getScore();
-
   public final int getState() {
     return myState;
   }
+
+  /**
+   * remaining specs of the gamedef line.
+   * default implementation does nothing.
+   * @param specSettings
+   */
+  protected void configure(String specSettings) {}
+
+  public abstract void layout(LayoutParameters layoutParams);
+
+  public abstract void paintNext(Canvas g);
+
+  public abstract void init();
 
   protected abstract boolean computeCanSqueeze();
 
@@ -171,6 +194,13 @@ public abstract class Tetris {
   protected abstract boolean squeeze();
 
   protected abstract boolean throwInNewShape();
+
+  /**
+   * paints game field
+   * @param g canvas to draw to
+   * @param dynamicState props of current move state
+   */
+  public abstract void paintField(Canvas g, DynamicState dynamicState);
 
   public boolean canSqueeze() {
     return myCanSqueeze;
@@ -204,9 +234,20 @@ public abstract class Tetris {
    * Called after modification of field.
    * Queries implementation for allowed impulses in new configuration
    */
-  private void checkEffectiveImpulses() {
+  protected void checkEffectiveImpulses() {
     _allowedImpulses.clear();
     addEffectiveImpulses(_allowedImpulses);
+    Debug.print(">>> checkEffectiveImpulses: " + _allowedImpulses);
+  }
+
+  private boolean internalDropCurrent(boolean toBottom) {
+    boolean moved = dropCurrent(toBottom);
+
+    if(moved) {
+      checkEffectiveImpulses();
+    }
+
+    return moved;
   }
 
   /**
@@ -240,11 +281,11 @@ public abstract class Tetris {
       repaintAll = true;
       //return true;
 
-    }else if (dropCurrent(doDrop)) {
+    }else if (internalDropCurrent(doDrop)) {
       repaintAll = false;
       //return false;
 
-    }else if (!acquireFallenShape()) {
+    }else if (!internalAcquireFallenShape()) {
       myState = LOST;
       repaintAll = true;
 

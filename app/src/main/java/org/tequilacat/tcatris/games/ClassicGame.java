@@ -5,6 +5,9 @@
 package org.tequilacat.tcatris.games;
 
 import org.tequilacat.tcatris.core.GameDescriptor;
+import org.tequilacat.tcatris.core.GameImpulse;
+
+import java.util.EnumSet;
 
 public class ClassicGame extends FlatGame {
 
@@ -64,9 +67,6 @@ public class ClassicGame extends FlatGame {
     return canDo;
   }
 
-  /****************************************
-   * @returns if squeeze leads to next squeeze
-   ****************************************/
   @Override
   public boolean squeeze() {
     if (mySqueezable == null || mySqueezable.length != getHeight()) return false;
@@ -75,8 +75,10 @@ public class ClassicGame extends FlatGame {
 
     for (int i = 0; i < mySqueezable.length; ) {
       if (mySqueezable[i]) {
-        myScore += increment++;
+        setScore(getScore() + increment);
+        increment++;
         mySqueezable[i] = false;
+
         for (int y = i; y < getHeight(); y++) {
           mySqueezable[y] = (y == getHeight() - 1) ? false : mySqueezable[y + 1];
           for (int x = 0; x < getWidth(); x++) {

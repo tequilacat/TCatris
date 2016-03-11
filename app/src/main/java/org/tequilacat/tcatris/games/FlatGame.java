@@ -26,8 +26,6 @@ public abstract class FlatGame extends Tetris {
 
   public static final int EMPTY = 0;
 
-  protected int myScore;
-  private int myLevel;
   protected int field[][];
   int myShapesThrown;
   private FlatShape myFallingShape;
@@ -46,7 +44,7 @@ public abstract class FlatGame extends Tetris {
    * resets game to initial step
    */
   public void init() {
-    myScore = 0;
+    setScore(0);
     myFallingShape = null;
     myNextShape = null;
     myShapesThrown = 0;
@@ -60,80 +58,44 @@ public abstract class FlatGame extends Tetris {
 
   }
 
+  private static EnumSet<GameImpulse> _CheckedImpulses = EnumSet.of(GameImpulse.MOVE_LEFT, GameImpulse.MOVE_RIGHT,
+    GameImpulse.ROTATE_CW, GameImpulse.ROTATE_CCW);
+
   @Override
   public void addEffectiveImpulses(EnumSet<GameImpulse> actionSet) {
     // TODO add impulses depending on current shape and state
+    FlatShape curShape = getCurrentShape();
+
+    for (GameImpulse impulse : _CheckedImpulses) {
+      if(!actionSet.contains(impulse)) {
+        FlatShape transformed = curShape.transformed(impulse);
+        if (transformed != null && isShapePlaceable(transformed)) {
+          actionSet.add(impulse);
+        }
+      }
+    }
   }
 
   @Override
   public boolean doAction(GameImpulse impulse) {
-    // TODO implement doAction
-    return false;
+    boolean moved = isEffective(impulse) && getCurrentShape().transform(impulse);
+
+    if(moved){
+      checkEffectiveImpulses();
+    }
+
+    return moved;
   }
 
-  /**************************************************
-   **************************************************/
   public int getCellValue(int i, int j) {
     return field[j][i];
   }
 
-  /**************************************************
-   **************************************************/
-  public boolean rotateClockwise() {
-    return tryRotate(1);
-  }
-
-  /**************************************************
-   **************************************************/
-  public boolean rotateAntiClockwise() {
-    return tryRotate(-1);
-  }
-
-  /**************************************************
-   **************************************************/
-  private boolean tryRotate(int direction) {
-    FlatShape moved = rotate(myFallingShape, direction);
-
-    if (isShapePlaceable(moved)) { // isOk ,
-      myFallingShape = moved;
-      return true;
-    } else { // if same shape (myFallingShape) rollback it
-      if (myFallingShape == moved) {
-        rotate(myFallingShape, -direction);
-      }
-      return false;
-    }
-  }
-
-
-  /**************************************************
-   **************************************************/
-  public boolean moveLeft() {
-    FlatShape moved = myFallingShape; // new FlatShape(myFallingShape);
-    moved.moveBy(-1, 0);
-    if (!isShapePlaceable(moved)) {
-      // revert
-      moved.moveBy(1, 0);
-      return false;
-    }
-    return true;
-  }
-
-  /**************************************************
-   **************************************************/
-  public boolean moveRight() {
-    FlatShape moved = myFallingShape;
-    moved.moveBy(1, 0);
-    if (!isShapePlaceable(moved)) {
-      // revert
-      moved.moveBy(-1, 0);
-      return false;
-    }
-    return true;
-  }
-
-  /**************************************************
-   **************************************************/
+  /**
+   * checks whether the given shape fits the field
+   * @param aShape
+   * @return
+   */
   private boolean isShapePlaceable(FlatShape aShape) {
     // check for not out of bounds, not not over existing
     boolean canPlace = true;
@@ -151,29 +113,12 @@ public abstract class FlatGame extends Tetris {
     return canPlace;
   }
 
-  /**************************************************
-   **************************************************/
-  protected FlatShape rotate(FlatShape shape, int dir) {
-    shape = new FlatShape(shape);
-    shape.rotate(dir);
-    return shape;
-  }
-
-  /**************************************************
-   **************************************************/
-  public int getLevel() {
-    return myLevel;
-  }
-
-  public int getScore() {
-    return myScore;
-  }
-
   /********************************
    * drops cur shape 1 level , or till bottom.
    *
    * @returns if really have dropped it any level.
    ******************************/
+  @Override
   protected boolean dropCurrent(boolean tillBottom) {
     boolean dropped = false;
     if (tillBottom) {
@@ -196,10 +141,10 @@ public abstract class FlatGame extends Tetris {
     return dropped;
   }
 
+  @Override
   protected boolean acquireFallenShape() {
-    //    System.out.println("Acquire Fallen Shape");
-
     FlatShape shape = getCurrentShape();
+
     for (int i = 0; i < myFallingShape.size(); i++) {
       int x = shape.getX(i), y = shape.getY(i);
       if (x < 0 || y < 0 || x >= getWidth() || y >= getHeight()) {
@@ -221,23 +166,17 @@ public abstract class FlatGame extends Tetris {
   }
 
   private void countStep() {
-    myLevel = myShapesThrown / 20;
-    if (myLevel > 10)
-      myLevel = 10;
+    setLevel(Math.min(myShapesThrown / 20, 10));
   }
 
-  /**
-   */
+  @Override
   protected boolean throwInNewShape() {
     myShapesThrown++;
     countStep();
-    myFallingShape = myNextShape;
-    if (myFallingShape == null)
-      myFallingShape = createNext();
+
+    myFallingShape = myNextShape == null ? createNext() : myNextShape;
     myNextShape = createNext();
-
     myFallingShape.moveTo(getWidth() / 2, getHeight() - 1);
-
     return isShapePlaceable(myFallingShape);
   }
 
@@ -245,7 +184,6 @@ public abstract class FlatGame extends Tetris {
   protected abstract boolean isSqueezable(int i, int j);
 
   protected abstract FlatShape createNext();
-
 
   @Override
   public void layout(LayoutParameters layoutParams) {
@@ -327,8 +265,8 @@ public abstract class FlatGame extends Tetris {
       }
 
 
-      int centerX0 = fieldRect.left + shape.getX(0) * cellSize;
-      int centerY0 = fieldRect.bottom - (shape.getY(0) + 1) * cellSize;
+      int centerX0 = fieldRect.left + shape.getCenterX() * cellSize;
+      int centerY0 = fieldRect.bottom - (shape.getCenterY() + 1) * cellSize;
 
       // draw state
       // double rotateValue = dynamicState.values[1];
