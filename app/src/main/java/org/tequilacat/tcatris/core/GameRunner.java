@@ -14,7 +14,7 @@ public class GameRunner {
   }
 
   enum GameAction {
-    LEFT, RIGHT, ROTATE_CW, ROTATE_CCW, DROP, UNPAUSE, DRAG, ADVANCE,
+    DROP, UNPAUSE, DRAG, ADVANCE, IMPULSE,
   }
 
   private GameAction _gameThreadAction;
@@ -107,6 +107,7 @@ public class GameRunner {
             repaintType = ScreenPaintType.FULLSCREEN;
 
           } else { // ACTIVE: run action, see consequences
+            GameImpulse currentImpulse = null;
 
             for (DragType dt : DragType.values()) {
               int pos = dt.ordinal();
@@ -131,9 +132,11 @@ public class GameRunner {
                   // replace DRAG with one of impulses, reset init pos to current
 
                   if(dt == DragType.HORIZONTAL) {
-                    curAction = newValue > 0 ? GameAction.RIGHT : GameAction.LEFT;
+                    curAction = GameAction.IMPULSE;
+                    currentImpulse = newValue > 0 ? GameImpulse.MOVE_RIGHT : GameImpulse.MOVE_LEFT;
                   }else if(dt == DragType.ROTATE) {
-                    curAction = newValue > 0 ? GameAction.ROTATE_CW : GameAction.ROTATE_CCW;
+                    curAction = GameAction.IMPULSE;
+                    currentImpulse = newValue > 0 ? GameImpulse.ROTATE_CW : GameImpulse.ROTATE_CCW;
                   }
 
                   _dtPositions[pos] = curValue;
@@ -183,6 +186,10 @@ public class GameRunner {
                 nextTickMoment = WAIT_CYCLE; // reset timer to wait next
                 break;
 
+              case IMPULSE:
+                repaintType = getGame().doAction(currentImpulse) ? ScreenPaintType.FIELD_ONLY : null;
+                break;
+                /*
               case LEFT:
                 repaintType = getGame().doAction(GameImpulse.MOVE_LEFT) ? ScreenPaintType.FIELD_ONLY : null;
                 break;
@@ -195,6 +202,7 @@ public class GameRunner {
               case ROTATE_CCW:
                 repaintType = getGame().doAction(GameImpulse.ROTATE_CCW) ? ScreenPaintType.FIELD_ONLY : null;
                 break;
+              */
               default:
                 repaintType = null;
                 break;
