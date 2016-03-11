@@ -2,6 +2,9 @@
     <dimen name="title_font_size">32sp</dimen>
     <dimen name="gameinfo_font_size">24sp</dimen>
 
+    <dimen name="margin_size">16dp</dimen>
+    <dimen name="buttonarea_height">40dp</dimen>
+
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>

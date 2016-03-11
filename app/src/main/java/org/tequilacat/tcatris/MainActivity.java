@@ -16,6 +16,7 @@ import org.tequilacat.tcatris.core.GameList;
 import org.tequilacat.tcatris.core.GameView;
 import org.tequilacat.tcatris.core.Scoreboard;
 import org.tequilacat.tcatris.core.Tetris;
+import org.tequilacat.tcatris.core.VisualResources;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -31,6 +32,9 @@ public class MainActivity extends Activity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    VisualResources.Defaults = new VisualResources(getResources());
+
     setContentView(R.layout.activity_main);
     _viewFlipper = (ViewFlipper) findViewById(R.id.viewflipper);
 
@@ -165,12 +169,12 @@ public class MainActivity extends Activity {
 
       ListView scoreListView = (ListView) findViewById(R.id.lvScoreList);
       scoreListView.setAdapter(new ArrayAdapter<String>(this,
-              android.R.layout.simple_list_item_1, android.R.id.text1, scores));
+        android.R.layout.simple_list_item_1, android.R.id.text1, scores));
 
       Button scoreBackButton = (Button) findViewById(R.id.scoreBackBtn);
       scoreBackButton.setText(getString(
-                      gameView.getGame().getState() == Tetris.LOST ?
-                              R.string.btn_play_again : R.string.btn_continue)
+          gameView.getGame().getState() == Tetris.LOST ?
+            R.string.btn_play_again : R.string.btn_continue)
       );
 
       // gameView.setPaused(true);

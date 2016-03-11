@@ -8,6 +8,7 @@ import org.tequilacat.tcatris.core.ColorCodes;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.Tetris;
 import org.tequilacat.tcatris.core.Ui;
+import org.tequilacat.tcatris.core.VisualResources;
 
 /**
  * Created by avo on 29.02.2016.
@@ -39,7 +40,7 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
 
   @Override
   public int getFieldBackground() {
-    return getTypeColor(0);
+    return VisualResources.Defaults.FIELD_BG_COLOR;
   }
 
   @Override
@@ -86,7 +87,7 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
 
       Ui.fillRect(g, layout.getFieldRect(), getFieldBackground());
 
-      _cellPainter.setColor(ColorCodes.black);
+      _cellPainter.setColor(VisualResources.Defaults.FIELD_LINE_COLOR);
       final int cellSize = getGameScreenLayout().getCellSize();
 
       for (int x = left + cellSize; x < right; x += cellSize) {

@@ -9,7 +9,6 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
 
-import org.tequilacat.tcatris.core.ColorCodes;
 import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameDescriptor;
@@ -18,6 +17,7 @@ import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.LayoutParameters;
 import org.tequilacat.tcatris.core.Tetris;
 import org.tequilacat.tcatris.core.Ui;
+import org.tequilacat.tcatris.core.VisualResources;
 
 import java.util.EnumSet;
 
@@ -187,14 +187,18 @@ public abstract class FlatGame extends Tetris {
 
   @Override
   public void layout(LayoutParameters layoutParams) {
+
+    int MARGIN = VisualResources.Defaults.MARGIN_SIZE;
+    int VERT_SPACING = MARGIN;
+
     //LayoutParameters layoutParams = new LayoutParameters();
     int screenWidth = layoutParams.GameArea.width(), screenHeight = layoutParams.GameArea.height();
 
     int glassWidth = this.getWidth(), glassHeight = this.getHeight(),
       nextFigWidth = this.getMaxShapeWidth(), nextFigHeight = this.getMaxShapeHeight();
 
-    int width = screenWidth - layoutParams.MARGIN_LEFT - layoutParams.MARGIN_RIGHT - layoutParams.SPACING_VERT;
-    int height = screenHeight - layoutParams.MARGIN_TOP - layoutParams.MARGIN_BOTTOM;
+    int width = screenWidth - MARGIN - MARGIN - VERT_SPACING;
+    int height = screenHeight - MARGIN - MARGIN;
 
     int cellSize = width / (glassWidth + nextFigWidth);
 
@@ -202,8 +206,8 @@ public abstract class FlatGame extends Tetris {
       cellSize = height / glassHeight;
     }
 
-    int fieldX0 = layoutParams.MARGIN_LEFT;
-    int fieldY0 = layoutParams.MARGIN_TOP;
+    int fieldX0 = MARGIN;
+    int fieldY0 = MARGIN;
 
     int myFieldWidth = cellSize * glassWidth;
     int myFieldHeight = cellSize * glassHeight;
@@ -211,9 +215,9 @@ public abstract class FlatGame extends Tetris {
 
     // lay out next fig
 
-    int myNextShapeX0 = layoutParams.MARGIN_LEFT + myFieldWidth + layoutParams.SPACING_VERT;
-    myNextShapeX0 += (screenWidth - layoutParams.MARGIN_RIGHT - myNextShapeX0 - cellSize * nextFigWidth) / 2;
-    int myNextShapeY0 = layoutParams.MARGIN_TOP;
+    int myNextShapeX0 = MARGIN + myFieldWidth + VERT_SPACING;
+    myNextShapeX0 += (screenWidth - MARGIN - myNextShapeX0 - cellSize * nextFigWidth) / 2;
+    int myNextShapeY0 = MARGIN;
 
     //Debug.print("Cell Size: "+myCellSize+" , fieldWidth = "+myFieldWidth);
 
@@ -280,9 +284,10 @@ public abstract class FlatGame extends Tetris {
 //        Debug.print("Draw arc "+ (curValue*360));
 
         if (dynamicState.valueStates[ROTATE_ID] == DynamicState.ValueState.INVALID) {
-          tmpPaint.setColor(ColorCodes.red);
+          tmpPaint.setColor(VisualResources.Defaults.DYN_SHAPE_STROKE_INVALID);
+
         }else if (dynamicState.valueStates[ROTATE_ID] == DynamicState.ValueState.VALID) {
-          tmpPaint.setColor(ColorCodes.blue);
+          tmpPaint.setColor(VisualResources.Defaults.DYN_SHAPE_STROKE_VALID);
         }
         RectF rect = new RectF(centerX0, centerY0, centerX0+cellSize, centerY0 + cellSize);
         g.drawArc(rect, 0, curValue*360, true, tmpPaint);

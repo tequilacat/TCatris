@@ -460,7 +460,8 @@ public final class GameView extends SurfaceView {
     };
 
     // compute proportional sizes of painted screen components
-    _fontSize = getResources().getDimensionPixelSize(R.dimen.gameinfo_font_size);
+    //_fontSize = getResources().getDimensionPixelSize(R.dimen.gameinfo_font_size);
+    _fontSize = VisualResources.Defaults.HEADER_FONT_SIZE;
     _scoreBarArea.set(0, 0, w, getLineHeight());
 
     int buttonHeight = h / 10, buttonY = h - buttonHeight, buttonWidth = w / 5, buttonX = 0;
@@ -471,9 +472,6 @@ public final class GameView extends SurfaceView {
     _buttons.add(new Button(DragType.HORIZONTAL, Ui.ButtonGlyph.RIGHT, buttonX + buttonWidth * 3, buttonY, buttonWidth * 2, buttonHeight));
 
     LayoutParameters layoutParams = new LayoutParameters();
-    layoutParams.MARGIN_BOTTOM = layoutParams.MARGIN_LEFT
-      = layoutParams.MARGIN_RIGHT = layoutParams.MARGIN_TOP = layoutParams.SPACING_VERT
-      = w / 30;
     layoutParams.GameArea = new Rect(0, _scoreBarArea.bottom, w, h - buttonHeight - _scoreBarArea.height());
 
     _clickableZones.clear();
@@ -498,16 +496,16 @@ public final class GameView extends SurfaceView {
     // Debug.print("paint: " + (repaintAll ? "ALL" : "field only"));
 
     if(repaintAll) {
-      c.drawColor(Ui.UI_COLOR_PANEL);
+      c.drawColor(VisualResources.Defaults.SCREEN_BG_COLOR);
 
       Rect next = layout.getNextShapeRect();
       getGame().paintNext(c);
 
       // TODO paint scores as bar
-      Ui.fillRect(c, _scoreBarArea, ColorCodes.black);
+      Ui.fillRect(c, _scoreBarArea, VisualResources.Defaults.SCORE_BG_COLOR);
       Ui.drawText(c,
         String.format("%s %s: %d", getGame().getDescriptor().getLabel(), getContext().getString(R.string.msg_score), getGame().getScore()),
-        _scoreBarArea.left, _scoreBarArea.top, _fontSize, ColorCodes.yellow);
+        _scoreBarArea.left, _scoreBarArea.top, _fontSize, VisualResources.Defaults.SCORE_TEXT_COLOR);
 
       // paint buttons
       for(Button btn : _buttons) {

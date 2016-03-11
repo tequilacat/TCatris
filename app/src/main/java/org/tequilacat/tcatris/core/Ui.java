@@ -17,10 +17,6 @@ public class Ui {
   private static final Paint _framePainter;
   private static final Paint _fillPainter;
 
-  public static final int UI_COLOR_PANEL = ColorCodes.gray;
-  public static final int UI_COLOR_DARKSHADOW = ColorCodes.darkGray;
-  public static final int UI_COLOR_LIGHTSHADOW = ColorCodes.white;
-
   static {
     _textPainter = new Paint();
     _textPainter.setAntiAlias(true);
@@ -64,11 +60,11 @@ public class Ui {
     y += 2;
     h -= 4;
 
-    _framePainter.setColor(Ui.UI_COLOR_DARKSHADOW);
+    _framePainter.setColor(VisualResources.Defaults.DARKSHADOW_COLOR);
     g.drawLine(x - 1, y - 1, x - 1, y + h, _framePainter);
     g.drawLine(x - 1, y - 1, x + w, y - 1, _framePainter);
 
-    _framePainter.setColor(Ui.UI_COLOR_LIGHTSHADOW);
+    _framePainter.setColor(VisualResources.Defaults.LIGHTSHADOW_COLOR);
     x += w;
     y += h;
     g.drawLine(x, y, x - w, y, _framePainter);
@@ -103,11 +99,11 @@ public class Ui {
   static {
     _buttonGlyphStrokePainter.setStyle(Paint.Style.STROKE);
     _buttonGlyphStrokePainter.setStrokeWidth(0.02f);
-    _buttonGlyphStrokePainter.setColor(ColorCodes.black);
+    _buttonGlyphStrokePainter.setColor(VisualResources.Defaults.GLYPH_STROKE_COLOR);
     _buttonGlyphStrokePainter.setStrokeJoin(Paint.Join.ROUND);
 
     _buttonGlyphFillPainter.setStyle(Paint.Style.FILL);
-    _buttonGlyphFillPainter.setColor(ColorCodes.white);
+    _buttonGlyphFillPainter.setColor(VisualResources.Defaults.GLYPH_FILL_COLOR);
 
     // create buttons
     GLYPH_PATHS = new ArrayList<>();
@@ -140,8 +136,6 @@ public class Ui {
     final int index = glyph.ordinal();
 
     if(index < GLYPH_PATHS.size()) {
-      // fillRect(c, x, y, w, h, ColorCodes.green); // DEBUG!!!
-
       Path path = GLYPH_PATHS.get(index);
       c.save();
       c.translate(x, y);
