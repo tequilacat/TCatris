@@ -173,7 +173,7 @@ public class MainActivity extends Activity {
                               R.string.btn_play_again : R.string.btn_continue)
       );
 
-      gameView.setPaused(true);
+      // gameView.setPaused(true);
       showFlipperViewById(R.id.scoreView);
     }
   }
