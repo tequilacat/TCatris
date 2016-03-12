@@ -35,11 +35,15 @@ public class VisualResources {
   public final int DYN_SHAPE_STROKE_VALID;
   public final int DYN_SHAPE_STROKE_INVALID;
 
+  public final float DYN_SHAPE_STROKE_WIDTH;
+
   public VisualResources(Resources bundle) {
     HEADER_FONT_SIZE = bundle.getDimensionPixelSize(R.dimen.gameinfo_font_size);
 
     BUTTONAREA_HEIGHT = bundle.getDimensionPixelSize(R.dimen.buttonarea_height);
     MARGIN_SIZE = bundle.getDimensionPixelSize(R.dimen.margin_size);
+
+    DYN_SHAPE_STROKE_WIDTH = bundle.getDimension(R.dimen.dynaShapeStrokeWidth);
 
     SCREEN_BG_COLOR = bundle.getColor(R.color.screenBgColor);
     FIELD_BG_COLOR = bundle.getColor(R.color.fieldBgColor);

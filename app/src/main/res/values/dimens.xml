@@ -5,6 +5,8 @@
     <dimen name="margin_size">16dp</dimen>
     <dimen name="buttonarea_height">40dp</dimen>
 
+    <dimen name="dynaShapeStrokeWidth">2dp</dimen>
+
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>

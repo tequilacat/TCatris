@@ -62,7 +62,6 @@ public abstract class FlatGame extends Tetris {
 
   @Override
   public void addEffectiveImpulses(EnumSet<GameImpulse> actionSet) {
-    // TODO add impulses depending on current shape and state
     FlatShape curShape = getCurrentShape();
 
     for (GameImpulse impulse : _CheckedImpulses) {

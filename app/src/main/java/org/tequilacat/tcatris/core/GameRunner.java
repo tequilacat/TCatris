@@ -21,7 +21,6 @@ public class GameRunner {
   private final Object _gameChangeLock = new Object();
   private DynamicState _bgThreadDynamicState = new DynamicState(2);
 
-  private boolean _isPaused;
   private boolean _isRunning;
 
   /** reset timer to wait whole cycle */
@@ -76,7 +75,6 @@ public class GameRunner {
     // on 1st iteration just display screen
     _gameThreadAction = GameAction.UNPAUSE;
     _isRunning = true;
-    _isPaused = false;
     long nextTickMoment = WAIT_CYCLE;
 
     synchronized (_gameChangeLock) {
@@ -84,11 +82,6 @@ public class GameRunner {
         while (_isRunning) {
           GameAction curAction = _gameThreadAction;
           _gameThreadAction = null;
-
-          if (_isPaused) {
-            Debug.print("Paused: exit game thread");
-            break;
-          }
 
           if (getGame().getState() == Tetris.LOST) {
             Debug.print("Lost: show scores, exit game thread");

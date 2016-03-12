@@ -26,10 +26,12 @@ public abstract class AbstractFlatGamePainter {
   private static final float CONTOUR_FACTOR = 1.1f;
 
   public AbstractFlatGamePainter(){
-    // TODO parametrize shape contour stroke width and contour factor via VisualResources
-    _shapeContourPaint.setStrokeWidth(5);
+    float strokeWidth = VisualResources.Defaults.DYN_SHAPE_STROKE_WIDTH;
+
+    _shapeContourPaint.setStrokeWidth(strokeWidth);
     _shapeContourPaint.setStyle(Paint.Style.STROKE);
-    _shapeContourPaint.setPathEffect(new DashPathEffect(new float[]{10f, 3f}, 0));
+    _shapeContourPaint.setPathEffect(new DashPathEffect(new float[]{
+        strokeWidth * 7, strokeWidth * 3}, 0));
   }
 
   /**
