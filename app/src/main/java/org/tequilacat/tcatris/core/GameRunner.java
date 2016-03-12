@@ -105,52 +105,36 @@ public class GameRunner {
             for (DragType dt : DragType.values()) {
               int pos = dt.ordinal();
 
-              if(!_dragStates.isActive(dt)) {
+              if (!_dragStates.isActive(dt)) {
                 _dtPositions[pos] = 0;
                 _bgThreadDynamicState.setState(pos, DynamicState.ValueState.NOT_TRACKED, 0);
 
-              }else if (curAction == GameAction.DRAG) {
+              } else if (curAction == GameAction.DRAG) {
                 DynamicState.ValueState newState;
                 double newValue;
                 double curValue = _dragStates.getValue(dt);
                 newValue = curValue - _dtPositions[pos];
                 double absDistance = Math.abs(newValue);
 
-                if(absDistance < MIN_DRAG) {
+                if (absDistance < MIN_DRAG) {
                   // don't display if too small
                   newState = DynamicState.ValueState.NOT_TRACKED;
                   newValue = 0;
 
-                }else if(absDistance >= MAX_DRAG) {
+                } else if (absDistance >= MAX_DRAG) {
                   // replace DRAG with one of impulses, reset init pos to current
-
-                  if(dt == DragType.HORIZONTAL) {
-                    curAction = GameAction.IMPULSE;
-                    currentImpulse = newValue > 0 ? GameImpulse.MOVE_RIGHT : GameImpulse.MOVE_LEFT;
-                  }else if(dt == DragType.ROTATE) {
-                    curAction = GameAction.IMPULSE;
-                    currentImpulse = newValue > 0 ? GameImpulse.ROTATE_CW : GameImpulse.ROTATE_CCW;
-                  }
-
+                  currentImpulse = getGame().getAxisImpulse(dt, newValue >= 0);
+                  curAction = GameAction.IMPULSE;
                   _dtPositions[pos] = curValue;
                   newState = DynamicState.ValueState.NOT_TRACKED;
                   newValue = 0;
-                  Debug.print("Drag results in game action: " + curAction);
+                  //Debug.print("Drag results in game action: " + curAction);
 
                 } else {
                   // in between - see if allowed, set valid/invalid
-                  GameImpulse impulse;
-
-                  if(dt == DragType.HORIZONTAL) {
-                    impulse = newValue > 0 ? GameImpulse.MOVE_RIGHT : GameImpulse.MOVE_LEFT;
-                  }else if(dt == DragType.ROTATE) {
-                    impulse = newValue > 0 ? GameImpulse.ROTATE_CW : GameImpulse.ROTATE_CCW;
-                  }else {
-                    impulse = null;
-                  }
-
+                  GameImpulse impulse = getGame().getAxisImpulse(dt, newValue >= 0);
                   newState = impulse == null ? DynamicState.ValueState.NOT_TRACKED :
-                    (getGame().isEffective(impulse) ? DynamicState.ValueState.VALID : DynamicState.ValueState.INVALID);
+                      (getGame().isEffective(impulse) ? DynamicState.ValueState.VALID : DynamicState.ValueState.INVALID);
                 }
 
                 _bgThreadDynamicState.setState(pos, newState, newValue);
@@ -182,20 +166,6 @@ public class GameRunner {
               case IMPULSE:
                 repaintType = getGame().doAction(currentImpulse) ? ScreenPaintType.FIELD_ONLY : null;
                 break;
-                /*
-              case LEFT:
-                repaintType = getGame().doAction(GameImpulse.MOVE_LEFT) ? ScreenPaintType.FIELD_ONLY : null;
-                break;
-              case RIGHT:
-                repaintType = getGame().doAction(GameImpulse.MOVE_RIGHT) ? ScreenPaintType.FIELD_ONLY : null;
-                break;
-              case ROTATE_CW:
-                repaintType = getGame().doAction(GameImpulse.ROTATE_CW) ? ScreenPaintType.FIELD_ONLY : null;
-                break;
-              case ROTATE_CCW:
-                repaintType = getGame().doAction(GameImpulse.ROTATE_CCW) ? ScreenPaintType.FIELD_ONLY : null;
-                break;
-              */
               default:
                 repaintType = null;
                 break;

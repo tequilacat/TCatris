@@ -300,12 +300,21 @@ public abstract class FlatGame extends Tetris {
             isValid, rotateFactor * 90);
       }
 
-      for (int i = 0; i < shape.size(); i++) {
-        int x = shape.getX(i), y = shape.getY(i);
-        if (x >= 0 && x < getWidth() && y >= 0 && y < getHeight()) {
-          _fieldPainter.paintCellPix(g, fieldRect.left + x * cellSize,
-              fieldRect.bottom - (y + 1) * cellSize, shape.getCellType(i), CellState.FALLING);
-        }
+      paintFallingShape(g);
+    }
+  }
+
+  protected void paintFallingShape(Canvas c) {
+    FlatShape shape = getCurrentShape();
+    int cols = getWidth(), rows = getHeight();
+    Rect fieldRect = getGameScreenLayout().getFieldRect();
+    int cellSize = getGameScreenLayout().getCellSize();
+
+    for (int i = 0, len = shape.size(); i < len; i++) {
+      int x = shape.getX(i), y = shape.getY(i);
+      if (x >= 0 && x < cols && y >= 0 && y < rows) {
+        _fieldPainter.paintCellPix(c, fieldRect.left + x * cellSize,
+            fieldRect.bottom - (y + 1) * cellSize, shape.getCellType(i), CellState.FALLING);
       }
     }
   }
@@ -336,5 +345,20 @@ public abstract class FlatGame extends Tetris {
         nextRect.top + (maxUp - y) * cellSize,
         shape.getCellType(i), CellState.FALLING);
     }
+  }
+
+  @Override
+  public GameImpulse getAxisImpulse(GameRunner.DragType axis, boolean positiveDirection) {
+    GameImpulse impulse;
+
+    if(axis == GameRunner.DragType.HORIZONTAL) {
+      impulse = positiveDirection ? GameImpulse.MOVE_RIGHT : GameImpulse.MOVE_LEFT;
+    }else if(axis == GameRunner.DragType.ROTATE) {
+      impulse = positiveDirection ? GameImpulse.ROTATE_CW : GameImpulse.ROTATE_CCW;
+    }else {
+      impulse = null;
+    }
+
+    return impulse;
   }
 }

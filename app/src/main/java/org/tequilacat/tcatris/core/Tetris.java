@@ -173,6 +173,14 @@ public abstract class Tetris {
 
   public abstract void layout(LayoutParameters layoutParams);
 
+  /**
+   * returns game impulse for specified axis and direction
+   * @param axis
+   * @param positiveDirection used as sign along the axis (>=0 or <0)
+   * @return impulse for the game
+   */
+  public abstract GameImpulse getAxisImpulse(GameRunner.DragType axis, boolean positiveDirection);
+
   public abstract void paintNext(Canvas g);
 
   public abstract void init();

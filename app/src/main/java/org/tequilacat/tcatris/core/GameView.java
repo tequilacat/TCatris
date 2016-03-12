@@ -359,12 +359,6 @@ public final class GameView extends SurfaceView {
   }
 
   /**
-   * if false the impulse is issued when certain amount is dragged
-   * If true the DRAG action is sent to thread with current dragged distance
-   */
-  private static final boolean COMPUTE_DRAGS = true;
-
-  /**
    * detects game action from touch event and sends it to game thread
    * @param event
    * @return true
