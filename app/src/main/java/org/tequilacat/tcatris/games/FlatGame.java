@@ -7,11 +7,10 @@ package org.tequilacat.tcatris.games;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 
-import org.tequilacat.tcatris.core.Debug;
+import org.tequilacat.tcatris.core.DragAxis;
 import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
-import org.tequilacat.tcatris.core.GameRunner;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.LayoutParameters;
 import org.tequilacat.tcatris.core.Tetris;
@@ -266,7 +265,7 @@ public abstract class FlatGame extends Tetris {
       boolean isValid = true;
       boolean drawContour = false;
 
-      int pos = GameRunner.DragType.HORIZONTAL.ordinal();
+      int pos = DragAxis.HORIZONTAL.ordinal();
 
       if(dynamicState.isTracking(pos)) {
         dx = dynamicState.getValue(pos);
@@ -280,7 +279,7 @@ public abstract class FlatGame extends Tetris {
         //g.drawArc(rect, 0, curValue*360, true, tmpPaint);
       }
 
-      pos = GameRunner.DragType.ROTATE.ordinal();
+      pos = DragAxis.ROTATE.ordinal();
 
       if(dynamicState.isTracking(pos)) {
         rotateFactor = dynamicState.getValue(pos);
@@ -348,12 +347,12 @@ public abstract class FlatGame extends Tetris {
   }
 
   @Override
-  public GameImpulse getAxisImpulse(GameRunner.DragType axis, boolean positiveDirection) {
+  public GameImpulse getAxisImpulse(DragAxis axis, boolean positiveDirection) {
     GameImpulse impulse;
 
-    if(axis == GameRunner.DragType.HORIZONTAL) {
+    if(axis == DragAxis.HORIZONTAL) {
       impulse = positiveDirection ? GameImpulse.MOVE_RIGHT : GameImpulse.MOVE_LEFT;
-    }else if(axis == GameRunner.DragType.ROTATE) {
+    }else if(axis == DragAxis.ROTATE) {
       impulse = positiveDirection ? GameImpulse.ROTATE_CW : GameImpulse.ROTATE_CCW;
     }else {
       impulse = null;

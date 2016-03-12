@@ -9,7 +9,6 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import static org.tequilacat.tcatris.core.GameRunner.DragType;
 import static org.tequilacat.tcatris.core.GameRunner.GameAction;
 
 import org.tequilacat.tcatris.MainActivity;
@@ -178,7 +177,7 @@ public final class GameView extends SurfaceView {
    */
   static class DragTrack {
 
-    private final DragType _dragType;
+    private final DragAxis _dragType;
     private final int _stepDistance;
 
     // pointer id for which this track currently registers offset
@@ -195,7 +194,7 @@ public final class GameView extends SurfaceView {
     private int _lastStoredX;
     private int _lastStoredY;
 
-    public DragTrack(DragType dragType, int distance) {
+    public DragTrack(DragAxis dragType, int distance) {
       this._dragType = dragType;
       _stepDistance = distance;
       pointerId = -1;
@@ -240,7 +239,7 @@ public final class GameView extends SurfaceView {
       */
     }
 
-    public DragType getDragType() {
+    public DragAxis getDragType() {
       return _dragType;
     }
 
@@ -424,9 +423,9 @@ public final class GameView extends SurfaceView {
   static class Button {
     public final Ui.ButtonGlyph glyph;
     public final Rect rect;
-    public final DragType dragType;
+    public final DragAxis dragType;
 
-    public Button(DragType dragType, Ui.ButtonGlyph glyph, int x, int y, int w, int h) {
+    public Button(DragAxis dragType, Ui.ButtonGlyph glyph, int x, int y, int w, int h) {
       this.dragType = dragType;
       this.glyph = glyph;
       rect = new Rect(x, y, x + w, y + h);
@@ -447,8 +446,8 @@ public final class GameView extends SurfaceView {
     // define drag factors (pixels to cell movements) as fraction of screen dimensions
 
     _tracksByType = new DragTrack[]{
-      new DragTrack(DragType.ROTATE, (int) (w *0.4 / 20)), // 20 rotations per btn
-      new DragTrack(DragType.HORIZONTAL, (int) (w * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
+      new DragTrack(DragAxis.ROTATE, (int) (w *0.4 / 20)), // 20 rotations per btn
+      new DragTrack(DragAxis.HORIZONTAL, (int) (w * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
     };
 
     // compute proportional sizes of painted screen components
@@ -457,9 +456,9 @@ public final class GameView extends SurfaceView {
     int buttonHeight = h / 10, buttonY = h - buttonHeight, buttonWidth = w / 5, buttonX = 0;
 
     _buttons.clear();
-    _buttons.add(new Button(DragType.ROTATE, Ui.ButtonGlyph.RCCW, buttonX, buttonY, buttonWidth * 2, buttonHeight));
+    _buttons.add(new Button(DragAxis.ROTATE, Ui.ButtonGlyph.RCCW, buttonX, buttonY, buttonWidth * 2, buttonHeight));
     _buttons.add(new Button(null, Ui.ButtonGlyph.DROP, buttonX + buttonWidth * 2, buttonY, buttonWidth, buttonHeight));
-    _buttons.add(new Button(DragType.HORIZONTAL, Ui.ButtonGlyph.RIGHT, buttonX + buttonWidth * 3, buttonY, buttonWidth * 2, buttonHeight));
+    _buttons.add(new Button(DragAxis.HORIZONTAL, Ui.ButtonGlyph.RIGHT, buttonX + buttonWidth * 3, buttonY, buttonWidth * 2, buttonHeight));
 
     LayoutParameters layoutParams = new LayoutParameters();
     layoutParams.GameArea = new Rect(0, _scoreBarArea.bottom, w, h - buttonHeight - _scoreBarArea.height());

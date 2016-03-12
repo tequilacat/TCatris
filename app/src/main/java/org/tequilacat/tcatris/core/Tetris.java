@@ -179,7 +179,7 @@ public abstract class Tetris {
    * @param positiveDirection used as sign along the axis (>=0 or <0)
    * @return impulse for the game
    */
-  public abstract GameImpulse getAxisImpulse(GameRunner.DragType axis, boolean positiveDirection);
+  public abstract GameImpulse getAxisImpulse(DragAxis axis, boolean positiveDirection);
 
   public abstract void paintNext(Canvas g);
 

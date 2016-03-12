@@ -9,10 +9,6 @@ import android.view.SurfaceHolder;
  */
 public class GameRunner {
 
-  public enum DragType {
-    HORIZONTAL, ROTATE
-  }
-
   enum GameAction {
     DROP, UNPAUSE, DRAG, ADVANCE, IMPULSE,
   }
@@ -26,23 +22,23 @@ public class GameRunner {
   /** reset timer to wait whole cycle */
   final static long WAIT_CYCLE = -1;
 
-  double[] _dtPositions = new double[DragType.values().length];
+  double[] _dtPositions = new double[DragAxis.values().length];
 
   public static class DragStates {
-    private final boolean[] _dragStatuses = new boolean[DragType.values().length];
-    private final double[] _dragDeltas = new double[DragType.values().length];
+    private final boolean[] _dragStatuses = new boolean[DragAxis.values().length];
+    private final double[] _dragDeltas = new double[DragAxis.values().length];
 
-    public void setState(final DragType type, boolean newState, double value) {
+    public void setState(final DragAxis type, boolean newState, double value) {
       final int pos = type.ordinal();
       _dragDeltas[pos] = value;
       _dragStatuses[pos] = newState;
     }
 
-    public boolean isActive(final DragType type) {
+    public boolean isActive(final DragAxis type) {
       return _dragStatuses[type.ordinal()];
     }
 
-    public double getValue(final DragType type) {
+    public double getValue(final DragAxis type) {
       return _dragStatuses[type.ordinal()] ? _dragDeltas[type.ordinal()] : 0;
     }
 
@@ -102,7 +98,7 @@ public class GameRunner {
           } else { // ACTIVE: run action, see consequences
             GameImpulse currentImpulse = null;
 
-            for (DragType dt : DragType.values()) {
+            for (DragAxis dt : DragAxis.values()) {
               int pos = dt.ordinal();
 
               if (!_dragStates.isActive(dt)) {
@@ -151,7 +147,7 @@ public class GameRunner {
                 boolean gameStateChanged = getGame().nextState(curAction == GameAction.DROP);
 
                 if(gameStateChanged) {
-                  for (DragType dt : DragType.values()) {
+                  for (DragAxis dt : DragAxis.values()) {
                     int pos = dt.ordinal();
                     _dtPositions[pos] = _dragStates.getValue(dt);
                     _bgThreadDynamicState.setState(pos, _bgThreadDynamicState.valueStates[pos], 0);
