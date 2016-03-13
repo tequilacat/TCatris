@@ -270,29 +270,37 @@ public abstract class FlatGame extends Tetris {
       boolean isValid = true;
       boolean drawContour = false;
 
-      int pos = DragAxis.HORIZONTAL.ordinal();
+      DragAxis moveAxis = getMovementAxis();
 
-      if(dynamicState.isTracking(pos)) {
-        dx = dynamicState.getValue(pos);
-        drawContour = true;
+      if(moveAxis!=null) {
+        int pos = moveAxis.ordinal();
 
-        if(!dynamicState.isValid(pos)) {
-          isValid = false;
-          dx = 0;
-        }
+        if (dynamicState.isTracking(pos)) {
+          dx = dynamicState.getValue(pos);
+          drawContour = true;
+
+          if (!dynamicState.isValid(pos)) {
+            isValid = false;
+            dx = 0;
+          }
 //        RectF rect = new RectF(centerX0, centerY0, centerX0+cellSize, centerY0 + cellSize);
-        //g.drawArc(rect, 0, curValue*360, true, tmpPaint);
+          //g.drawArc(rect, 0, curValue*360, true, tmpPaint);
+        }
       }
 
-      pos = DragAxis.ROTATE.ordinal();
+      DragAxis rotationAxis = getRotationAxis();
 
-      if(dynamicState.isTracking(pos)) {
-        rotateFactor = dynamicState.getValue(pos);
-        drawContour = true;
+      if(rotationAxis!=null) {
+        int pos = DragAxis.ROTATE.ordinal();
 
-        if(!dynamicState.isValid(pos)) {
-          isValid = false;
-          rotateFactor = 0;
+        if (dynamicState.isTracking(pos)) {
+          rotateFactor = dynamicState.getValue(pos);
+          drawContour = true;
+
+          if (!dynamicState.isValid(pos)) {
+            isValid = false;
+            rotateFactor = 0;
+          }
         }
       }
 
@@ -304,11 +312,15 @@ public abstract class FlatGame extends Tetris {
             isValid, rotateFactor * 90);
       }
 
-      paintFallingShape(g);
+      paintFallingShape(g, dynamicState);
     }
   }
 
-  protected void paintFallingShape(Canvas c) {
+  /**
+   * @param c
+   * @param dynamicState current state of shape offset along supported axis
+   */
+  protected void paintFallingShape(Canvas c, DynamicState dynamicState) {
     FlatShape shape = getCurrentShape();
     int cols = getWidth(), rows = getHeight();
     Rect fieldRect = getGameScreenLayout().getFieldRect();
@@ -321,6 +333,22 @@ public abstract class FlatGame extends Tetris {
             fieldRect.bottom - (y + 1) * cellSize, shape.getCellType(i), CellState.FALLING);
       }
     }
+  }
+
+  /**
+   *
+   * @return axis used to move shape along
+   */
+  public DragAxis getMovementAxis() {
+    return DragAxis.HORIZONTAL;
+  }
+
+  /**
+   *
+   * @return rotation axis
+   */
+  public DragAxis getRotationAxis() {
+    return DragAxis.ROTATE;
   }
 
   /**

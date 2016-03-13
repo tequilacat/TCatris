@@ -7,7 +7,7 @@ import android.view.SurfaceHolder;
 /**
  * Created by avo on 11.03.2016.
  */
-public class GameRunner {
+public abstract class GameRunner {
 
   enum GameAction {
     DROP, UNPAUSE, DRAG, ADVANCE, IMPULSE,
@@ -51,7 +51,7 @@ public class GameRunner {
   private DragStates _dragStates;
 
   private final static double MIN_DRAG = 0.2;
-  private final static double MAX_DRAG = 1;
+  private final static double MAX_DRAG = 0.8;
 
   private SurfaceHolder _surfaceHolder;
   private Tetris _currentGame;
@@ -268,7 +268,14 @@ public class GameRunner {
     }
   }
 
-  public void onPaintGameScreen(Canvas c, boolean repaintAll, DynamicState dynamicState) { }
+  /**
+   * Called from background thread witih canvas locked on surface holder.
+   * Override to paint new game state.
+   * @param c
+   * @param repaintAll
+   * @param dynamicState
+   */
+  public abstract void onPaintGameScreen(Canvas c, boolean repaintAll, DynamicState dynamicState);
 
   /**
    * called from bg thread when the game is lost

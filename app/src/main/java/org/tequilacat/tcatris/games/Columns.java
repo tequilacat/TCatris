@@ -70,6 +70,14 @@ public class Columns extends FlatGame {
     return fs;
   }
 
+  /**
+   * For colorshifting games returns null maning game does not support rotation
+   * @return rotation axis
+   */
+  public DragAxis getRotationAxis() {
+    return isColorShifting() ? null : DragAxis.ROTATE;
+  }
+
   private static EnumSet<GameImpulse> _colorShiftImpulses = EnumSet.of(GameImpulse.MOVE_LEFT, GameImpulse.MOVE_RIGHT,
       GameImpulse.SHIFT_FORWARD, GameImpulse.SHIFT_BACKWARD);
 
