@@ -5,4 +5,5 @@ package org.tequilacat.tcatris.core;
  */
 public enum GameImpulse {
   ROTATE_CW, ROTATE_CCW, MOVE_LEFT, MOVE_RIGHT,
+  SHIFT_FORWARD, SHIFT_BACKWARD,
 }

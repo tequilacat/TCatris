@@ -7,6 +7,7 @@ package org.tequilacat.tcatris.games;
 // Referenced classes of package flat:
 //            FlatGame, Shape
 
+import org.tequilacat.tcatris.core.DragAxis;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
 
@@ -32,6 +33,13 @@ public class Columns extends FlatGame {
     super(descriptor, new FlatRectGamePainter());
   }
 
+  /**
+   *
+   * @return whether this game shifts cells instead of rotating
+   */
+  private boolean isColorShifting() {
+    return myGameType != FIGTYPE_ROTATE;
+  }
 
   /**************************************************
    **************************************************/
@@ -62,23 +70,47 @@ public class Columns extends FlatGame {
     return fs;
   }
 
+  private static EnumSet<GameImpulse> _colorShiftImpulses = EnumSet.of(GameImpulse.MOVE_LEFT, GameImpulse.MOVE_RIGHT,
+      GameImpulse.SHIFT_FORWARD, GameImpulse.SHIFT_BACKWARD);
+
+  @Override
+  public EnumSet<GameImpulse> getSupportedImpulses() {
+    return isColorShifting() ? _colorShiftImpulses : super.getSupportedImpulses();
+  }
+
   @Override
   public void addEffectiveImpulses(EnumSet<GameImpulse> actionSet) {
-    if (myGameType != FIGTYPE_ROTATE) {
-      actionSet.add(GameImpulse.ROTATE_CCW);
-      actionSet.add(GameImpulse.ROTATE_CW);
+    // for color shifting allow move and shift, never allow rotate
+    if (isColorShifting()) {
+      // always supported, won't be checked in base class
+      // - and flatshape does not support them anyway
+      actionSet.add(GameImpulse.SHIFT_BACKWARD);
+      actionSet.add(GameImpulse.SHIFT_FORWARD);
+    }
+      // now test in base class which handles move and rotate
+    super.addEffectiveImpulses(actionSet);
+  }
+
+  @Override
+  public GameImpulse getAxisImpulse(DragAxis axis, boolean positiveDirection) {
+    // for color shift return shift impulses instead of rotating
+    GameImpulse impulse;
+
+    if(isColorShifting() && axis == DragAxis.ROTATE) {
+      impulse = positiveDirection ? GameImpulse.SHIFT_FORWARD : GameImpulse.SHIFT_BACKWARD;
+    }else {
+      impulse = super.getAxisImpulse(axis, positiveDirection);
     }
 
-    // now test in base class which handles move and rotate
-    super.addEffectiveImpulses(actionSet);
+    return impulse;
   }
 
   @Override
   public boolean doAction(GameImpulse impulse) {
     boolean modified;
 
-    if (myGameType != FIGTYPE_ROTATE
-      && (impulse == GameImpulse.ROTATE_CW || impulse == GameImpulse.ROTATE_CCW)) {
+    // for color shifting process only
+    if (impulse == GameImpulse.SHIFT_BACKWARD || impulse == GameImpulse.SHIFT_FORWARD) {
       shift(getCurrentShape(), impulse);
       modified = true;
     } else {

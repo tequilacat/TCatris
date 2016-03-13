@@ -60,10 +60,15 @@ public abstract class FlatGame extends Tetris {
     GameImpulse.ROTATE_CW, GameImpulse.ROTATE_CCW);
 
   @Override
+  public EnumSet<GameImpulse> getSupportedImpulses() {
+    return _CheckedImpulses;
+  }
+
+  @Override
   public void addEffectiveImpulses(EnumSet<GameImpulse> actionSet) {
     FlatShape curShape = getCurrentShape();
 
-    for (GameImpulse impulse : _CheckedImpulses) {
+    for (GameImpulse impulse : getSupportedImpulses()) {
       if(!actionSet.contains(impulse)) {
         FlatShape transformed = curShape.transformed(impulse);
         if (transformed != null && isShapePlaceable(transformed)) {

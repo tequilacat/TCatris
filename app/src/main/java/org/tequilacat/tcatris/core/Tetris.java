@@ -239,6 +239,12 @@ public abstract class Tetris {
   }
 
   /**
+   *
+   * @return impulses supported by this kind of game
+   */
+  public abstract EnumSet<GameImpulse> getSupportedImpulses();
+
+  /**
    * Called after modification of field.
    * Queries implementation for allowed impulses in new configuration
    */
