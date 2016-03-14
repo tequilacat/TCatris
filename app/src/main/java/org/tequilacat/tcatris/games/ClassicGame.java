@@ -103,7 +103,6 @@ public class ClassicGame extends FlatGame {
   @Override
   public boolean squeeze() {
     int curRow = getHeight() - 1, targetRow = curRow;
-    Debug.print("------------");
 
     while (curRow >= 0) {
       if(mySqueezable[curRow]) { // have contents

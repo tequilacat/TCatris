@@ -265,7 +265,6 @@ public class Columns extends FlatGame {
     }
 
     // diagonals
-    // TODO fix CS
     int x = 2, yPos = 0;
     do {
       int xPos = (x < getWidth()) ? x : (getWidth() - 1);
@@ -282,7 +281,6 @@ public class Columns extends FlatGame {
 
   /**
    * Runs along direction, marks all 3 and more cells as toRemove.
-   * TODO fix CS if needed
    * @param x0
    * @param y0
    * @param dx
@@ -341,7 +339,6 @@ public class Columns extends FlatGame {
   }
 
   /**
-   * TODO fix CS if needed
    * @return
    */
   @Override
@@ -350,29 +347,21 @@ public class Columns extends FlatGame {
     myLastScores = 0;
 
     for (int x = 0; x < getWidth(); x++) {// scan cells in rows
-      // foreach col, remove
-      int curY = 0, fromY = 0;
-
-      while (curY < getHeight()) {
-        if (fromY >= getHeight()) { // copy to cell from outside
-          field[curY][x] = EMPTY;
-          _cellsToSqueeze[curY][x] = false;
-          curY++;
-        } else
-          //  fromY is readable, test
-          if (_cellsToSqueeze[fromY][x]) { // cur cell is _isSqueezable
-//					Debug.print("  row "+ x +", SQUEEZE: "+ curY +" / "+ fromY +" : "+dbgGetCol(x));
-            fromY++;
-          } else {
-            if (curY != fromY) {
-              String s = "  " + field[fromY][x] + "[ @" + fromY + "]  -> " + field[curY][x] + "[ @" + curY + "]";
-              field[curY][x] = field[fromY][x];
-              _cellsToSqueeze[curY][x] = false;
-//						Debug.print(s+"  : "+dbgGetCol(x));
-            }
-            curY++;
-            fromY++;
+      int dst = getHeight() - 1, src = dst;
+      while (src >= 0) {
+        if (_cellsToSqueeze[src][x]) {
+          src--;
+        } else {
+          if (src < dst) {
+            field[dst][x] = field[src][x];
           }
+          src--;
+          dst--;
+        }
+      }
+      while(dst >= 0) {
+        field[dst][x] = EMPTY;
+        dst--;
       }
     }
 
