@@ -162,39 +162,64 @@ public class Columns extends FlatGame {
     super.paintFallingShape(c, dynamicState);
 
     // TODO for color shift in progress entirely redraw the falling shape within its bounds
-    //if(isColorShifting()) {
-    if(false) { // TODO temporarily block colorshift preview until coordinate systems are synched
+    if(isColorShifting()) {
+    //if(false) {
       float val = dynamicState.getValue(DragAxis.ROTATE.ordinal());
 
       if(val >= DynamicState.MIN_DRAG) {
+        Debug.print("Display shift " + val);
+
         FlatShape fallingShape = getCurrentShape();
         int cellSize = getGameScreenLayout().getCellSize();
         // get shape bounds
         fallingShape.getBounds(_shapeBounds);
         Rect fieldRect = getGameScreenLayout().getFieldRect();
+
+
+        // cell coords
+        int shapeX = _shapeBounds.left * cellSize + fieldRect.left;
+        int shapeY = _shapeBounds.top * cellSize + fieldRect.top;
         int shapeW = _shapeBounds.width() * cellSize;
         int shapeH = _shapeBounds.height() * cellSize;
-        int shapeX = fieldRect.left + _shapeBounds.left * cellSize;
-        int shapeY = fieldRect.bottom - _shapeBounds.top * cellSize;
 
         //_shiftedCellStroke.setStrokeWidth(cellSize / 20);
-        Debug.print("Fill " + shapeX + "x" + shapeY + " [" + shapeW + ", " + shapeH + "]");
-        c.drawRect(shapeX, shapeY, shapeX + shapeW, shapeY + shapeH, _shiftedCellFill);
+        // Debug.print("Fill " + shapeX + "x" + shapeY + " [" + shapeW + ", " + shapeH + "]");
 
-        //_shapeBounds.left = _shapeBounds.left * cellSize + fieldRect.left;
-        /*
+        c.save();
+        //c.clipRect(shapeX, shapeY, shapeX + shapeW, shapeY + shapeH);
+
+        // TODO construct path in constructor
         _shiftedCellPath.rewind();
-
-        // create
         int pos = 0;
         float x0 = -cellSize / 2, y0 = -cellSize / 2;
         addContourPoint(pos++, x0, y0, 0);
-        addContourPoint(pos++, x0 + cellSize * val, y0, 0);
-        addContourPoint(pos++, x0 + cellSize * val * 1.2f, 0, 0);
-        addContourPoint(pos++, x0 + cellSize * val, y0 + cellSize, 0);
+        addContourPoint(pos++, x0 + cellSize, y0, 0);
+        addContourPoint(pos++, x0 + cellSize * 1.2f, 0, 0);
+        addContourPoint(pos++, x0 + cellSize, y0 + cellSize, 0);
         addContourPoint(pos++, x0, y0 + cellSize, 0);
-
         _shiftedCellPath.close();
+
+        boolean isForward = val > 0;
+        int dx, dy;
+
+        if(myGameType==FIGTYPE_VERT) {
+          dx = 0;
+          dy = isForward ? cellSize : -cellSize;
+        }else {
+          dx = isForward ? cellSize : -cellSize;
+          dy = 0;
+        }
+
+
+        c.restore();
+        //c.drawRect(shapeX, shapeY, shapeX + shapeW, shapeY + shapeH, _shiftedCellFill);
+
+        //_shapeBounds.left = _shapeBounds.left * cellSize + fieldRect.left;
+        /*
+
+
+        // create
+
 
         // foreach cell translate and draw/fill path
 
