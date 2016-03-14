@@ -7,7 +7,13 @@ package org.tequilacat.tcatris.games;
 // Referenced classes of package flat:
 //            FlatGame, Shape
 
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Path;
+
+import org.tequilacat.tcatris.core.ColorCodes;
 import org.tequilacat.tcatris.core.DragAxis;
+import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
 
@@ -29,8 +35,18 @@ public class Columns extends FlatGame {
   private static final int FIGTYPE_HORZ = 1;
   private static final int FIGTYPE_ROTATE = 2;
 
+  private static Path _shiftedCellPath = new Path();
+  private static Paint _shiftedCellFill = new Paint();
+  private static Paint _shiftedCellStroke = new Paint();
+
   public Columns(GameDescriptor descriptor) {
     super(descriptor, new FlatRectGamePainter());
+
+    _shiftedCellFill.setStyle(Paint.Style.STROKE);
+    _shiftedCellFill.setColor(ColorCodes.black);
+
+    _shiftedCellFill.setStyle(Paint.Style.FILL);
+    _shiftedCellFill.setColor(ColorCodes.darkYellow);
   }
 
   /**
@@ -111,6 +127,54 @@ public class Columns extends FlatGame {
     }
 
     return impulse;
+  }
+
+  // 10 points for contour
+  //private float[] _shiftedCellContour = new float[20];
+
+  private void addContourPoint(int pos, float x, float y, int rotate) {
+    // convert acc to rotation
+    if(_shiftedCellPath.isEmpty()) {
+      _shiftedCellPath.moveTo(x, y);
+    }else{
+      _shiftedCellPath.lineTo(x, y);
+    }
+  }
+
+  @Override
+  protected void paintFallingShape(Canvas c, DynamicState dynamicState) {
+    super.paintFallingShape(c, dynamicState);
+
+    if(isColorShifting()) {
+      float val = dynamicState.getValue(getRotationAxis().ordinal());
+
+      if(val >= DynamicState.MIN_DRAG) {
+        _shiftedCellPath.rewind();
+
+        // create
+        int pos = 0;
+        int cellSize = getGameScreenLayout().getCellSize();
+        float x0 = -cellSize / 2, y0 = -cellSize / 2;
+        addContourPoint(pos++, x0, y0, 0);
+        addContourPoint(pos++, x0 + cellSize * val, y0, 0);
+        addContourPoint(pos++, x0 + cellSize * val * 1.2f, 0, 0);
+        addContourPoint(pos++, x0 + cellSize * val, y0 + cellSize, 0);
+        addContourPoint(pos++, x0, y0 + cellSize, 0);
+
+        _shiftedCellPath.close();
+
+        // TODO move init cell fills to constructor
+        _shiftedCellFill.setStrokeWidth(cellSize / 20f);
+        // foreach cell translate and draw/fill path
+        FlatShape fallingShape = getCurrentShape();
+
+        for(int i = 0, len = fallingShape.size(); i < len;i++){
+          int col = fallingShape.getX(i), row = fallingShape.getY(i);
+          // compute x, y
+        }
+      }
+      //
+    }
   }
 
   @Override
@@ -275,16 +339,5 @@ public class Columns extends FlatGame {
     }
 
     return true;
-  }
-
-
-  /************************************************
-   ************************************************/
-  private String dbgGetCol(int x) {
-    String s = "";
-    for (int y = 0; y < getHeight(); y++) {
-      s += "" + field[y][x];
-    }
-    return s;
   }
 }

@@ -49,10 +49,6 @@ public abstract class GameRunner {
   }
 
   private DragStates _dragStates;
-
-  private final static double MIN_DRAG = 0.2;
-  private final static double MAX_DRAG = 0.8;
-
   private SurfaceHolder _surfaceHolder;
   private Tetris _currentGame;
 
@@ -112,12 +108,12 @@ public abstract class GameRunner {
                 newValue = curValue - _dtPositions[pos];
                 double absDistance = Math.abs(newValue);
 
-                if (absDistance < MIN_DRAG) {
+                if (absDistance < DynamicState.MIN_DRAG) {
                   // don't display if too small
                   newState = DynamicState.ValueState.NOT_TRACKED;
                   newValue = 0;
 
-                } else if (absDistance >= MAX_DRAG) {
+                } else if (absDistance >= DynamicState.MAX_DRAG) {
                   // replace DRAG with one of impulses, reset init pos to current
                   currentImpulse = getGame().getAxisImpulse(dt, newValue >= 0);
                   curAction = GameAction.IMPULSE;
