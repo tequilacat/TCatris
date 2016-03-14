@@ -18,10 +18,11 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
 
   private final boolean _paintFieldBg = true;
 
+  // TODO make distinctive colors bright ones and thus distinguishable from their darker variants
   private static final int[] _distinctiveColors = new int[]{
           ColorCodes.lightGray,
-          ColorCodes.red, ColorCodes.blue, ColorCodes.purple, ColorCodes.orange, ColorCodes.green,
-          ColorCodes.darkRed, ColorCodes.darkGreen, ColorCodes.blue, ColorCodes.cyan, ColorCodes.magenta, ColorCodes.orange, ColorCodes.lightBrown
+          ColorCodes.red, ColorCodes.blue, ColorCodes.magenta, ColorCodes.orange, ColorCodes.green,
+          ColorCodes.darkRed, ColorCodes.darkGreen, ColorCodes.blue, ColorCodes.cyan, ColorCodes.purple, ColorCodes.orange, ColorCodes.lightBrown
   };
 
   private static final int[] _darkerColors;

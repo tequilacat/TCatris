@@ -68,36 +68,6 @@ public abstract class AbstractFlatGamePainter {
   public abstract void paintFieldBackground(Canvas g);
 
   /**
-   * paints next shape in specified bounds
-   * @param g
-   * @param shape
-   * @param nextFigX
-   * @param nextFigY
-   * @param nextFigWidth
-   * @param nextFigHeight
-   */
-  public void paintNext(Canvas g, FlatShape shape, int nextFigX, int nextFigY, int nextFigWidth, int nextFigHeight) {
-    Ui.fillRect(g, nextFigX, nextFigY, nextFigWidth, nextFigHeight, getFieldBackground());
-
-    int cellSize = getGameScreenLayout().getCellSize();
-    // find out max leftToCenter and rightToCenter
-    int maxLeft = 0, maxUp = 0;
-    for (int i = 0; i < shape.size(); i++) {
-      int x = shape.getX(i), y = shape.getY(i);
-      if (maxLeft < -x) maxLeft = -x;
-      if (maxUp < y) maxUp = y;
-    }
-
-    // int nextX = myNextShapeWindow.x + 2, nextY = myNextShapeWindow.y + 2;
-    for (int i = 0; i < shape.size(); i++) {
-      int x = shape.getX(i), y = shape.getY(i);
-      paintCellPix(g, nextFigX + (x - maxLeft) * cellSize,
-        nextFigY + (maxUp - y) * cellSize,
-        shape.getCellType(i), Tetris.CellState.FALLING);
-    }
-  }
-
-  /**
    * Returns color of field.
    * Defaults to color of cell type #0, Tetris.getTypeColor(0),
    * may be overwritten in implementations
@@ -109,11 +79,11 @@ public abstract class AbstractFlatGamePainter {
     _shapeContourPaint.setColor(isValid ?
         VisualResources.Defaults.DYN_SHAPE_STROKE_VALID : VisualResources.Defaults.DYN_SHAPE_STROKE_INVALID);
 
-    if(_shapeContourPath!=null) {
+    if (_shapeContourPath != null) {
       c.save();
       c.clipRect(getGameScreenLayout().getFieldRect());
       c.translate(centerX, centerY);
-      if(rotateByDegrees!=0) {
+      if (rotateByDegrees != 0) {
         c.rotate(rotateByDegrees);
       }
       c.drawPath(_shapeContourPath, _shapeContourPaint);
@@ -139,7 +109,7 @@ public abstract class AbstractFlatGamePainter {
 
       for(int i = 0; i < fallingShape.size(); i++) {
         int cellX = (fallingShape.getX(i) - cx) * cellSize + x0;
-        int cellY = -(fallingShape.getY(i) - cy) * cellSize + y0;
+        int cellY = (fallingShape.getY(i) - cy) * cellSize + y0;
 
         _shapeContourPath.addRect(cellX, cellY, cellX + cellSize, cellY + cellSize, Path.Direction.CW);
       }

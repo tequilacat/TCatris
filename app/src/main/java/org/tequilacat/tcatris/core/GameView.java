@@ -481,14 +481,14 @@ public final class GameView extends SurfaceView {
     //repaintAll = true; Debug.print("paint all (debug)");
 
     final GameScreenLayout layout = getGame().getGameScreenLayout();
-    Rect fieldRect = layout.getFieldRect();
+    //Rect fieldRect = layout.getFieldRect();
 
     // Debug.print("paint: " + (repaintAll ? "ALL" : "field only"));
 
     if(repaintAll) {
       c.drawColor(VisualResources.Defaults.SCREEN_BG_COLOR);
 
-      Rect next = layout.getNextShapeRect();
+      //Rect next = layout.getNextShapeRect();
       getGame().paintNext(c);
 
       // TODO paint scores as bar

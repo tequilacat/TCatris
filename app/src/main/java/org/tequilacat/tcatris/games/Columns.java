@@ -10,8 +10,10 @@ package org.tequilacat.tcatris.games;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
 
 import org.tequilacat.tcatris.core.ColorCodes;
+import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.DragAxis;
 import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameDescriptor;
@@ -23,8 +25,8 @@ public class Columns extends FlatGame {
 
   int myLastScores;
   private static final int N_FIGURES = 5;
-  boolean cellsToSqueeze[][];
-  boolean squeezable;
+  private boolean _cellsToSqueeze[][];
+  private boolean _isSqueezable;
 
   // default is xixit
   // "columns" same but shapes are vertical
@@ -42,8 +44,10 @@ public class Columns extends FlatGame {
   public Columns(GameDescriptor descriptor) {
     super(descriptor, new FlatRectGamePainter());
 
-    _shiftedCellFill.setStyle(Paint.Style.STROKE);
-    _shiftedCellFill.setColor(ColorCodes.black);
+    _cellsToSqueeze = new boolean[getHeight()][getWidth()];
+
+    _shiftedCellStroke.setStyle(Paint.Style.STROKE);
+    _shiftedCellStroke.setColor(ColorCodes.black);
 
     _shiftedCellFill.setStyle(Paint.Style.FILL);
     _shiftedCellFill.setColor(ColorCodes.darkYellow);
@@ -55,6 +59,16 @@ public class Columns extends FlatGame {
    */
   private boolean isColorShifting() {
     return myGameType != FIGTYPE_ROTATE;
+  }
+
+  @Override
+  protected int getMaxNextWidth() {
+    return myGameType == FIGTYPE_HORZ ? 3 : 1;
+  }
+
+  @Override
+  protected int getMaxNextHeight() {
+    return myGameType == FIGTYPE_HORZ ? 1 : 3;
   }
 
   /**************************************************
@@ -141,19 +155,38 @@ public class Columns extends FlatGame {
     }
   }
 
+  private Rect _shapeBounds = new Rect();
+
   @Override
   protected void paintFallingShape(Canvas c, DynamicState dynamicState) {
     super.paintFallingShape(c, dynamicState);
 
-    if(isColorShifting()) {
-      float val = dynamicState.getValue(getRotationAxis().ordinal());
+    // TODO for color shift in progress entirely redraw the falling shape within its bounds
+    //if(isColorShifting()) {
+    if(false) { // TODO temporarily block colorshift preview until coordinate systems are synched
+      float val = dynamicState.getValue(DragAxis.ROTATE.ordinal());
 
       if(val >= DynamicState.MIN_DRAG) {
+        FlatShape fallingShape = getCurrentShape();
+        int cellSize = getGameScreenLayout().getCellSize();
+        // get shape bounds
+        fallingShape.getBounds(_shapeBounds);
+        Rect fieldRect = getGameScreenLayout().getFieldRect();
+        int shapeW = _shapeBounds.width() * cellSize;
+        int shapeH = _shapeBounds.height() * cellSize;
+        int shapeX = fieldRect.left + _shapeBounds.left * cellSize;
+        int shapeY = fieldRect.bottom - _shapeBounds.top * cellSize;
+
+        //_shiftedCellStroke.setStrokeWidth(cellSize / 20);
+        Debug.print("Fill " + shapeX + "x" + shapeY + " [" + shapeW + ", " + shapeH + "]");
+        c.drawRect(shapeX, shapeY, shapeX + shapeW, shapeY + shapeH, _shiftedCellFill);
+
+        //_shapeBounds.left = _shapeBounds.left * cellSize + fieldRect.left;
+        /*
         _shiftedCellPath.rewind();
 
         // create
         int pos = 0;
-        int cellSize = getGameScreenLayout().getCellSize();
         float x0 = -cellSize / 2, y0 = -cellSize / 2;
         addContourPoint(pos++, x0, y0, 0);
         addContourPoint(pos++, x0 + cellSize * val, y0, 0);
@@ -163,15 +196,13 @@ public class Columns extends FlatGame {
 
         _shiftedCellPath.close();
 
-        // TODO move init cell fills to constructor
-        _shiftedCellFill.setStrokeWidth(cellSize / 20f);
         // foreach cell translate and draw/fill path
-        FlatShape fallingShape = getCurrentShape();
 
-        for(int i = 0, len = fallingShape.size(); i < len;i++){
+        for (int i = 0, len = fallingShape.size(); i < len; i++) {
           int col = fallingShape.getX(i), row = fallingShape.getY(i);
           // compute x, y
         }
+        */
       }
       //
     }
@@ -209,20 +240,17 @@ public class Columns extends FlatGame {
 
   @Override
   protected boolean isSqueezable(int x, int y) {
-    return (cellsToSqueeze != null) && canSqueeze() && cellsToSqueeze[y][x];
+    return (_cellsToSqueeze != null) && canSqueeze() && _cellsToSqueeze[y][x];
   }
 
   @Override
   public boolean computeCanSqueeze() {
-    squeezable = false;
+    _isSqueezable = false;
     myLastScores = 0;
-
-    if (cellsToSqueeze == null)
-      cellsToSqueeze = new boolean[getHeight()][getWidth()];
 
     for (int y = 0; y < getHeight(); y++) { // scan rows
       for (int x = 0; x < getWidth(); x++) {// scan cells in rows
-        cellsToSqueeze[y][x] = false;
+        _cellsToSqueeze[y][x] = false;
       }
     }
 
@@ -237,6 +265,7 @@ public class Columns extends FlatGame {
     }
 
     // diagonals
+    // TODO fix CS
     int x = 2, yPos = 0;
     do {
       int xPos = (x < getWidth()) ? x : (getWidth() - 1);
@@ -248,13 +277,18 @@ public class Columns extends FlatGame {
     } while (yPos + 2 < getHeight());
 
     myLastScored = myLastScores;
-    return squeezable;
+    return _isSqueezable;
   }
 
-  // runs along direction, marks all 3&more cells as toRemove.
-
-  /************************************************
-   ************************************************/
+  /**
+   * Runs along direction, marks all 3 and more cells as toRemove.
+   * TODO fix CS if needed
+   * @param x0
+   * @param y0
+   * @param dx
+   * @param dy
+   * @return
+   */
   private int runLength(int x0, int y0, int dx, int dy) {
     int scores = 0;
 
@@ -269,14 +303,14 @@ public class Columns extends FlatGame {
       int curCol = field[y][x];
       if (curCol != prevCol) {
         if (rlen >= 3) {
-          squeezable = true;
+          _isSqueezable = true;
           scores += rlen;
           int xx = x - dx, yy = y - dy;
           while (rlen-- > 0) {
 //							diag = "field["+ y +"]["+ x +"], ";
-//							diag += "cellsToSqueeze["+ yy +"]["+ xx +"]";
+//							diag += "_cellsToSqueeze["+ yy +"]["+ xx +"]";
 
-            cellsToSqueeze[yy][xx] = true;
+            _cellsToSqueeze[yy][xx] = true;
             xx -= dx;
             yy -= dy;
           }
@@ -291,14 +325,14 @@ public class Columns extends FlatGame {
     }
 
     if (rlen >= 3) {
-      squeezable = true;
+      _isSqueezable = true;
       scores += rlen;
       int xx = x - dx, yy = y - dy;
       while (rlen-- > 0) {
 //							diag = "field["+ y +"]["+ x +"], ";
-//							diag += "cellsToSqueeze["+ yy +"]["+ xx +"]";
+//							diag += "_cellsToSqueeze["+ yy +"]["+ xx +"]";
 
-        cellsToSqueeze[yy][xx] = true;
+        _cellsToSqueeze[yy][xx] = true;
         xx -= dx;
         yy -= dy;
       }
@@ -306,6 +340,10 @@ public class Columns extends FlatGame {
     return scores;
   }
 
+  /**
+   * TODO fix CS if needed
+   * @return
+   */
   @Override
   public boolean squeeze() {
     setScore(getScore() + myLastScores);
@@ -318,18 +356,18 @@ public class Columns extends FlatGame {
       while (curY < getHeight()) {
         if (fromY >= getHeight()) { // copy to cell from outside
           field[curY][x] = EMPTY;
-          cellsToSqueeze[curY][x] = false;
+          _cellsToSqueeze[curY][x] = false;
           curY++;
         } else
           //  fromY is readable, test
-          if (cellsToSqueeze[fromY][x]) { // cur cell is squeezable
+          if (_cellsToSqueeze[fromY][x]) { // cur cell is _isSqueezable
 //					Debug.print("  row "+ x +", SQUEEZE: "+ curY +" / "+ fromY +" : "+dbgGetCol(x));
             fromY++;
           } else {
             if (curY != fromY) {
               String s = "  " + field[fromY][x] + "[ @" + fromY + "]  -> " + field[curY][x] + "[ @" + curY + "]";
               field[curY][x] = field[fromY][x];
-              cellsToSqueeze[curY][x] = false;
+              _cellsToSqueeze[curY][x] = false;
 //						Debug.print(s+"  : "+dbgGetCol(x));
             }
             curY++;

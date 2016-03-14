@@ -25,8 +25,6 @@ public abstract class Tetris {
 
   private int myFieldWidth;
   private int myFieldHeight;
-  private int myNextWidth;
-  private int myNextHeight;
 
   private int _level;
   private int _score;
@@ -50,8 +48,9 @@ public abstract class Tetris {
 
     myFieldWidth = Integer.parseInt(gameParams.substring(0, sep1));
     myFieldHeight = Integer.parseInt(gameParams.substring(sep1 + 1, sep2));
-    myNextWidth = Integer.parseInt(gameParams.substring(sep2 + 1, sep3));
-    myNextHeight = Integer.parseInt(gameParams.substring(sep3 + 1, (sep4 > 0) ? sep4 : gameParams.length()));
+
+//    myNextWidth = Integer.parseInt(gameParams.substring(sep2 + 1, sep3));
+//    myNextHeight = Integer.parseInt(gameParams.substring(sep3 + 1, (sep4 > 0) ? sep4 : gameParams.length()));
 
     configure((sep4 < 0) ? null : gameParams.substring(sep4 + 1));
   }
@@ -99,14 +98,6 @@ public abstract class Tetris {
    */
   public final int getHeight() {
     return myFieldHeight;
-  }
-
-  public final int getMaxShapeWidth() {
-    return myNextWidth;
-  }
-
-  public final int getMaxShapeHeight() {
-    return myNextHeight;
   }
 
   private synchronized int nextRandom(int i) {

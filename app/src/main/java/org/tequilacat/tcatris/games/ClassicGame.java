@@ -4,6 +4,9 @@
 
 package org.tequilacat.tcatris.games;
 
+import android.graphics.Rect;
+
+import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
 
@@ -13,7 +16,7 @@ public class ClassicGame extends FlatGame {
 
   boolean mySqueezable[];
 
-  private final FlatShape shapes[] = {
+  private static final FlatShape shapes[] = {
     new FlatShape(new int[]{
       0, 0, 1, 1, 0, 1, 1, -1, 1, 0, 1, 1
     }), new FlatShape(new int[]{
@@ -31,8 +34,41 @@ public class ClassicGame extends FlatGame {
   })
   };
 
+  private static int _maxNextWidth;
+  private static int _maxNextHeight;
+
+  static {
+    Rect bounds = new Rect();
+    _maxNextWidth = 0;
+    _maxNextHeight = 0;
+
+    for (FlatShape shape : shapes) {
+      shape.getBounds(bounds);
+      int w = bounds.width(), h = bounds.height();
+
+      if (_maxNextWidth < w) {
+        _maxNextWidth = w;
+      }
+
+      if (_maxNextHeight < h) {
+        _maxNextHeight = h;
+      }
+    }
+  }
+
   public ClassicGame(GameDescriptor descriptor) {
     super(descriptor, new FlatRectGamePainter());
+    mySqueezable = new boolean[getHeight()];
+  }
+
+  @Override
+  protected int getMaxNextWidth() {
+    return _maxNextWidth;
+  }
+
+  @Override
+  protected int getMaxNextHeight() {
+    return _maxNextHeight;
   }
 
   @Override
@@ -47,11 +83,8 @@ public class ClassicGame extends FlatGame {
 
   @Override
   public boolean computeCanSqueeze() {
-    if (mySqueezable == null) {
-      mySqueezable = new boolean[getHeight()];
-    }
-
     boolean canDo = false;
+
     for (int y = 0; y < getHeight(); y++) {
       mySqueezable[y] = true;
       for (int x = 0; x < getWidth(); x++) {
@@ -69,26 +102,30 @@ public class ClassicGame extends FlatGame {
 
   @Override
   public boolean squeeze() {
-    if (mySqueezable == null || mySqueezable.length != getHeight()) return false;
+    int curRow = getHeight() - 1, targetRow = curRow;
+    Debug.print("------------");
 
-    int increment = 1;
+    while (curRow >= 0) {
+      if(mySqueezable[curRow]) { // have contents
+        curRow--; // move forward, keep target pointed to same
 
-    for (int i = 0; i < mySqueezable.length; ) {
-      if (mySqueezable[i]) {
-        setScore(getScore() + increment);
-        increment++;
-        mySqueezable[i] = false;
-
-        for (int y = i; y < getHeight(); y++) {
-          mySqueezable[y] = (y == getHeight() - 1) ? false : mySqueezable[y + 1];
-          for (int x = 0; x < getWidth(); x++) {
-            field[y][x] = (y == getHeight() - 1) ? EMPTY : field[y + 1][x];
-          }
+      }else {
+        if(curRow < targetRow) {
+          System.arraycopy(field[curRow], 0, field[targetRow], 0, getWidth());
         }
-      } else {
-        i++;
+
+        targetRow--;
+        curRow--;
       }
     }
+
+    while (targetRow >= 0) {
+      for (int col = 0; col < getWidth(); col++) {
+        field[targetRow][col] = EMPTY;
+      }
+      targetRow--;
+    }
+
     return false;
   }
 

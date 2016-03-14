@@ -6,7 +6,9 @@ package org.tequilacat.tcatris.games;
 
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.util.Size;
 
+import org.tequilacat.tcatris.core.ColorCodes;
 import org.tequilacat.tcatris.core.DragAxis;
 import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameDescriptor;
@@ -28,8 +30,6 @@ public abstract class FlatGame extends Tetris {
   int myShapesThrown;
   private FlatShape myFallingShape;
   private FlatShape myNextShape;
-
-  protected static final int MIN_CELL_SIZE = 8;
 
   private AbstractFlatGamePainter _fieldPainter;
 
@@ -101,12 +101,14 @@ public abstract class FlatGame extends Tetris {
   private boolean isShapePlaceable(FlatShape aShape) {
     // check for not out of bounds, not not over existing
     boolean canPlace = true;
+    int rowCount = getHeight(), colCount = getWidth();
 
     for (int i = 0; i < aShape.size(); i++) {
       int x = aShape.getX(i), y = aShape.getY(i);
       // if( x<0 || y<0 || x>=getWidth() || y>=getHeight()
-      if (x < 0 || y < 0 || x >= getWidth() // || y>=getHeight()
-        || (y < getHeight() && field[y][x] != EMPTY)) {
+      if (x < 0 || x >= colCount // || y>=getHeight()
+        || y >= rowCount
+        || (y >= 0 && field[y][x] != EMPTY)) {
         canPlace = false;
         break;
       }
@@ -122,20 +124,25 @@ public abstract class FlatGame extends Tetris {
    ******************************/
   @Override
   protected boolean dropCurrent(boolean tillBottom) {
+    int downStep = 1;
     boolean dropped = false;
+
     if (tillBottom) {
-      myFallingShape.moveBy(0, -1);
+      myFallingShape.moveBy(0, downStep);
+
       while (isShapePlaceable(myFallingShape)) {
         dropped = true;
-        myFallingShape.moveBy(0, -1);
+        myFallingShape.moveBy(0, downStep);
       }
-      myFallingShape.moveBy(0, 1);
+      myFallingShape.moveBy(0, -downStep);
+
     } else {
       // move one row down
-      myFallingShape.moveBy(0, -1);
+      myFallingShape.moveBy(0, downStep);
+
       if (!isShapePlaceable(myFallingShape)) {
         // revert
-        myFallingShape.moveBy(0, 1);
+        myFallingShape.moveBy(0, -downStep);
       } else {
         dropped = true;
       }
@@ -167,6 +174,9 @@ public abstract class FlatGame extends Tetris {
     return myFallingShape;
   }
 
+  /**
+   * called on each thrown shape to update stats like level, speed etc
+   */
   private void countStep() {
     setLevel(Math.min(myShapesThrown / 20, 10));
   }
@@ -178,7 +188,7 @@ public abstract class FlatGame extends Tetris {
 
     myFallingShape = myNextShape == null ? createNext() : myNextShape;
     myNextShape = createNext();
-    myFallingShape.moveTo(getWidth() / 2, getHeight() - 1);
+    myFallingShape.moveTo(getWidth() / 2, 0);
     return isShapePlaceable(myFallingShape);
   }
 
@@ -196,12 +206,13 @@ public abstract class FlatGame extends Tetris {
     //LayoutParameters layoutParams = new LayoutParameters();
     int screenWidth = layoutParams.GameArea.width(), screenHeight = layoutParams.GameArea.height();
 
-    int glassWidth = this.getWidth(), glassHeight = this.getHeight(),
-      nextFigWidth = this.getMaxShapeWidth(), nextFigHeight = this.getMaxShapeHeight();
+    int glassWidth = this.getWidth(), glassHeight = this.getHeight();
 
-    int width = screenWidth - MARGIN - MARGIN - VERT_SPACING;
+    int nextFigWidth = this.getMaxNextWidth(), nextFigHeight = this.getMaxNextHeight();
+
+    int nextFigMargin = VERT_SPACING;
+    int width = screenWidth - MARGIN - MARGIN - VERT_SPACING - nextFigMargin * 2;
     int height = screenHeight - MARGIN - MARGIN;
-
     int cellSize = width / (glassWidth + nextFigWidth);
 
     if (cellSize * glassHeight > height) {
@@ -211,27 +222,29 @@ public abstract class FlatGame extends Tetris {
     int fieldX0 = MARGIN;
     int fieldY0 = MARGIN;
 
-    int myFieldWidth = cellSize * glassWidth;
-    int myFieldHeight = cellSize * glassHeight;
+    int fieldWidth = cellSize * glassWidth;
+    int fieldHeight = cellSize * glassHeight;
 
 
     // lay out next fig
-
-    int myNextShapeX0 = MARGIN + myFieldWidth + VERT_SPACING;
-    myNextShapeX0 += (screenWidth - MARGIN - myNextShapeX0 - cellSize * nextFigWidth) / 2;
-    int myNextShapeY0 = MARGIN;
-
-    //Debug.print("Cell Size: "+myCellSize+" , fieldWidth = "+myFieldWidth);
-
+    ///layoutParams.GameArea.left
+    int nextShapeX = layoutParams.GameArea.left + MARGIN + fieldWidth + VERT_SPACING;
+    int nextShapeWidth = nextFigMargin * 2 + nextFigWidth * cellSize;
+    int nextShapeY = layoutParams.GameArea.top + MARGIN;
+    int nextShapeHeight = nextFigMargin * 2 + nextFigHeight * cellSize;
 
     setGameScreenLayout(new GameScreenLayout(cellSize,
-        layoutParams.GameArea.left + fieldX0, layoutParams.GameArea.top + fieldY0,
-        myFieldWidth, myFieldHeight,
-        layoutParams.GameArea.left + myNextShapeX0, layoutParams.GameArea.top + myNextShapeY0,
-        this.getMaxShapeWidth() * cellSize, this.getMaxShapeHeight() * cellSize));
+      layoutParams.GameArea.left + fieldX0, layoutParams.GameArea.top + fieldY0,
+      fieldWidth, fieldHeight,
+      nextShapeX, nextShapeY, nextShapeWidth, nextShapeHeight));
+//        layoutParams.GameArea.left + myNextShapeX0, layoutParams.GameArea.top + myNextShapeY0,
+//        this.getMaxShapeWidth() * cellSize, this.getMaxShapeHeight() * cellSize));
 
     _fieldPainter.init(getGameScreenLayout());
   }
+
+  protected abstract int getMaxNextWidth();
+  protected abstract int getMaxNextHeight();
 
   /**
    * paints game field
@@ -242,7 +255,7 @@ public abstract class FlatGame extends Tetris {
   public void paintField(Canvas g, DynamicState dynamicState) {
     Rect fieldRect = getGameScreenLayout().getFieldRect();
     int cellSize = getGameScreenLayout().getCellSize();
-    int pixY = fieldRect.bottom - cellSize;
+    int pixY = fieldRect.top;
 
     _fieldPainter.paintFieldBackground(g);
 
@@ -256,14 +269,14 @@ public abstract class FlatGame extends Tetris {
         pixX += cellSize;
       }
 
-      pixY -= cellSize;
+      pixY += cellSize;
     }
 
     if (getState() == ACTIVE && !canSqueeze()) {
       FlatShape shape = getCurrentShape();
 
       int centerX0 = fieldRect.left + shape.getCenterX() * cellSize;
-      int centerY0 = fieldRect.bottom - (shape.getCenterY() + 1) * cellSize;
+      int centerY0 = fieldRect.top + shape.getCenterY() * cellSize;
 
       double dx = 0;
       float rotateFactor = 0; // 1 means 90', 0 means no rotate
@@ -330,7 +343,7 @@ public abstract class FlatGame extends Tetris {
       int x = shape.getX(i), y = shape.getY(i);
       if (x >= 0 && x < cols && y >= 0 && y < rows) {
         _fieldPainter.paintCellPix(c, fieldRect.left + x * cellSize,
-            fieldRect.bottom - (y + 1) * cellSize, shape.getCellType(i), CellState.FALLING);
+            fieldRect.top + y * cellSize, shape.getCellType(i), CellState.FALLING);
       }
     }
   }
@@ -362,21 +375,19 @@ public abstract class FlatGame extends Tetris {
 
     int cellSize = getGameScreenLayout().getCellSize();
     FlatShape shape = getNextShape();
+    Rect bounds = new Rect();
+    shape.getBounds(bounds);
 
-    // find out max leftToCenter and rightToCenter
-    int maxLeft = 0, maxUp = 0;
-    for (int i = 0; i < shape.size(); i++) {
-      int x = shape.getX(i), y = shape.getY(i);
-      if (maxLeft < -x) maxLeft = -x;
-      if (maxUp < y) maxUp = y;
-    }
+    int x0 = nextRect.left + (nextRect.width() - bounds.width() * cellSize) / 2;
+    int y0 = nextRect.top + (nextRect.height() - bounds.height() * cellSize) / 2;
 
     for (int i = 0; i < shape.size(); i++) {
-      int x = shape.getX(i), y = shape.getY(i);
-      _fieldPainter.paintCellPix(g, nextRect.left + (x - maxLeft) * cellSize,
-        nextRect.top + (maxUp - y) * cellSize,
+      _fieldPainter.paintCellPix(g,
+        x0 + (-bounds.left + (shape.getX(i) - shape.getCenterX())) * cellSize,
+        y0 + (-bounds.top + (shape.getY(i) - shape.getCenterY())) * cellSize,
         shape.getCellType(i), CellState.FALLING);
     }
+
   }
 
   @Override
