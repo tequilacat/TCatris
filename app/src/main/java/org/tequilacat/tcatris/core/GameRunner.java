@@ -62,7 +62,7 @@ public abstract class GameRunner {
 
     _dragStates = new DragStates();// now no info on current drag state available to game thread
     // runs
-    long INTERVAL = 500; // 300 millis per step
+    long INTERVAL = 500; // millis per step
 
     // on 1st iteration just display screen
     _gameThreadAction = GameAction.UNPAUSE;

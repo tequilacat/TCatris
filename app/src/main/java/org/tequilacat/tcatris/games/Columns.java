@@ -11,6 +11,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.RectF;
 
 import org.tequilacat.tcatris.core.ColorCodes;
 import org.tequilacat.tcatris.core.Debug;
@@ -18,6 +19,7 @@ import org.tequilacat.tcatris.core.DragAxis;
 import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
+import org.tequilacat.tcatris.core.LayoutParameters;
 
 import java.util.EnumSet;
 
@@ -50,7 +52,7 @@ public class Columns extends FlatGame {
     _shiftedCellStroke.setColor(ColorCodes.black);
 
     _shiftedCellFill.setStyle(Paint.Style.FILL);
-    _shiftedCellFill.setColor(ColorCodes.darkYellow);
+    //_shiftedCellFill.setColor(ColorCodes.darkYellow);
   }
 
   /**
@@ -143,93 +145,121 @@ public class Columns extends FlatGame {
     return impulse;
   }
 
-  // 10 points for contour
-  //private float[] _shiftedCellContour = new float[20];
+  @Override
+  public void layout(LayoutParameters layoutParams) {
+    super.layout(layoutParams);
 
-  private void addContourPoint(int pos, float x, float y, int rotate) {
-    // convert acc to rotation
-    if(_shiftedCellPath.isEmpty()) {
-      _shiftedCellPath.moveTo(x, y);
-    }else{
-      _shiftedCellPath.lineTo(x, y);
-    }
+    int cellSize = getGameScreenLayout().getCellSize();
+    float x0 = -cellSize / 2, y0 = -cellSize / 2;
+
+    _shiftedCellPath = new Path();
+    _shiftedCellPath.moveTo(x0, y0);
+    _shiftedCellPath.lineTo(x0 + cellSize, y0);
+    _shiftedCellPath.lineTo(x0 + cellSize * 1.2f, 0);
+    _shiftedCellPath.lineTo(x0 + cellSize, y0 + cellSize);
+    _shiftedCellPath.lineTo(x0, y0 + cellSize);
+    _shiftedCellPath.close();
+
+    // set proportional line width
+    _shiftedCellStroke.setStrokeWidth(cellSize / 20);
   }
 
+  // Used in drawShiftedShape
   private Rect _shapeBounds = new Rect();
+
+
+  private void drawShiftedShape(Canvas c, float value) {
+    FlatShape fallingShape = getCurrentShape();
+    int cellSize = getGameScreenLayout().getCellSize();
+    // get shape bounds
+    fallingShape.getBounds(_shapeBounds);
+    Rect fieldRect = getGameScreenLayout().getFieldRect();
+
+
+    // cell coords
+    int shapeX = _shapeBounds.left * cellSize + fieldRect.left;
+    int shapeY = _shapeBounds.top * cellSize + fieldRect.top;
+    int shapeW = _shapeBounds.width() * cellSize;
+    int shapeH = _shapeBounds.height() * cellSize;
+
+
+    // Debug.print("Fill " + shapeX + "x" + shapeY + " [" + shapeW + ", " + shapeH + "]");
+
+    c.save();
+    c.clipRect(shapeX, shapeY, shapeX + shapeW, shapeY + shapeH);
+
+    // whether the forward shift should be done from 0 to size-1
+    boolean isShapeCoDirected = fallingShape.getX(0) < fallingShape.getX(fallingShape.size() - 1)
+        || fallingShape.getY(0) < fallingShape.getY(fallingShape.size() - 1);
+
+    // find from which we display
+    boolean from0 = isShapeCoDirected != (value > 0);
+    boolean isForward = value > 0;
+    int angle;
+    float dx, dy;
+
+    if(myGameType==FIGTYPE_VERT) {
+      angle = isForward ? 90 : -90;
+      dx = 0;
+      dy = isForward ? cellSize : -cellSize;
+    }else {
+      angle = isForward ? 0 : 180;
+      dx = isForward ? cellSize : -cellSize;
+      dy = 0;
+    }
+
+    float absValue = Math.abs(value);
+    int DEBUG_OFFSET = 20;
+
+    for (int i = 0; i <= fallingShape.size(); i++) {
+      int cellIndex = from0 ? i : (fallingShape.size() - 1 - i);
+
+      // fix extra last cell
+      if (cellIndex < 0) {
+        cellIndex = fallingShape.size() - 1;
+      } else if (cellIndex >= fallingShape.size()) {
+        cellIndex = 0;
+      }
+
+      _shiftedCellFill.setColor(FlatRectGamePainter.getTypeColor(fallingShape.getCellType(cellIndex)));
+
+      if (i == 0) {
+        int x = fallingShape.getX(cellIndex), y = fallingShape.getY(cellIndex);
+        // translate to center of the cell
+        c.translate(fieldRect.left + x * cellSize + cellSize / 2 + dx * absValue,
+            fieldRect.top + y * cellSize + cellSize / 2 + dy * absValue + DEBUG_OFFSET);
+
+      } else {
+        c.translate(-dx, -dy);
+      }
+
+      if (angle != 0) {
+        c.save();
+        c.rotate(angle);
+      }
+
+      c.drawPath(_shiftedCellPath, _shiftedCellFill);
+      c.drawPath(_shiftedCellPath, _shiftedCellStroke);
+
+      if (angle != 0) {
+        c.restore();
+      }
+    }
+
+    c.restore();
+  }
 
   @Override
   protected void paintFallingShape(Canvas c, DynamicState dynamicState) {
     super.paintFallingShape(c, dynamicState);
 
-    // TODO for color shift in progress entirely redraw the falling shape within its bounds
     if(isColorShifting()) {
     //if(false) {
-      float val = dynamicState.getValue(DragAxis.ROTATE.ordinal());
+      float value = dynamicState.getValue(DragAxis.ROTATE.ordinal());
 
-      if(val >= DynamicState.MIN_DRAG) {
-        Debug.print("Display shift " + val);
-
-        FlatShape fallingShape = getCurrentShape();
-        int cellSize = getGameScreenLayout().getCellSize();
-        // get shape bounds
-        fallingShape.getBounds(_shapeBounds);
-        Rect fieldRect = getGameScreenLayout().getFieldRect();
-
-
-        // cell coords
-        int shapeX = _shapeBounds.left * cellSize + fieldRect.left;
-        int shapeY = _shapeBounds.top * cellSize + fieldRect.top;
-        int shapeW = _shapeBounds.width() * cellSize;
-        int shapeH = _shapeBounds.height() * cellSize;
-
-        //_shiftedCellStroke.setStrokeWidth(cellSize / 20);
-        // Debug.print("Fill " + shapeX + "x" + shapeY + " [" + shapeW + ", " + shapeH + "]");
-
-        c.save();
-        //c.clipRect(shapeX, shapeY, shapeX + shapeW, shapeY + shapeH);
-
-        // TODO construct path in constructor
-        _shiftedCellPath.rewind();
-        int pos = 0;
-        float x0 = -cellSize / 2, y0 = -cellSize / 2;
-        addContourPoint(pos++, x0, y0, 0);
-        addContourPoint(pos++, x0 + cellSize, y0, 0);
-        addContourPoint(pos++, x0 + cellSize * 1.2f, 0, 0);
-        addContourPoint(pos++, x0 + cellSize, y0 + cellSize, 0);
-        addContourPoint(pos++, x0, y0 + cellSize, 0);
-        _shiftedCellPath.close();
-
-        boolean isForward = val > 0;
-        int dx, dy;
-
-        if(myGameType==FIGTYPE_VERT) {
-          dx = 0;
-          dy = isForward ? cellSize : -cellSize;
-        }else {
-          dx = isForward ? cellSize : -cellSize;
-          dy = 0;
-        }
-
-
-        c.restore();
-        //c.drawRect(shapeX, shapeY, shapeX + shapeW, shapeY + shapeH, _shiftedCellFill);
-
-        //_shapeBounds.left = _shapeBounds.left * cellSize + fieldRect.left;
-        /*
-
-
-        // create
-
-
-        // foreach cell translate and draw/fill path
-
-        for (int i = 0, len = fallingShape.size(); i < len; i++) {
-          int col = fallingShape.getX(i), row = fallingShape.getY(i);
-          // compute x, y
-        }
-        */
+      if (Math.abs(value) >= DynamicState.MIN_DRAG) {
+        drawShiftedShape(c, value);
       }
-      //
     }
   }
 
@@ -249,7 +279,10 @@ public class Columns extends FlatGame {
   }
 
   private void shift(FlatShape shape, GameImpulse impulse) {
-    int dir = (impulse == GameImpulse.ROTATE_CCW) ? -1 : 1;
+    boolean isShapeCoDirected = shape.getX(0) < shape.getX(shape.size() - 1)
+        || shape.getY(0) < shape.getY(shape.size() - 1);
+
+    int dir = (isShapeCoDirected != (impulse == GameImpulse.SHIFT_BACKWARD)) ? -1 : 1;
     int i = (dir > 0) ? 0 : shape.size() - 1, count = shape.size(),
       newPos = i + dir, firstValue = shape.getCellType(i);
 

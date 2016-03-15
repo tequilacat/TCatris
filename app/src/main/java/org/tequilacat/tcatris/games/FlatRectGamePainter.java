@@ -11,7 +11,7 @@ import org.tequilacat.tcatris.core.Ui;
 import org.tequilacat.tcatris.core.VisualResources;
 
 /**
- * Created by avo on 29.02.2016.
+ * Implementation of painter drawing flat color squares
  */
 public class FlatRectGamePainter extends AbstractFlatGamePainter {
   private Paint _cellPainter = new Paint();

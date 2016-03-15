@@ -38,6 +38,10 @@ public abstract class FlatGame extends Tetris {
     _fieldPainter = fieldPainter;
   }
 
+  protected AbstractFlatGamePainter getGamePainter() {
+    return _fieldPainter;
+  }
+
   /**
    * resets game to initial step
    */
