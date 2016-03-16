@@ -36,7 +36,7 @@ public class MainActivity extends Activity {
 
     // the sound vol buttons will control sound of FX
     setVolumeControlStream(AudioManager.STREAM_MUSIC);
-    
+
     VisualResources.Defaults = new VisualResources(getResources());
 
     setContentView(R.layout.activity_main);

@@ -172,6 +172,23 @@ public abstract class Tetris {
    */
   public abstract GameImpulse getAxisImpulse(DragAxis axis, boolean positiveDirection);
 
+  /**
+   * defines game-specific sensitivity along specified axis
+   * @param axis
+   * @return
+   */
+  public DragSensitivity getAxisSensitivity(DragAxis axis) {
+    DragSensitivity sensitivity;
+
+    switch (axis){
+      case ROTATE: sensitivity = DragSensitivity.ROTATE; break;
+      case HORIZONTAL: sensitivity = DragSensitivity.MOVE; break;
+      default: sensitivity = null;break;
+    }
+
+    return sensitivity;
+  }
+
   public abstract void paintNext(Canvas g);
 
   public abstract void init();

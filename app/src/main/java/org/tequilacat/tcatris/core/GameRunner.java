@@ -108,13 +108,14 @@ public abstract class GameRunner {
                 double curValue = _dragStates.getValue(dt);
                 newValue = curValue - _dtPositions[pos];
                 double absDistance = Math.abs(newValue);
+                DragSensitivity sensitivity = getGame().getAxisSensitivity(dt);
 
-                if (absDistance < DynamicState.MIN_DRAG) {
+                if (absDistance < sensitivity.MIN) {
                   // don't display if too small
                   newState = DynamicState.ValueState.NOT_TRACKED;
                   newValue = 0;
 
-                } else if (absDistance >= DynamicState.MAX_DRAG) {
+                } else if (absDistance >= sensitivity.MAX) {
                   // replace DRAG with one of impulses, reset init pos to current
                   currentImpulse = getGame().getAxisImpulse(dt, newValue >= 0);
                   curAction = GameAction.IMPULSE;

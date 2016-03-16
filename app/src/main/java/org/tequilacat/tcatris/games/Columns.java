@@ -16,6 +16,7 @@ import android.graphics.RectF;
 import org.tequilacat.tcatris.core.ColorCodes;
 import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.DragAxis;
+import org.tequilacat.tcatris.core.DragSensitivity;
 import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
@@ -132,12 +133,29 @@ public class Columns extends FlatGame {
   }
 
   @Override
+  public DragSensitivity getAxisSensitivity(DragAxis axis) {
+    // for rotate axis return colorshift sensitivity
+    return (axis == DragAxis.ROTATE) ? DragSensitivity.COLORSHIFT : super.getAxisSensitivity(axis);
+  }
+
+  private static GameImpulse POSITIVE_SHIFT = GameImpulse.SHIFT_FORWARD;
+
+  @Override
   public GameImpulse getAxisImpulse(DragAxis axis, boolean positiveDirection) {
     // for color shift return shift impulses instead of rotating
     GameImpulse impulse;
 
     if(isColorShifting() && axis == DragAxis.ROTATE) {
-      impulse = positiveDirection ? GameImpulse.SHIFT_FORWARD : GameImpulse.SHIFT_BACKWARD;
+  //    impulse = positiveDirection ? GameImpulse.SHIFT_FORWARD : GameImpulse.SHIFT_BACKWARD;
+
+      if (positiveDirection) {
+        impulse = POSITIVE_SHIFT;
+      } else if (POSITIVE_SHIFT == GameImpulse.SHIFT_FORWARD) {
+        impulse = GameImpulse.SHIFT_BACKWARD;
+      } else {
+        impulse = GameImpulse.SHIFT_BACKWARD;
+      }
+
     }else {
       impulse = super.getAxisImpulse(axis, positiveDirection);
     }
@@ -262,7 +280,7 @@ public class Columns extends FlatGame {
     //if(false) {
       float value = dynamicState.getValue(DragAxis.ROTATE.ordinal());
 
-      if (Math.abs(value) >= DynamicState.MIN_DRAG) {
+      if (Math.abs(value) >= DragSensitivity.COLORSHIFT.MIN) {
         drawShiftedShape(c, value);
       }
     }
@@ -287,7 +305,9 @@ public class Columns extends FlatGame {
     boolean isShapeCoDirected = shape.getX(0) < shape.getX(shape.size() - 1)
         || shape.getY(0) < shape.getY(shape.size() - 1);
 
-    int dir = (isShapeCoDirected != (impulse == GameImpulse.SHIFT_BACKWARD)) ? -1 : 1;
+    int dir = (isShapeCoDirected != (impulse != POSITIVE_SHIFT)) ? -1 : 1;
+    //int dir = (isShapeCoDirected != (impulse == GameImpulse.SHIFT_BACKWARD)) ? -1 : 1;
+
     int i = (dir > 0) ? 0 : shape.size() - 1, count = shape.size(),
       newPos = i + dir, firstValue = shape.getCellType(i);
 

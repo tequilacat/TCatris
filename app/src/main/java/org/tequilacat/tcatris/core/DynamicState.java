@@ -6,8 +6,8 @@ package org.tequilacat.tcatris.core;
  */
 public class DynamicState {
 
-  public final static double MIN_DRAG = 0.1;
-  public final static double MAX_DRAG = 1;//0.8;
+//  public final static double MIN_DRAG = 0.1;
+//  public final static double MAX_DRAG = 1;//0.8;
 
   public enum ValueState {
     NOT_TRACKED, VALID, INVALID
