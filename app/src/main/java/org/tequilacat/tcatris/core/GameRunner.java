@@ -2,6 +2,7 @@ package org.tequilacat.tcatris.core;
 
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.view.SoundEffectConstants;
 import android.view.SurfaceHolder;
 
 /**
@@ -141,6 +142,9 @@ public abstract class GameRunner {
               case ADVANCE:
               case DROP:
                 boolean gameStateChanged = getGame().nextState(curAction == GameAction.DROP);
+                if(getGame().canSqueeze()) {
+                  playViewSoundEffect(Sounds.Id.SQUEEZE);
+                }
 
                 if(gameStateChanged) {
                   for (DragAxis dt : DragAxis.values()) {
@@ -156,7 +160,13 @@ public abstract class GameRunner {
                 break;
 
               case IMPULSE:
-                repaintType = getGame().doAction(currentImpulse) ? ScreenPaintType.FIELD_ONLY : null;
+                if (getGame().doAction(currentImpulse)) {
+                  repaintType = ScreenPaintType.FIELD_ONLY;
+                  playViewSoundEffect(Sounds.Id.MOVEMENT);
+                } else {
+                  repaintType = null;
+                }
+
                 break;
               default:
                 repaintType = null;
@@ -272,6 +282,12 @@ public abstract class GameRunner {
    * @param dynamicState
    */
   public abstract void onPaintGameScreen(Canvas c, boolean repaintAll, DynamicState dynamicState);
+
+  /**
+   * Called from background thread when a sound must be played.
+   * @param soundId
+   */
+  protected abstract void playViewSoundEffect(final Sounds.Id soundId);
 
   /**
    * called from bg thread when the game is lost

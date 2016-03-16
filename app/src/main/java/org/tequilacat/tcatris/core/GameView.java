@@ -9,23 +9,31 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import static org.tequilacat.tcatris.core.GameRunner.GameAction;
-
 import org.tequilacat.tcatris.MainActivity;
 import org.tequilacat.tcatris.R;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.tequilacat.tcatris.core.GameRunner.GameAction;
+
 public final class GameView extends SurfaceView {
 
   private Tetris _currentGame;
   private Thread _gameThread;
 
+  private boolean _gameStarted;
+  Sounds _sounds;
+
   private GameRunner _gameRunner = new GameRunner() {
     @Override
     public void onPaintGameScreen(Canvas c, boolean repaintAll, DynamicState dynamicState) {
       paintGameScreen(c, repaintAll, dynamicState);
+    }
+
+    @Override
+    protected void playViewSoundEffect(final Sounds.Id soundId) {
+      _sounds.play(soundId);
     }
 
     @Override
@@ -71,13 +79,14 @@ public final class GameView extends SurfaceView {
     initView(context);
   }
 
-  boolean _gameStarted;
 
   /**
    * Real constructor code
    * @param context
    */
   private void initView(Context context) {
+    _sounds = new Sounds(context);
+
     SurfaceHolder _holder = getHolder();
     _holder.addCallback(new SurfaceHolder.Callback() {
       @Override
@@ -93,7 +102,7 @@ public final class GameView extends SurfaceView {
         Debug.print("surfaceChanged");
         layoutGameScreen(width, height);
 
-        if(!_gameStarted) {
+        if (!_gameStarted) {
           _gameStarted = true;
           gameStart(holder);
         }
@@ -321,7 +330,7 @@ public final class GameView extends SurfaceView {
         }
 
         if (found != null) {
-          Debug.print("  ++ " + btn.dragType + ", id = " + pointerId + " [index = " + index + "]");
+          // Debug.print("  ++ " + btn.dragType + ", id = " + pointerId + " [index = " + index + "]");
           found.start(x, y, pointerId);
         }
       }

@@ -1,6 +1,7 @@
 package org.tequilacat.tcatris;
 
 import android.content.SharedPreferences;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.View;
@@ -33,6 +34,9 @@ public class MainActivity extends Activity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+    // the sound vol buttons will control sound of FX
+    setVolumeControlStream(AudioManager.STREAM_MUSIC);
+    
     VisualResources.Defaults = new VisualResources(getResources());
 
     setContentView(R.layout.activity_main);
