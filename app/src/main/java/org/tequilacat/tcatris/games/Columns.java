@@ -233,6 +233,11 @@ public class Columns extends FlatGame {
         c.translate(-dx, -dy);
       }
 
+
+      c.drawRect(-cellSize / 2, -cellSize / 2, cellSize / 2, cellSize / 2, _shiftedCellFill);
+      c.drawRect(-cellSize / 2, -cellSize / 2, cellSize / 2, cellSize / 2, _shiftedCellStroke);
+
+      /*
       if (angle != 0) {
         c.save();
         c.rotate(angle);
@@ -243,7 +248,7 @@ public class Columns extends FlatGame {
 
       if (angle != 0) {
         c.restore();
-      }
+      }*/
     }
 
     c.restore();
