@@ -227,7 +227,6 @@ public class Columns extends FlatGame {
     }
 
     float absValue = Math.abs(value);
-    int DEBUG_OFFSET = 20;
 
     for (int i = 0; i <= fallingShape.size(); i++) {
       int cellIndex = from0 ? i : (fallingShape.size() - 1 - i);
@@ -245,7 +244,7 @@ public class Columns extends FlatGame {
         int x = fallingShape.getX(cellIndex), y = fallingShape.getY(cellIndex);
         // translate to center of the cell
         c.translate(fieldRect.left + x * cellSize + cellSize / 2 + dx * absValue,
-            fieldRect.top + y * cellSize + cellSize / 2 + dy * absValue + DEBUG_OFFSET);
+            fieldRect.top + y * cellSize + cellSize / 2 + dy * absValue);
 
       } else {
         c.translate(-dx, -dy);
