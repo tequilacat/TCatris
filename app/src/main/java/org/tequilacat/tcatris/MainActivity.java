@@ -1,14 +1,19 @@
 package org.tequilacat.tcatris;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.app.Activity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.TwoLineListItem;
 import android.widget.ViewFlipper;
 
 import org.tequilacat.tcatris.core.Debug;
@@ -146,12 +151,12 @@ public class MainActivity extends Activity {
     if(currentView instanceof GameView) {
       // fill scores with current score
       GameView gameView = (GameView) currentView;
+      final Scoreboard.GameScores gs = Scoreboard.instance().getGameScores(
+          gameView.getGame().getDescriptor().getId());
 
+      /*boolean isInTable = false;
       List<String> scores = new ArrayList<>();
       StringBuilder stb = new StringBuilder();
-      Scoreboard.GameScores gs = Scoreboard.instance().getGameScores(
-          gameView.getGame().getDescriptor().getId());
-      boolean isInTable = false;
 
       for (Scoreboard.ScoreEntry scoreEntry : gs.getEntries()) {
         stb.setLength(0);
@@ -170,18 +175,44 @@ public class MainActivity extends Activity {
       if(!isInTable) {
         scores.add("Your score (" + gameView.getGame().getScore() + ") isn't high enough");
       }
-
+    */
       ListView scoreListView = (ListView) findViewById(R.id.lvScoreList);
-      scoreListView.setAdapter(new ArrayAdapter<String>(this,
-        android.R.layout.simple_list_item_1, android.R.id.text1, scores));
 
+      ArrayAdapter<Scoreboard.ScoreEntry> adapter = new ArrayAdapter<Scoreboard.ScoreEntry>(
+          this, android.R.layout.simple_list_item_2,
+          android.R.id.text1, gs.getEntries()) {
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+          View view = super.getView(position, convertView, parent);
+          TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+          TextView text2 = (TextView) view.findViewById(android.R.id.text2);
+
+          Scoreboard.ScoreEntry item = getItem(position);
+          text1.setText(Integer.valueOf(item.getScore()).toString());
+          text2.setText(gs.isCurrent(item) ? getContext().getString(R.string.current_score)
+              : TIMESTAMP_FORMAT.format(new Date(item.getTime())));
+          return view;
+        }
+      };
+      scoreListView.setAdapter(adapter);
+
+      // if current score did not make into roaster show message
+      TextView scoreTooLowText = (TextView) findViewById(R.id.scoreOutOfRoasterText);
+      scoreTooLowText.setText(gs.containsCurrentScore() ? null :
+          String.format(getString(R.string.current_score_too_low), gameView.getGame().getScore()));
+
+      // create back button
       Button scoreBackButton = (Button) findViewById(R.id.scoreBackBtn);
       scoreBackButton.setText(getString(
-          gameView.getGame().getState() == Tetris.LOST ?
-            R.string.btn_play_again : R.string.btn_continue)
+              gameView.getGame().getState() == Tetris.LOST ?
+                  R.string.btn_play_again : R.string.btn_continue)
       );
 
-      // gameView.setPaused(true);
+      // create score view title
+      TextView scoreViewTitle = (TextView) findViewById(R.id.scoreViewTitle);
+      scoreViewTitle.setText(String.format(getString(R.string.top_scores),
+          gameView.getGame().getDescriptor().getLabel()));
+
       showFlipperViewById(R.id.scoreView);
     }
   }

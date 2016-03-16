@@ -149,5 +149,13 @@ public class Scoreboard {
         _currentEntry.setTime(System.currentTimeMillis());
       }
     }
+
+    /**
+     * Whether current score is included into score board
+     * @return
+     */
+    public boolean containsCurrentScore() {
+      return _currentEntry != null && _entries.contains(_currentEntry);
+    }
   }
 }
