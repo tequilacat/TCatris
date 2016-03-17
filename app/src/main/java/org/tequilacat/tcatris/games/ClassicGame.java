@@ -107,7 +107,8 @@ public class ClassicGame extends FlatGame {
     while (curRow >= 0) {
       if(mySqueezable[curRow]) { // have contents
         curRow--; // move forward, keep target pointed to same
-
+        setScore(getScore() + 1);
+        
       }else {
         if(curRow < targetRow) {
           System.arraycopy(field[curRow], 0, field[targetRow], 0, getWidth());
