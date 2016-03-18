@@ -38,21 +38,18 @@ public abstract class Tetris {
     //String gameLabel, String gameDescriptor
     // byte[] gameData, String gameLabel, int fWidth, int fHeight, int nextWidth, int nextHeight){
     // example:
-    // 5:13:1:3
+    // 5:13:
+    // 5:13:specificparams
     _descriptor = descriptor;
     String gameParams = descriptor.getGameParameters();
-    int sep1 = gameParams.indexOf(':'),
-        sep2 = gameParams.indexOf(':', sep1 + 1),
-        sep3 = gameParams.indexOf(':', sep2 + 1),
-        sep4 = gameParams.indexOf(':', sep3 + 1);
 
-    myFieldWidth = Integer.parseInt(gameParams.substring(0, sep1));
-    myFieldHeight = Integer.parseInt(gameParams.substring(sep1 + 1, sep2));
+    int lastSep = gameParams.lastIndexOf(':');
+    int whSep = gameParams.indexOf(':');
 
-//    myNextWidth = Integer.parseInt(gameParams.substring(sep2 + 1, sep3));
-//    myNextHeight = Integer.parseInt(gameParams.substring(sep3 + 1, (sep4 > 0) ? sep4 : gameParams.length()));
+    myFieldWidth = Integer.parseInt(gameParams.substring(0, whSep));
+    myFieldHeight = Integer.parseInt(gameParams.substring(whSep+1, lastSep));
 
-    configure((sep4 < 0) ? null : gameParams.substring(sep4 + 1));
+    configure(gameParams.substring(lastSep + 1));
   }
 
   public GameDescriptor getDescriptor() {

@@ -32,6 +32,8 @@ import java.util.List;
 public class MainActivity extends Activity {
 
   private static final String SCOREBOARD_PARCEL_KEY = "scoreboard_parcel_key";
+  private static final String SCORE_PREFBANK_NAME = "scores";
+  private static final String COMMONPREFS_PREFBANK_NAME = "commonprefs";
 
   private ViewFlipper _viewFlipper;
 
@@ -50,7 +52,7 @@ public class MainActivity extends Activity {
     // fill game list
     GameList.init();
     // init scores from saved preferences
-    SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+    SharedPreferences prefs = getSharedPreferences(SCORE_PREFBANK_NAME, MODE_PRIVATE);
     Scoreboard.setState(prefs.getString(SCOREBOARD_PARCEL_KEY, null));
 
     final List<GameDescriptor> gameTypes = GameList.instance().getGameDescriptors();
@@ -74,7 +76,7 @@ public class MainActivity extends Activity {
   protected void onPause() {
     super.onPause();
 
-    SharedPreferences.Editor prefEditor = getPreferences(MODE_PRIVATE).edit();
+    SharedPreferences.Editor prefEditor = getSharedPreferences(SCORE_PREFBANK_NAME, MODE_PRIVATE).edit();
     prefEditor.putString(SCOREBOARD_PARCEL_KEY, Scoreboard.getState());
     prefEditor.commit();
   }
