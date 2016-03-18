@@ -34,7 +34,7 @@ public class GameList {
 
     for(String mayBeDesc: GameDefinitions) {
       int sep1 = mayBeDesc.indexOf(':'), sep2 = mayBeDesc.indexOf(':', sep1 + 1);
-      _descriptors.add(new GameDescriptor("org.tequilacat.tcatris.games." + mayBeDesc.substring(sep1),
+      _descriptors.add(new GameDescriptor("org.tequilacat.tcatris.games." + mayBeDesc.substring(0, sep1),
           mayBeDesc.substring(sep1 + 1, sep2), mayBeDesc.substring(sep2 + 1)));
     }
   }
