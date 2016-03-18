@@ -41,6 +41,7 @@ public class Columns extends FlatGame {
   private static final int FIGTYPE_ROTATE = 2;
 
   private static Path _shiftedCellPath = new Path();
+  private static Path _arrowPath = new Path();
   private static Paint _shiftedCellFill = new Paint();
   private static Paint _shiftedCellStroke = new Paint();
 
@@ -178,6 +179,12 @@ public class Columns extends FlatGame {
     _shiftedCellPath.lineTo(x0, y0 + cellSize);
     _shiftedCellPath.close();
 
+    _arrowPath = new Path();
+    _arrowPath.moveTo(0.3f * cellSize, 0);
+    _arrowPath.lineTo(-0.2f * cellSize, -0.3f * cellSize);
+    _arrowPath.lineTo(-0.2f * cellSize, 0.3f * cellSize);
+    _arrowPath.close();
+
     // set proportional line width
     _shiftedCellStroke.setStrokeWidth(cellSize / 20);
   }
@@ -227,6 +234,9 @@ public class Columns extends FlatGame {
     }
 
     float absValue = Math.abs(value);
+    //float markerRadius = cellSize / 4;
+
+    //float centerX = 0, centerY = 0;// always assigned in cycle,
 
     for (int i = 0; i <= fallingShape.size(); i++) {
       int cellIndex = from0 ? i : (fallingShape.size() - 1 - i);
@@ -246,26 +256,39 @@ public class Columns extends FlatGame {
         c.translate(fieldRect.left + x * cellSize + cellSize / 2 + dx * absValue,
             fieldRect.top + y * cellSize + cellSize / 2 + dy * absValue);
 
+//        centerX = fieldRect.left + x * cellSize + cellSize / 2 + dx * absValue;
+//        centerY = fieldRect.top + y * cellSize + cellSize / 2 + dy * absValue;
+
       } else {
         c.translate(-dx, -dy);
+
+//        centerX -= dx;
+//        centerY -= dy;
       }
 
+      // small rect in center
+//      c.drawRect(centerX, centerY, centerX + markerRadius, centerY + markerRadius, _shiftedCellFill);
+//      c.drawRect(centerX, centerY, centerX + markerRadius, centerY + markerRadius, _shiftedCellStroke);
 
-      c.drawRect(-cellSize / 2, -cellSize / 2, cellSize / 2, cellSize / 2, _shiftedCellFill);
-      c.drawRect(-cellSize / 2, -cellSize / 2, cellSize / 2, cellSize / 2, _shiftedCellStroke);
+      // simple offset rects fully covering
+//      c.drawRect(-cellSize / 2, -cellSize / 2, cellSize / 2, cellSize / 2, _shiftedCellFill);
+//      c.drawRect(-cellSize / 2, -cellSize / 2, cellSize / 2, cellSize / 2, _shiftedCellStroke);
 
-      /*
+
+      // arrow-like offset rectangular shapes
       if (angle != 0) {
         c.save();
         c.rotate(angle);
       }
 
-      c.drawPath(_shiftedCellPath, _shiftedCellFill);
-      c.drawPath(_shiftedCellPath, _shiftedCellStroke);
+//      c.drawPath(_shiftedCellPath, _shiftedCellFill);
+//      c.drawPath(_shiftedCellPath, _shiftedCellStroke);
+      c.drawPath(_arrowPath, _shiftedCellFill);
+      c.drawPath(_arrowPath, _shiftedCellStroke);
 
       if (angle != 0) {
         c.restore();
-      }*/
+      }
     }
 
     c.restore();
