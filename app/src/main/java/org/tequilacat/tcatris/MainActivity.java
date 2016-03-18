@@ -108,7 +108,10 @@ public class MainActivity extends AppCompatActivity {
       res = true;
 
     }else if(item.getItemId() == R.id.mnu_about) {
-      Toast toast = Toast.makeText(this, BuildConfig.VERSION_NAME, Toast.LENGTH_LONG);
+      Toast toast = Toast.makeText(this,
+          String.format(getText(R.string.txt_about).toString(), BuildConfig.VERSION_NAME),
+          Toast.LENGTH_LONG);
+
       toast.show();
       res = true;
 
