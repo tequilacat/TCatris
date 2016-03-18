@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/mnu_play_again"
+        android:title="@string/btn_play_again"
+        app:showAsAction="ifRoom"
+        />
+    <item
+        android:id="@+id/mnu_back_to_game"
+        android:title="@string/btn_continue"
+        app:showAsAction="ifRoom"/>
+    <item
+        android:id="@+id/mnu_selectgame"
+        android:title="@string/select_game"/>
+    <item
+        android:id="@+id/mnu_settings"
+        android:title="@string/settings"/>
+    <item
+        android:id="@+id/mnu_about"
+        android:title="@string/mnu_about"/>
+    <!--<item android:id="@+id/mnu_help"-->
+    <!--android:title="@string/mnu_help" />-->
+</menu>

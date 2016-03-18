@@ -128,16 +128,6 @@ public final class GameView extends SurfaceView {
 
   public void setGame(Tetris game) {
     _currentGame = game;
-    restartGame();
-  }
-
-  /**
-   * Just reinit current game , no thread work here
-   */
-  public void restartGame() {
-    getGame().initGame();
-    // create new slot
-    Scoreboard.instance().getGameScores(getGame().getDescriptor().getId()).setScore(0);
   }
 
   public Tetris getGame() {
@@ -479,7 +469,7 @@ public final class GameView extends SurfaceView {
     _clickableZones.add(new ClickableZone(ClickableZoneType.DROP_BUTTON, _buttons.get(1).rect));
     _clickableZones.add(new ClickableZone(ClickableZoneType.PAUSE_BUTTON, layoutParams.GameArea));
 
-    Debug.print("do game layout [" + getGame().getDescriptor().getId() + "]");
+    Debug.print("do game view_scores [" + getGame().getDescriptor().getId() + "]");
     getGame().layout(layoutParams);
   }
 
@@ -493,14 +483,14 @@ public final class GameView extends SurfaceView {
     //repaintAll = true; Debug.print("paint all (debug)");
 
     final GameScreenLayout layout = getGame().getGameScreenLayout();
-    //Rect fieldRect = layout.getFieldRect();
+    //Rect fieldRect = view_scores.getFieldRect();
 
     // Debug.print("paint: " + (repaintAll ? "ALL" : "field only"));
 
     if(repaintAll) {
       c.drawColor(VisualResources.Defaults.SCREEN_BG_COLOR);
 
-      //Rect next = layout.getNextShapeRect();
+      //Rect next = view_scores.getNextShapeRect();
       getGame().paintNext(c);
 
       // TODO paint scores as bar

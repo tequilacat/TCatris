@@ -36,7 +36,7 @@ public abstract class AbstractFlatGamePainter {
 
   /**
    * stores size and calculates all things dependent on cell size
-   * @param gameScreenLayout screen layout
+   * @param gameScreenLayout screen view_scores
    */
   public void init(GameScreenLayout gameScreenLayout){
     _gameScreenLayout = gameScreenLayout;
