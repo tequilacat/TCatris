@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <CheckBoxPreference
+        android:key="pref_sound_enable"
+        android:title="@string/pref_sound_enable"
+        android:summary="@string/pref_sound_enable_summ"
+        android:defaultValue="false" />
+
+    <CheckBoxPreference
+        android:key="pref_show_droptarget"
+        android:title="@string/pref_show_droptarget"
+        android:summary="@string/pref_show_droptarget_summ"
+        android:defaultValue="false" />
+</PreferenceScreen>

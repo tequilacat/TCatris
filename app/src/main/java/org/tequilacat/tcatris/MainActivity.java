@@ -1,11 +1,21 @@
 package org.tequilacat.tcatris;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.app.Activity;
+import android.preference.PreferenceFragment;
+import android.preference.PreferenceManager;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -13,6 +23,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.TwoLineListItem;
 import android.widget.ViewFlipper;
 
@@ -29,7 +40,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
   private static final String SCOREBOARD_PARCEL_KEY = "scoreboard_parcel_key";
   private static final String SCORE_PREFBANK_NAME = "scores";
@@ -41,12 +52,19 @@ public class MainActivity extends Activity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+    // set preferences from XML
+    PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+
     // the sound vol buttons will control sound of FX
     setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
     VisualResources.Defaults = new VisualResources(getResources());
 
     setContentView(R.layout.activity_main);
+
+    Toolbar myToolbar = (Toolbar) findViewById(R.id.main_toolbar);
+    setSupportActionBar(myToolbar);
+
     _viewFlipper = (ViewFlipper) findViewById(R.id.viewflipper);
 
     // fill game list
@@ -78,7 +96,34 @@ public class MainActivity extends Activity {
 
     SharedPreferences.Editor prefEditor = getSharedPreferences(SCORE_PREFBANK_NAME, MODE_PRIVATE).edit();
     prefEditor.putString(SCOREBOARD_PARCEL_KEY, Scoreboard.getState());
-    prefEditor.commit();
+    prefEditor.apply();
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    boolean res;
+
+    if(item.getItemId() == R.id.mnu_settings) {
+      showSettings();
+      res = true;
+
+    }else if(item.getItemId() == R.id.mnu_about) {
+      Toast toast = Toast.makeText(this, BuildConfig.VERSION_NAME, Toast.LENGTH_LONG);
+      toast.show();
+      res = true;
+
+    }else {
+      res = super.onOptionsItemSelected(item);
+    }
+
+    return res;
+  }
+
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    MenuInflater inflater = getMenuInflater();
+    inflater.inflate(R.menu.game_menu, menu);
+    return true;
   }
 
   private void runGame(GameDescriptor gameDescriptor) {
@@ -114,6 +159,7 @@ public class MainActivity extends Activity {
 
     if(currentView instanceof GameView) {
       showScores();
+      // showSettings();
 
     }else if(currentView.getId() == R.id.gameSelectorContainer) {
       // let the system process back button
@@ -145,39 +191,12 @@ public class MainActivity extends Activity {
   public void showScores() {
     View currentView = _viewFlipper.getCurrentView();
 
-//    Date d = new Date();
-//    d.setTime(0);
-//    String s = TIMESTAMP_FORMAT.format(d);
-
-    //TIMESTAMP_FORMAT.format()
     if(currentView instanceof GameView) {
       // fill scores with current score
       GameView gameView = (GameView) currentView;
       final Scoreboard.GameScores gs = Scoreboard.instance().getGameScores(
           gameView.getGame().getDescriptor().getId());
 
-      /*boolean isInTable = false;
-      List<String> scores = new ArrayList<>();
-      StringBuilder stb = new StringBuilder();
-
-      for (Scoreboard.ScoreEntry scoreEntry : gs.getEntries()) {
-        stb.setLength(0);
-        stb.append(scores.size()+1).append(": ").append(scoreEntry.getScore());
-
-        if(gs.isCurrent(scoreEntry)) {
-          stb.append(" YOU");
-          isInTable = true;
-        }else{
-          stb.append(" (").append(TIMESTAMP_FORMAT.format(new Date(scoreEntry.getTime()))).append(")");
-        }
-
-        scores.add(stb.toString());
-      }
-
-      if(!isInTable) {
-        scores.add("Your score (" + gameView.getGame().getScore() + ") isn't high enough");
-      }
-    */
       ListView scoreListView = (ListView) findViewById(R.id.lvScoreList);
 
       ArrayAdapter<Scoreboard.ScoreEntry> adapter = new ArrayAdapter<Scoreboard.ScoreEntry>(
@@ -206,14 +225,14 @@ public class MainActivity extends Activity {
       // create back button
       Button scoreBackButton = (Button) findViewById(R.id.scoreBackBtn);
       scoreBackButton.setText(getString(
-              gameView.getGame().getState() == Tetris.LOST ?
-                  R.string.btn_play_again : R.string.btn_continue)
+          gameView.getGame().getState() == Tetris.LOST ?
+            R.string.btn_play_again : R.string.btn_continue)
       );
 
       // create score view title
       TextView scoreViewTitle = (TextView) findViewById(R.id.scoreViewTitle);
       scoreViewTitle.setText(String.format(getString(R.string.top_scores),
-          gameView.getGame().getDescriptor().getLabel()));
+        gameView.getGame().getDescriptor().getLabel()));
 
       showFlipperViewById(R.id.scoreView);
     }
@@ -230,4 +249,9 @@ public class MainActivity extends Activity {
     showFlipperViewById(R.id.gameView);
   }
 
+  private void showSettings() {
+    Intent intent = new Intent();
+    intent.setClass(MainActivity.this, SettingsActivity.class);
+    startActivityForResult(intent, 0);
+  }
 }

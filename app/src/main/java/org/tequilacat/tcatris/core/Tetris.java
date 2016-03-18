@@ -1,5 +1,6 @@
 package org.tequilacat.tcatris.core;
 
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 
 import java.util.EnumSet;
@@ -8,6 +9,9 @@ import java.util.EnumSet;
  * implements game logic
  */
 public abstract class Tetris {
+
+  private boolean _prefEnableSound;
+  private boolean _prefShowDropTarget;
 
   public enum CellState {
     FALLING, SQUEEZED, SETTLED
@@ -184,6 +188,16 @@ public abstract class Tetris {
     }
 
     return sensitivity;
+  }
+
+  /**
+   * Adjusts game settings from preferences instance.
+   * Can be called anytime during lifecycle of a game, at least once before main game cycle.
+   * @param preferences
+   */
+  public void initSettings(SharedPreferences preferences) {
+    _prefEnableSound = preferences.getBoolean("pref_sound_enable", false);
+    _prefShowDropTarget = preferences.getBoolean("pref_show_droptarget", false);
   }
 
   public abstract void paintNext(Canvas g);

@@ -3,6 +3,7 @@ package org.tequilacat.tcatris.core;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.preference.PreferenceManager;
 import android.support.v4.view.MotionEventCompat;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -147,6 +148,8 @@ public final class GameView extends SurfaceView {
     final Tetris game = getGame();
     _dragStates = new GameRunner.DragStates();
     Debug.print("game start");
+
+    game.initSettings(PreferenceManager.getDefaultSharedPreferences(getContext()));
 
     _gameThread = new Thread() {
       @Override
