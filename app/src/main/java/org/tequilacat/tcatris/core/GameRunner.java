@@ -6,7 +6,7 @@ import android.view.SoundEffectConstants;
 import android.view.SurfaceHolder;
 
 /**
- * Worker class processing game cycles according to 
+ * Worker class processing game cycles according to
  */
 public abstract class GameRunner {
 
@@ -271,7 +271,7 @@ public abstract class GameRunner {
       }
 
       long end = System.currentTimeMillis();
-      //Debug.print("Repaint [" + paintType + "] took " + (end - start) + " ms");
+      Debug.print("Repaint [" + paintType + "] took " + (end - start) + " ms");
     }
   }
 
