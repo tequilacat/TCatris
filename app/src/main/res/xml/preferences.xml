@@ -11,4 +11,10 @@
         android:title="@string/pref_show_droptarget"
         android:summary="@string/pref_show_droptarget_summ"
         android:defaultValue="false" />
+
+    <CheckBoxPreference
+        android:key="pref_level_advance"
+        android:title="@string/pref_level_advance"
+        android:summary="@string/pref_level_advance_summ"
+        android:defaultValue="false" />
 </PreferenceScreen>

@@ -146,8 +146,8 @@ public final class GameView extends SurfaceView {
     Debug.print("game start");
 
     SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-    _prefEnableSound = preferences.getBoolean("pref_sound_enable", false);
-    _prefShowDropTarget = preferences.getBoolean("pref_show_droptarget", false);
+    _prefEnableSound = preferences.getBoolean(GameConstants.PREF_SOUND_ENABLE, false);
+    _prefShowDropTarget = preferences.getBoolean(GameConstants.PREF_SHOW_DROPTARGET, false);
     game.initSettings(preferences);
 
     _gameThread = new Thread() {
@@ -495,17 +495,19 @@ public final class GameView extends SurfaceView {
     //Rect fieldRect = view_scores.getFieldRect();
 
     // Debug.print("paint: " + (repaintAll ? "ALL" : "field only"));
+    final Tetris game = getGame();
 
     if(repaintAll) {
       c.drawColor(VisualResources.Defaults.SCREEN_BG_COLOR);
 
       //Rect next = view_scores.getNextShapeRect();
-      getGame().paintNext(c);
+      game.paintNext(c);
 
       // TODO paint scores as bar
       Ui.fillRect(c, _scoreBarArea, VisualResources.Defaults.SCORE_BG_COLOR);
-      Ui.drawText(c, String.format("%s %s: %d", getGame().getDescriptor().getLabel(), getContext().getString(R.string.msg_score),
-              getGame().getScore()), _scoreBarArea.left, _scoreBarArea.top,
+      Ui.drawText(c, String.format("%s %s: %d [%d]",
+              game.getDescriptor().getLabel(), getContext().getString(R.string.msg_score),
+              game.getScore(), game.getLevel()), _scoreBarArea.left, _scoreBarArea.top,
           VisualResources.Defaults.HEADER_FONT_SIZE, VisualResources.Defaults.SCORE_TEXT_COLOR);
 
       // paint buttons

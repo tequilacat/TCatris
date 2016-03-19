@@ -6,9 +6,7 @@ package org.tequilacat.tcatris.games;
 
 import android.graphics.Canvas;
 import android.graphics.Rect;
-import android.util.Size;
 
-import org.tequilacat.tcatris.core.ColorCodes;
 import org.tequilacat.tcatris.core.DragAxis;
 import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameDescriptor;
@@ -27,7 +25,7 @@ public abstract class FlatGame extends Tetris {
   public static final int EMPTY = 0;
 
   protected int field[][];
-  int myShapesThrown;
+  int _shapesThrown;
   private FlatShape myFallingShape;
   private FlatShape myNextShape;
 
@@ -49,7 +47,7 @@ public abstract class FlatGame extends Tetris {
     setScore(0);
     myFallingShape = null;
     myNextShape = null;
-    myShapesThrown = 0;
+    _shapesThrown = 0;
     countStep();
     field = new int[getHeight()][getWidth()];
     for (int i = 0; i < getHeight(); i++) {
@@ -179,15 +177,15 @@ public abstract class FlatGame extends Tetris {
   }
 
   /**
-   * called on each thrown shape to update stats like level, speed etc
+   * Called on each thrown shape to update stats like level, speed etc
    */
   private void countStep() {
-    setLevel(Math.min(myShapesThrown / 20, 10));
+    setLevel(Math.min(1 + _shapesThrown / 10, 10));
   }
 
   @Override
   protected boolean throwInNewShape() {
-    myShapesThrown++;
+    _shapesThrown++;
     countStep();
 
     myFallingShape = myNextShape == null ? createNext() : myNextShape;

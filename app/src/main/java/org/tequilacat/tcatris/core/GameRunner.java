@@ -63,7 +63,7 @@ public abstract class GameRunner {
 
     _dragStates = new DragStates();// now no info on current drag state available to game thread
     // runs
-    long INTERVAL = 500; // millis per step
+    //long INTERVAL = 500; // millis per step
 
     // on 1st iteration just display screen
     _gameThreadAction = GameAction.UNPAUSE;
@@ -179,7 +179,7 @@ public abstract class GameRunner {
           paintScreen(repaintType);
 
           if(nextTickMoment == WAIT_CYCLE) {
-            nextTickMoment = now + INTERVAL;// after debug use
+            nextTickMoment = now + game.getLevelDelayMillis();// after debug use
           }
           if (nextTickMoment <= now) {
             nextTickMoment = now + 1;

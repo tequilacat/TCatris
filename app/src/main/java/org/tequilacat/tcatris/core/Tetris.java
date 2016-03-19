@@ -14,7 +14,8 @@ public abstract class Tetris {
     FALLING, SQUEEZED, SETTLED
   }
 
-  //private boolean myShowNext;
+  private boolean _prefAdvanceLevel = false;
+
   private int myState = NOTINIT;
   public static final int NOTINIT = 0;
   public static final int ACTIVE = 1;
@@ -73,7 +74,29 @@ public abstract class Tetris {
   }
 
   protected void setLevel(int level) {
-    _level = level;
+    if(!_prefAdvanceLevel) {
+      _level = 1;
+    }else if (level < 1) {
+      _level = 1;
+    } else if (level > GameConstants.MAX_LEVEL) {
+      _level = GameConstants.MAX_LEVEL;
+    } else {
+      _level = level;
+    }
+    Debug.print("Set level: " + _level);
+  }
+
+  /**
+   * @return level-dependent interval between movement cycles
+   */
+  public int getLevelDelayMillis() {
+    int interval = getLevel() == 1 ? GameConstants.MAX_DROP_DELAY :
+        (int) (GameConstants.MIN_DROP_DELAY +
+            (GameConstants.MAX_DROP_DELAY - GameConstants.MIN_DROP_DELAY) *
+                (GameConstants.MAX_LEVEL + 1 - getLevel()) / (float) GameConstants.MAX_LEVEL);
+
+    Debug.print("Level delay: " + interval);
+    return interval;
   }
 
   public int getScore() {
@@ -194,6 +217,8 @@ public abstract class Tetris {
    * @param preferences
    */
   public void initSettings(SharedPreferences preferences) {
+    _prefAdvanceLevel = preferences.getBoolean(GameConstants.PREF_LEVEL_ADVANCE, false);
+    setLevel(getLevel());
   }
 
   public abstract void paintNext(Canvas g);
@@ -330,14 +355,6 @@ public abstract class Tetris {
     }
 
     return repaintAll;
-  }
-
-  public int getLevelDelayMS() {
-    int i = (10 - getLevel()) * 90;
-    if (i < 0) {
-      i = 0;
-    }
-    return 100 + i;
   }
 
   public GameScreenLayout getGameScreenLayout() {
