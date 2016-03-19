@@ -2,13 +2,15 @@
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <item
         android:id="@+id/mnu_play_again"
+        android:icon="@drawable/ic_refresh_24dp"
         android:title="@string/btn_play_again"
-        app:showAsAction="ifRoom"
-        />
+        app:showAsAction="ifRoom"/>
     <item
         android:id="@+id/mnu_back_to_game"
+        android:icon="@drawable/ic_arrow_back_24dp"
         android:title="@string/btn_continue"
         app:showAsAction="ifRoom"/>
     <item
@@ -16,6 +18,7 @@
         android:title="@string/select_game"/>
     <item
         android:id="@+id/mnu_settings"
+        android:icon="@drawable/ic_settings_24dp"
         android:title="@string/settings"/>
     <item
         android:id="@+id/mnu_about"
