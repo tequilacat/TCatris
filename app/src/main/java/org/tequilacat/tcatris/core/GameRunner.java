@@ -6,7 +6,7 @@ import android.view.SoundEffectConstants;
 import android.view.SurfaceHolder;
 
 /**
- * Created by avo on 11.03.2016.
+ * Worker class processing game cycles according to 
  */
 public abstract class GameRunner {
 

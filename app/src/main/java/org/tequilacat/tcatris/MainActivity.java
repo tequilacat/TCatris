@@ -22,6 +22,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.TwoLineListItem;
 
 import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.GameDescriptor;
@@ -79,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
     _gameSurfaceFragment = new GameViewFragment();
     _scoreFragment = new ScoreFragment();
 
-    _fragments = Arrays.asList(_gameSelectorFragment,_gameSurfaceFragment,_scoreFragment);
+    _fragments = Arrays.asList(_gameSelectorFragment, _gameSurfaceFragment, _scoreFragment);
 
     FragmentTransaction transaction = getFragmentManager().beginTransaction();
 
@@ -101,14 +102,14 @@ public class MainActivity extends AppCompatActivity {
     FragmentTransaction transaction = getFragmentManager().beginTransaction();
 
     for (Fragment aFragment : _fragments) {
-      if(aFragment!=fragment) {
+      if (aFragment != fragment) {
         transaction.hide(aFragment);
       }
     }
 
-    if(fragment.isShowToolbar()) {
+    if (fragment.isShowToolbar()) {
       getSupportActionBar().show();
-    }else{
+    } else {
       getSupportActionBar().hide();
     }
 
@@ -183,16 +184,8 @@ public class MainActivity extends AppCompatActivity {
   }
 
   public static class GameViewFragment extends MainActivityFragment {
-
-    private GameView _gameView;
-
     public GameViewFragment() {
       super(false);
-    }
-
-    // TODO remove gameView property of GameViewFragment
-    public GameView getGameView() {
-      return _gameView;
     }
 
     @Override
@@ -203,9 +196,7 @@ public class MainActivity extends AppCompatActivity {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-      View view = inflater.inflate(R.layout.view_gamesurface, container, false);
-      _gameView = (GameView) view;
-      return view;
+      return inflater.inflate(R.layout.view_gamesurface, container, false);
     }
   }
 
@@ -247,7 +238,9 @@ public class MainActivity extends AppCompatActivity {
       ListView scoreListView = (ListView) getActivity().findViewById(R.id.lvScoreList);
 
       ArrayAdapter<Scoreboard.ScoreEntry> adapter = new ArrayAdapter<Scoreboard.ScoreEntry>(
-          getActivity(), android.R.layout.simple_list_item_2,
+          getActivity(),
+          //android.R.layout.simple_list_item_2,
+          android.R.layout.simple_list_item_activated_2,
           android.R.id.text1, gs.getEntries()) {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
@@ -259,6 +252,10 @@ public class MainActivity extends AppCompatActivity {
           text1.setText(Integer.valueOf(item.getScore()).toString());
           text2.setText(gs.isCurrent(item) ? getContext().getString(R.string.current_score)
               : TIMESTAMP_FORMAT.format(new Date(item.getTime())));
+
+          TwoLineListItem listItem = (TwoLineListItem) view;
+          listItem.setActivated(gs.isCurrent(item));
+
           return view;
         }
       };
@@ -297,10 +294,10 @@ public class MainActivity extends AppCompatActivity {
     if (itemId == R.id.mnu_back_to_game || itemId == R.id.mnu_play_again) {
       backFromScores();
 
-    }else if (itemId == R.id.mnu_selectgame) {
+    } else if (itemId == R.id.mnu_selectgame) {
       showFragment(_gameSelectorFragment);
 
-    }else if (itemId == R.id.mnu_settings) {
+    } else if (itemId == R.id.mnu_settings) {
       showSettings();
 
     } else if (itemId == R.id.mnu_about) {
@@ -320,7 +317,8 @@ public class MainActivity extends AppCompatActivity {
   private void runGame(GameDescriptor gameDescriptor) {
     setCurrentGame(GameList.instance().createGame(gameDescriptor));
     restartGame();
-    _gameSurfaceFragment.getGameView().setGame(getCurrentGame());
+    GameView gameView = (GameView) findViewById(R.id.gameView);
+    gameView.setGame(getCurrentGame());
     showFragment(_gameSurfaceFragment);
   }
 
@@ -364,11 +362,7 @@ public class MainActivity extends AppCompatActivity {
 
   private void backFromScores() {
     Debug.print("restart/continue after scores");
-
-    GameView gameView = (GameView) _gameSurfaceFragment.getGameView();
-        //findViewById(R.id.gameView);
-
-    if (gameView.getGame().getState() == Tetris.LOST) {
+    if (getCurrentGame().getState() == Tetris.LOST) {
       restartGame();
     }
     showFragment(_gameSurfaceFragment);

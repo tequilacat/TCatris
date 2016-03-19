@@ -155,7 +155,7 @@ public class Ui {
 
   public static void paintScores(Canvas c, int currentScore, int oldScore, int left, int top, int width, int height, float margin) {
 
-    Ui.fillRect(c, left, top, width, height, ColorCodes.black);
+    Ui.fillRect(c, left, top, width, height, VisualResources.Defaults.SCORE_BG_COLOR);
     // compute
     int textHeight = VisualResources.Defaults.HEADER_FONT_SIZE;
     _scoreTextPainter.setTextSize(textHeight);
@@ -229,7 +229,6 @@ public class Ui {
       }
 
       if (oldScoreBarWidth > 0) {
-        //Ui.fillRect(c, oldScoreLeft, oldScoreTop, oldScoreBarWidth, barHeight, ColorCodes.blue);
         Drawable d = VisualResources.Defaults.SCOREBAR_TOPSCORE_DRAWABLE;
         d.setBounds(oldScoreLeft, oldScoreTop, oldScoreLeft + oldScoreBarWidth, oldScoreTop + barHeight);
         d.draw(c);
@@ -248,7 +247,6 @@ public class Ui {
 
       if (curScoreBarWidth > 0) {
         // have
-        //Ui.fillRect(c, curScoreLeft, curScoreTop, curScoreBarWidth, barHeight, ColorCodes.green);
         if (curScoreBarWidth < VisualResources.Defaults.SCOREBAR_MIN_CURRENT_WIDTH) {
           Ui.fillRect(c, curScoreLeft, curScoreTop, curScoreBarWidth, barHeight,
               VisualResources.Defaults.SCOREBAR_CUR_COLOR);

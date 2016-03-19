@@ -89,8 +89,19 @@ public class Scoreboard {
     private List<ScoreEntry> _entries = new ArrayList<>();
     private transient ScoreEntry _currentEntry = null;
 
+    /**
+     *
+     * @return max score that does not belong to the current entry
+     */
     public int getMaxScore() {
-      return _entries.isEmpty() ? 0 : _entries.get(0).getScore();
+      int maxScore = 0;
+      for (ScoreEntry entry : _entries) {
+        if(entry != _currentEntry){
+          maxScore = entry.getScore();
+          break;
+        }
+      }
+      return maxScore; //_entries.isEmpty() ? 0 : _entries.get(0).getScore();
     }
 
     public boolean isCurrent(ScoreEntry entry) {
