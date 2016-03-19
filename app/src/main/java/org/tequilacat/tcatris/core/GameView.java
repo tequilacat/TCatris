@@ -1,6 +1,7 @@
 package org.tequilacat.tcatris.core;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.preference.PreferenceManager;
@@ -23,6 +24,9 @@ public final class GameView extends SurfaceView {
   private Tetris _currentGame;
   private Thread _gameThread;
 
+  private boolean _prefEnableSound;
+  private boolean _prefShowDropTarget;
+
   private boolean _gameStarted;
   Sounds _sounds;
 
@@ -34,7 +38,9 @@ public final class GameView extends SurfaceView {
 
     @Override
     protected void playViewSoundEffect(final Sounds.Id soundId) {
-      _sounds.play(soundId);
+      if(_prefEnableSound) {
+        _sounds.play(soundId);
+      }
     }
 
     @Override
@@ -139,7 +145,10 @@ public final class GameView extends SurfaceView {
     _dragStates = new GameRunner.DragStates();
     Debug.print("game start");
 
-    game.initSettings(PreferenceManager.getDefaultSharedPreferences(getContext()));
+    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+    _prefEnableSound = preferences.getBoolean("pref_sound_enable", false);
+    _prefShowDropTarget = preferences.getBoolean("pref_show_droptarget", false);
+    game.initSettings(preferences);
 
     _gameThread = new Thread() {
       @Override
