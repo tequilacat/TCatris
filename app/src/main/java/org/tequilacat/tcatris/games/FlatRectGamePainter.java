@@ -18,25 +18,9 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
 
   private final boolean _paintFieldBg = true;
 
-  // TODO make distinctive colors bright ones and thus distinguishable from their darker variants
-  private static final int[] _distinctiveColors = new int[]{
-          ColorCodes.lightGray,
-          ColorCodes.red, ColorCodes.blue, ColorCodes.magenta, ColorCodes.orange, ColorCodes.green,
-          ColorCodes.darkRed, ColorCodes.darkGreen, ColorCodes.blue, ColorCodes.cyan, ColorCodes.purple, ColorCodes.orange, ColorCodes.lightBrown
-  };
-
-  private static final int[] _darkerColors;
-
-  static {
-    _darkerColors = new int[_distinctiveColors.length];
-
-    for(int i = 0; i < _darkerColors.length; i++){
-      _darkerColors[i] = ColorCodes.darken(_distinctiveColors[i], 0.2f);
-    }
-  }
-
   public static int getTypeColor(int cellType) {
-    return _distinctiveColors[cellType];
+    return ColorCodes.getDistinctColor(cellType - 1, ColorCodes.Lightness.Normal);
+        //_distinctiveColors[cellType];
   }
 
   @Override
@@ -64,7 +48,8 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
 
       int innerSize = cellSize * 6 / 10;
       int margin = (cellSize - innerSize) >> 1;// fast /2
-      Ui.fillRect(c, x+margin, y+margin, innerSize, innerSize, _darkerColors[state]);
+      final int blockColor = ColorCodes.getDistinctColor(state - 1, ColorCodes.Lightness.Contrast);
+      Ui.fillRect(c, x + margin, y + margin, innerSize, innerSize, blockColor);
 
 //      _cellPainter.setColor(ColorCodes.black);
 //      x += 3;

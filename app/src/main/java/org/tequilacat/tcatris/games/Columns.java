@@ -21,6 +21,7 @@ import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
 import org.tequilacat.tcatris.core.LayoutParameters;
+import org.tequilacat.tcatris.core.VisualResources;
 
 import java.util.EnumSet;
 
@@ -51,7 +52,7 @@ public class Columns extends FlatGame {
     _cellsToSqueeze = new boolean[getHeight()][getWidth()];
 
     _shiftedCellStroke.setStyle(Paint.Style.STROKE);
-    _shiftedCellStroke.setColor(ColorCodes.black);
+    _shiftedCellStroke.setColor(VisualResources.Defaults.FIELD_LINE_COLOR);
 
     _shiftedCellFill.setStyle(Paint.Style.FILL);
     //_shiftedCellFill.setColor(ColorCodes.darkYellow);
