@@ -83,7 +83,7 @@ public abstract class Tetris {
     } else {
       _level = level;
     }
-    Debug.print("Set level: " + _level);
+    //Debug.print("Set level: " + _level);
   }
 
   /**
@@ -95,8 +95,9 @@ public abstract class Tetris {
             (GameConstants.MAX_DROP_DELAY - GameConstants.MIN_DROP_DELAY) *
                 (GameConstants.MAX_LEVEL + 1 - getLevel()) / (float) GameConstants.MAX_LEVEL);
 
-    Debug.print("Level delay: " + interval);
     return interval;
+    //Debug.print("Level delay: " + interval);
+    //return 50000;//interval; // debug
   }
 
   public int getScore() {

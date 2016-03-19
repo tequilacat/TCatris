@@ -5,6 +5,8 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.NinePatchDrawable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,8 +79,9 @@ public class Ui {
   }
 
   private static List<Path> GLYPH_PATHS;
-  private static Paint _buttonGlyphFillPainter = new Paint();
-  private static Paint _buttonGlyphStrokePainter = new Paint();
+  private static final Paint _buttonGlyphFillPainter = new Paint();
+  private static final Paint _buttonGlyphStrokePainter = new Paint();
+  private static final Paint _scoreTextPainter;
 
   /**
    * rotatas path around center which is considered 0.5, 0.5
@@ -97,6 +100,9 @@ public class Ui {
   }
 
   static {
+    _scoreTextPainter = new Paint();
+    _scoreTextPainter.setStyle(Paint.Style.STROKE);
+
     _buttonGlyphStrokePainter.setStyle(Paint.Style.STROKE);
     _buttonGlyphStrokePainter.setStrokeWidth(0.02f);
     _buttonGlyphStrokePainter.setColor(VisualResources.Defaults.GLYPH_STROKE_COLOR);
@@ -145,6 +151,118 @@ public class Ui {
       c.drawPath(path, _buttonGlyphStrokePainter);
       c.restore();
     }
+  }
+
+  public static void paintScores(Canvas c, int currentScore, int oldScore, int left, int top, int width, int height, float margin) {
+
+    Ui.fillRect(c, left, top, width, height, ColorCodes.black);
+    // compute
+    int textHeight = VisualResources.Defaults.HEADER_FONT_SIZE;
+    _scoreTextPainter.setTextSize(textHeight);
+    Paint.FontMetrics fm = _scoreTextPainter.getFontMetrics();
+
+    //float margin = height/8f;
+    int maxBarWidth = (int)(width - margin * 3);
+    int barHeight = (int)(height - margin * 3);
+
+    int curScoreColor;
+    int curScoreCenterY;
+    int curScoreTextLeft;
+    String strCurScore = Integer.toString(currentScore);
+
+    if(oldScore == 0) {
+      // just paint current score as text
+      curScoreColor = VisualResources.Defaults.SCORE_CUR_TEXTCOLOR_ALONE;
+      curScoreCenterY = top + height / 2;
+      curScoreTextLeft = left + (int)margin;
+
+    }else {
+      int oldScoreLeft = (int) (left + margin * 2);
+      int oldScoreTop = (int) (top + margin);
+      int curScoreLeft = (int) (left + margin);
+      int curScoreTop = (int) (top + margin * 2);
+
+      int curScoreBarWidth, oldScoreBarWidth;
+      boolean displayOld = true;
+
+      if (currentScore == 0) {
+        // draw old score bar, old score as top score at right, cur score at left
+        //oldScoreBarWidth = maxBarWidth;
+
+        barHeight = height - (int) (2 * margin);
+        oldScoreBarWidth = width - (int) (2 * margin);
+        oldScoreLeft = left + (int) margin;
+
+        curScoreBarWidth = 0;
+        curScoreColor = VisualResources.Defaults.SCORE_CUR_TEXTCOLOR;
+        curScoreCenterY = oldScoreTop + barHeight / 2;// center old score
+        curScoreTextLeft = oldScoreLeft + (int) margin;
+
+      } else if (oldScore <= currentScore) {
+        // cur score same or bigger - don't draw old score
+        // draw cur score leftmost
+        curScoreColor = VisualResources.Defaults.SCORE_CUR_TEXTCOLOR;
+        displayOld = false;
+        curScoreBarWidth = maxBarWidth;
+        oldScoreBarWidth = oldScore == currentScore ? maxBarWidth : (maxBarWidth * oldScore / currentScore);
+
+        curScoreCenterY = curScoreTop + barHeight / 2;// center old score
+        curScoreTextLeft = curScoreLeft + (int) margin; // draw over bar, have margin
+
+      } else { // old score bigger, display it, display current
+        curScoreColor = VisualResources.Defaults.SCORE_CUR_TEXTCOLOR;
+        oldScoreBarWidth = maxBarWidth;
+        curScoreBarWidth = maxBarWidth * currentScore / oldScore;
+
+        // check if width fits
+        float w = _scoreTextPainter.measureText(strCurScore);
+
+        if (w + margin * 2 <= curScoreBarWidth) {
+          // fits cur score bar, draw inside
+          curScoreTextLeft = curScoreLeft + (int) margin;
+          curScoreCenterY = curScoreTop + barHeight / 2;
+        } else {
+          // draw in topscore bar
+          curScoreTextLeft = curScoreLeft + curScoreBarWidth + (int) margin;
+          curScoreCenterY = oldScoreTop + barHeight / 2;
+        }
+      }
+
+      if (oldScoreBarWidth > 0) {
+        //Ui.fillRect(c, oldScoreLeft, oldScoreTop, oldScoreBarWidth, barHeight, ColorCodes.blue);
+        Drawable d = VisualResources.Defaults.SCOREBAR_TOPSCORE_DRAWABLE;
+        d.setBounds(oldScoreLeft, oldScoreTop, oldScoreLeft + oldScoreBarWidth, oldScoreTop + barHeight);
+        d.draw(c);
+
+        // draw text
+        if (displayOld) {
+          // aligned to right
+          String strScore = Integer.toString(oldScore);
+          float w = _scoreTextPainter.measureText(strScore);
+          _scoreTextPainter.setColor(VisualResources.Defaults.SCORE_TOP_TEXTCOLOR);
+          c.drawText(strScore, oldScoreLeft + oldScoreBarWidth - w - margin,
+              oldScoreTop + (barHeight - textHeight) / 2 - fm.ascent,
+              _scoreTextPainter);
+        }
+      }
+
+      if (curScoreBarWidth > 0) {
+        // have
+        //Ui.fillRect(c, curScoreLeft, curScoreTop, curScoreBarWidth, barHeight, ColorCodes.green);
+        if (curScoreBarWidth < VisualResources.Defaults.SCOREBAR_MIN_CURRENT_WIDTH) {
+          Ui.fillRect(c, curScoreLeft, curScoreTop, curScoreBarWidth, barHeight,
+              VisualResources.Defaults.SCOREBAR_CUR_COLOR);
+        } else {
+          VisualResources.Defaults.SCOREBAR_CURRENT_DRAWABLE.setBounds(
+              curScoreLeft, curScoreTop, curScoreLeft + curScoreBarWidth, curScoreTop + barHeight);
+          VisualResources.Defaults.SCOREBAR_CURRENT_DRAWABLE.draw(c);
+        }
+      }
+    }
+
+    _scoreTextPainter.setColor(curScoreColor);
+    c.drawText(strCurScore, curScoreTextLeft, curScoreCenterY - textHeight / 2 - fm.ascent,
+        _scoreTextPainter);
   }
 }
 

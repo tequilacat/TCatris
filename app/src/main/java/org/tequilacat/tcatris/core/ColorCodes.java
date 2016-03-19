@@ -8,7 +8,6 @@ public class ColorCodes {
     return (r << 16) | (g << 8) | b | 0xff000000;
   }
 
-  /*
   public final static int black = ColorCodes.intValue(0, 0, 0);
 
   public final static int white = ColorCodes.intValue(255, 255, 255);
@@ -34,7 +33,7 @@ public class ColorCodes {
   public final static int darkYellow = ColorCodes.intValue(0x80, 0x80, 0);
   public final static int darkRed = ColorCodes.intValue(0x80, 0, 0);
   public final static int darkCyan = ColorCodes.intValue(0, 0x80, 0x80);
-*/
+
 
   private static final int[] _distinctiveColors, _distinctiveDarkColors, _distinctiveLightColors;
   private static final int[] _distinctiveContrastColors;

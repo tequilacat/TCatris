@@ -1,7 +1,8 @@
 <resources>
     <dimen name="title_font_size">24sp</dimen>
     <dimen name="smalltitle_font_size">18sp</dimen>
-    <dimen name="gameinfo_font_size">24sp</dimen>
+
+    <dimen name="canvas_score_font_size">18sp</dimen>
 
     <dimen name="margin_size">16dp</dimen>
     <dimen name="buttonarea_height">40dp</dimen>

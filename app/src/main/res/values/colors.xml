@@ -9,9 +9,10 @@
     <color name="fieldLineColor">@color/Black</color>
 
     <color name="scoreBgColor">@color/Black</color>
-    <color name="scoreTextColor">@color/Yellow</color>
-    <color name="scoreBarWinColor">@color/YellowGreen</color>
-    <color name="scoreBarColor">@color/DarkBlue</color>
+    <color name="scoreBarCurColor">@color/YellowGreen</color>
+    <color name="scoreTopTextColor">@color/DarkViolet</color>
+    <color name="scoreCurTextColor">@color/Black</color>
+    <color name="scoreCurTextColorAlone">@color/White</color>
 
     <color name="darkShadow">#606060</color>
     <color name="lightShadow">@color/White</color>

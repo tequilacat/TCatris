@@ -28,7 +28,7 @@ public final class GameView extends SurfaceView {
   private boolean _prefShowDropTarget;
 
   private boolean _gameStarted;
-  Sounds _sounds;
+  private Sounds _sounds;
 
   private GameRunner _gameRunner = new GameRunner() {
     @Override
@@ -446,7 +446,20 @@ public final class GameView extends SurfaceView {
   private final List<ClickableZone> _clickableZones = new ArrayList<>();
   private final List<Button> _buttons = new ArrayList<>();
 
-  private Rect _scoreBarArea = new Rect();
+  /**
+   * game statictics area: scores and level
+   */
+  private Rect _gameStatisticsArea = new Rect();
+
+  /**
+   * black area displaying
+   */
+  private Rect _scoreArea = new Rect();
+
+  /**
+   * separates color bars in score area
+   */
+  private float _scoreMargin;
 
   /**
    * computes all areas to be displayed on screen
@@ -461,8 +474,13 @@ public final class GameView extends SurfaceView {
       new DragTrack(DragAxis.HORIZONTAL, (int) (w * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
     };
 
+    _scoreMargin = VisualResources.Defaults.HEADER_FONT_SIZE / 3;
+    int scoreMargin = (int) _scoreMargin;
+    int scoreAreaH = scoreMargin * 7;
+    _scoreArea.set(scoreMargin, scoreMargin, w - scoreMargin, scoreMargin + scoreAreaH);
+
     // compute proportional sizes of painted screen components
-    _scoreBarArea.set(0, 0, w, VisualResources.Defaults.HEADER_FONT_SIZE);
+    _gameStatisticsArea.set(0, 0, w, _scoreArea.bottom);
 
     int buttonHeight = h / 10, buttonY = h - buttonHeight, buttonWidth = w / 5, buttonX = 0;
 
@@ -472,7 +490,7 @@ public final class GameView extends SurfaceView {
     _buttons.add(new Button(DragAxis.HORIZONTAL, Ui.ButtonGlyph.RIGHT, buttonX + buttonWidth * 3, buttonY, buttonWidth * 2, buttonHeight));
 
     LayoutParameters layoutParams = new LayoutParameters();
-    layoutParams.GameArea = new Rect(0, _scoreBarArea.bottom, w, h - buttonHeight - _scoreBarArea.height());
+    layoutParams.GameArea = new Rect(0, _gameStatisticsArea.bottom, w, h - buttonHeight - _gameStatisticsArea.height());
 
     _clickableZones.clear();
     _clickableZones.add(new ClickableZone(ClickableZoneType.DROP_BUTTON, _buttons.get(1).rect));
@@ -500,15 +518,11 @@ public final class GameView extends SurfaceView {
     if(repaintAll) {
       c.drawColor(VisualResources.Defaults.SCREEN_BG_COLOR);
 
-      //Rect next = view_scores.getNextShapeRect();
       game.paintNext(c);
 
-      // TODO paint scores as bar
-      Ui.fillRect(c, _scoreBarArea, VisualResources.Defaults.SCORE_BG_COLOR);
-      Ui.drawText(c, String.format("%s %s: %d [%d]",
-              game.getDescriptor().getLabel(), getContext().getString(R.string.msg_score),
-              game.getScore(), game.getLevel()), _scoreBarArea.left, _scoreBarArea.top,
-          VisualResources.Defaults.HEADER_FONT_SIZE, VisualResources.Defaults.SCORE_TEXT_COLOR);
+      Scoreboard.GameScores gs = Scoreboard.instance().getGameScores(game.getDescriptor().getId());
+      Ui.paintScores(c, game.getScore(), gs.getMaxScore(), _scoreArea.left, _scoreArea.top,
+          _scoreArea.width(), _scoreArea.height(), _scoreMargin);
 
       // paint buttons
       for(Button btn : _buttons) {
@@ -521,6 +535,29 @@ public final class GameView extends SurfaceView {
     }
 
     getGame().paintField(c, dynamicState);
+
+    /*
+    Rect field = layout.getFieldRect();
+    int scoreX = field.left + 20, scoreY = field.top + 20, scoreW = field.width() - scoreX * 2;
+    int scoreH = _scoreArea.height();
+    int dy = scoreH + 20;
+
+    // no scores
+    Ui.paintScores(c, 0, 0, scoreX, scoreY, scoreW, scoreH, _scoreMargin); scoreY+= dy;
+    // no scores and have top scores
+    Ui.paintScores(c, 0, 1000, scoreX, scoreY, scoreW, scoreH, _scoreMargin); scoreY+= dy;
+    // 10, 0 - no top scores
+    Ui.paintScores(c, 10, 0, scoreX, scoreY, scoreW, scoreH, _scoreMargin); scoreY+= dy;
+    // 10, 1000 - less than top, width too small to display over bar
+    Ui.paintScores(c, 10, 1000, scoreX, scoreY, scoreW, scoreH, _scoreMargin); scoreY+= dy;
+    // 800,1000 - enough space to display over bar
+    Ui.paintScores(c, 200, 1000, scoreX, scoreY, scoreW, scoreH, _scoreMargin); scoreY+= dy;
+    // 1000, 1000 - equals
+    Ui.paintScores(c, 1000, 1000, scoreX, scoreY, scoreW, scoreH, _scoreMargin); scoreY+= dy;
+    // 1000, 800 - more than top
+    Ui.paintScores(c, 1000, 800, scoreX, scoreY, scoreW, scoreH, _scoreMargin); scoreY+= dy;
+    */
   }
+
 
 }
