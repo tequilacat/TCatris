@@ -5,6 +5,7 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.NinePatchDrawable;
 
@@ -99,6 +100,18 @@ public class Ui {
     return path;
   }
 
+  private static Path mirror(Path srcPath) {
+    Matrix mtx = new Matrix();
+    //mtx.postTranslate(-0.5f, -0.5f);
+    mtx.preScale(-1, 1);
+    mtx.postTranslate(1, 0);
+    //mtx.postRotate(degree);
+    //mtx.postTranslate(0.5f, 0.5f);
+    Path path = new Path();
+    srcPath.transform(mtx, path);
+    return path;
+  }
+
   static {
     _scoreTextPainter = new Paint();
     _scoreTextPainter.setStyle(Paint.Style.STROKE);
@@ -111,9 +124,24 @@ public class Ui {
     _buttonGlyphFillPainter.setStyle(Paint.Style.FILL);
     _buttonGlyphFillPainter.setColor(VisualResources.Defaults.GLYPH_FILL_COLOR);
 
-    // create buttons
-    GLYPH_PATHS = new ArrayList<>();
+    // create rotate arrow
+    RectF oval = new RectF(0.3f, 0.3f, 0.7f, 0.7f);
+    Path ccwArrow = new Path();
 
+    ccwArrow.moveTo(0.5f, 0f);
+    ccwArrow.lineTo(0.3f, 0.2f);
+    ccwArrow.lineTo(0.5f, 0.4f);
+    ccwArrow.lineTo(0.5f, 0.3f);
+
+    ccwArrow.arcTo(oval, -90, 270);
+    ccwArrow.lineTo(0.1f, 0.5f);
+
+    oval.set(0.1f, 0.1f, 0.9f, 0.9f);
+    ccwArrow.arcTo(oval, 180, -270);
+
+    ccwArrow.lineTo(0.5f, 0f);
+
+    // create straight arrow
     float side = 1;
     // create path
     Path arrowRightPath = new Path();
@@ -126,11 +154,22 @@ public class Ui {
     arrowRightPath.lineTo(side * 0.2f, side * 0.6f);
     arrowRightPath.close();
 
+    // create buttons
+    GLYPH_PATHS = new ArrayList<>();
+
     GLYPH_PATHS.add(rotated(arrowRightPath, 180)); // left
     GLYPH_PATHS.add(arrowRightPath); // right
-    GLYPH_PATHS.add(rotated(arrowRightPath, 45)); // CW
-    GLYPH_PATHS.add(rotated(arrowRightPath, 135)); // CCW
+//    GLYPH_PATHS.add(rotated(arrowRightPath, 45)); // CW
+//    GLYPH_PATHS.add(rotated(arrowRightPath, 135)); // CCW
+    GLYPH_PATHS.add(mirror(ccwArrow)); // CW
+    GLYPH_PATHS.add(ccwArrow); // CCW
+
     GLYPH_PATHS.add(rotated(arrowRightPath, 90)); // DROP
+
+
+
+
+    //ccwArrow.rMoveTo(0.3f, -0.2f);
   }
 
   public static void drawGlyph(Canvas c, Rect bounds, ButtonGlyph glyph){

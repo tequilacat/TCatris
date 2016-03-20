@@ -529,12 +529,29 @@ public final class GameView extends SurfaceView {
             _scoreArea.width(), _scoreArea.height(), _scoreMargin);
 
         // paint buttons
+        int index = 0;
+
         for (Button btn : _buttons) {
           Ui.draw3dRect(c, btn.rect);
-          int side = Math.min(btn.rect.width(), btn.rect.height());
-          Ui.drawGlyph(c, btn.rect.left + (btn.rect.width() - side) / 2,
-              btn.rect.top + (btn.rect.height() - side) / 2,
-              side, side, btn.glyph);
+
+          int btnHeight = btn.rect.height();
+          // compute glyph area
+          int h = (int) (btnHeight * 0.75), top = btn.rect.top + (btnHeight - h) / 2;
+          int left = btn.rect.left, w = btn.rect.width();
+          int side = Math.min(w, h);
+
+          // hardcode axis displayed on button
+          if(index == 1) {
+            // single drop
+            Ui.drawGlyph(c, left + (w - side) / 2, top + (h - side) / 2, side, side, btn.glyph);
+          }else if(index == 0) {
+            Ui.drawGlyph(c, left, top, side, side, Ui.ButtonGlyph.RCCW);
+            Ui.drawGlyph(c, left + w - side, top, side, side, Ui.ButtonGlyph.RCW);
+          } else { // index == 2 - move left right
+            Ui.drawGlyph(c, left, top, side, side, Ui.ButtonGlyph.LEFT);
+            Ui.drawGlyph(c, left + w - side, top, side, side, Ui.ButtonGlyph.RIGHT);
+          }
+          index++;
         }
       }
 

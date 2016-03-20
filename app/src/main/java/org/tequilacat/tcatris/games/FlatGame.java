@@ -180,7 +180,7 @@ public abstract class FlatGame extends Tetris {
    * Called on each thrown shape to update stats like level, speed etc
    */
   private void countStep() {
-    setLevel(Math.min(1 + _shapesThrown / 10, 10));
+    setLevel(Math.min(1 + _shapesThrown / 20, 10));
   }
 
   @Override
