@@ -470,37 +470,38 @@ public final class GameView extends SurfaceView {
    */
   private void layoutGameScreen(int w, int h) {
     // define drag factors (pixels to cell movements) as fraction of screen dimensions
+    if (getGame() != null) {
+      synchronized (_layoutLock) {
+        _tracksByType = new DragTrack[]{
+            new DragTrack(DragAxis.ROTATE, (int) (w * 0.4 / 12)), // rotations per btn
+            new DragTrack(DragAxis.HORIZONTAL, (int) (w * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
+        };
 
-    synchronized (_layoutLock) {
-      _tracksByType = new DragTrack[]{
-          new DragTrack(DragAxis.ROTATE, (int) (w * 0.4 / 12)), // rotations per btn
-          new DragTrack(DragAxis.HORIZONTAL, (int) (w * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
-      };
+        _scoreMargin = VisualResources.Defaults.HEADER_FONT_SIZE / 3;
+        int scoreMargin = (int) _scoreMargin;
+        int scoreAreaH = scoreMargin * 7;
+        _scoreArea.set(scoreMargin, scoreMargin, w - scoreMargin, scoreMargin + scoreAreaH);
 
-      _scoreMargin = VisualResources.Defaults.HEADER_FONT_SIZE / 3;
-      int scoreMargin = (int) _scoreMargin;
-      int scoreAreaH = scoreMargin * 7;
-      _scoreArea.set(scoreMargin, scoreMargin, w - scoreMargin, scoreMargin + scoreAreaH);
+        // compute proportional sizes of painted screen components
+        _gameStatisticsArea.set(0, 0, w, _scoreArea.bottom);
 
-      // compute proportional sizes of painted screen components
-      _gameStatisticsArea.set(0, 0, w, _scoreArea.bottom);
+        int buttonHeight = h / 10, buttonY = h - buttonHeight, buttonWidth = w / 5, buttonX = 0;
 
-      int buttonHeight = h / 10, buttonY = h - buttonHeight, buttonWidth = w / 5, buttonX = 0;
+        _buttons.clear();
+        _buttons.add(new Button(DragAxis.ROTATE, Ui.ButtonGlyph.RCCW, buttonX, buttonY, buttonWidth * 2, buttonHeight));
+        _buttons.add(new Button(null, Ui.ButtonGlyph.DROP, buttonX + buttonWidth * 2, buttonY, buttonWidth, buttonHeight));
+        _buttons.add(new Button(DragAxis.HORIZONTAL, Ui.ButtonGlyph.RIGHT, buttonX + buttonWidth * 3, buttonY, buttonWidth * 2, buttonHeight));
 
-      _buttons.clear();
-      _buttons.add(new Button(DragAxis.ROTATE, Ui.ButtonGlyph.RCCW, buttonX, buttonY, buttonWidth * 2, buttonHeight));
-      _buttons.add(new Button(null, Ui.ButtonGlyph.DROP, buttonX + buttonWidth * 2, buttonY, buttonWidth, buttonHeight));
-      _buttons.add(new Button(DragAxis.HORIZONTAL, Ui.ButtonGlyph.RIGHT, buttonX + buttonWidth * 3, buttonY, buttonWidth * 2, buttonHeight));
+        LayoutParameters layoutParams = new LayoutParameters();
+        layoutParams.GameArea = new Rect(0, _gameStatisticsArea.bottom, w, h - buttonHeight - _gameStatisticsArea.height());
 
-      LayoutParameters layoutParams = new LayoutParameters();
-      layoutParams.GameArea = new Rect(0, _gameStatisticsArea.bottom, w, h - buttonHeight - _gameStatisticsArea.height());
+        _clickableZones.clear();
+        _clickableZones.add(new ClickableZone(ClickableZoneType.DROP_BUTTON, _buttons.get(1).rect));
+        _clickableZones.add(new ClickableZone(ClickableZoneType.PAUSE_BUTTON, layoutParams.GameArea));
 
-      _clickableZones.clear();
-      _clickableZones.add(new ClickableZone(ClickableZoneType.DROP_BUTTON, _buttons.get(1).rect));
-      _clickableZones.add(new ClickableZone(ClickableZoneType.PAUSE_BUTTON, layoutParams.GameArea));
-
-      Debug.print("do game view_scores [" + getGame().getDescriptor().getId() + "]");
-      getGame().layout(layoutParams);
+        Debug.print("do game view_scores [" + getGame().getDescriptor().getId() + "]");
+        getGame().layout(layoutParams);
+      }
     }
   }
 
