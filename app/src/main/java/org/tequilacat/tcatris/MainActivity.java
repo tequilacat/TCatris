@@ -113,6 +113,15 @@ public class MainActivity extends AppCompatActivity {
       getSupportActionBar().hide();
     }
 
+    if(fragment == _gameSelectorFragment) {
+      getSupportActionBar().setTitle(R.string.app_name);
+
+    }else if(fragment == _scoreFragment) {
+      getSupportActionBar().setTitle(String.format("%s: %s",
+          getString(R.string.app_name), getCurrentGame().getDescriptor().getLabel()
+          ));
+    }
+
     transaction.show(fragment);
     transaction.commit();
   }
