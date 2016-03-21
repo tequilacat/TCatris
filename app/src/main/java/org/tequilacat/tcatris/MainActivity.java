@@ -229,9 +229,11 @@ public class MainActivity extends AppCompatActivity {
       super.onCreateOptionsMenu(menu, inflater);
       inflater.inflate(R.menu.score_menu, menu);
 
-      boolean isGameActive = getMainActivity().getCurrentGame().getState() != Tetris.LOST;
-      menu.findItem(R.id.mnu_back_to_game).setVisible(isGameActive);
-      menu.findItem(R.id.mnu_play_again).setVisible(!isGameActive);
+      if (getMainActivity().getCurrentGame() != null) { // fix crash when waking up without a game
+        boolean isGameActive = getMainActivity().getCurrentGame().getState() != Tetris.LOST;
+        menu.findItem(R.id.mnu_back_to_game).setVisible(isGameActive);
+        menu.findItem(R.id.mnu_play_again).setVisible(!isGameActive);
+      }
     }
 
     @Nullable
