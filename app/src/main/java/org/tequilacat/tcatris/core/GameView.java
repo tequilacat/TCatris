@@ -10,9 +10,9 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.ViewConfiguration;
 
 import org.tequilacat.tcatris.MainActivity;
-import org.tequilacat.tcatris.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,6 +93,8 @@ public final class GameView extends SurfaceView {
    */
   private void initView(Context context) {
     _sounds = new Sounds(context);
+    DragTrack.MinDragDistance = ViewConfiguration.get(context).getScaledTouchSlop();
+    DragTrack.MaxTapInterval = ViewConfiguration.get(context).getJumpTapTimeout();
 
     SurfaceHolder _holder = getHolder();
     _holder.addCallback(new SurfaceHolder.Callback() {
@@ -187,6 +189,9 @@ public final class GameView extends SurfaceView {
    * stores info on dragged direction button
    */
   static class DragTrack {
+    /** min dist in pixels required to start drag */
+    public static int MinDragDistance;
+    private static int MaxTapInterval;
 
     private final DragAxis _dragType;
     private final int _stepDistance;
@@ -204,6 +209,8 @@ public final class GameView extends SurfaceView {
     private int _startY;
     private int _lastStoredX;
     private int _lastStoredY;
+    private long _startDragTime;
+    private boolean _considerSingleTap;
 
     public DragTrack(DragAxis dragType, int distance) {
       this._dragType = dragType;
@@ -213,10 +220,10 @@ public final class GameView extends SurfaceView {
 
     public void start(int x, int y, int pointerId) {
       this.pointerId = pointerId;
+      _considerSingleTap = true;
       _startX = x;
       _startY = y;
-//      lastX = x;
-//      lastY = y;
+      _startDragTime = System.currentTimeMillis();
     }
 
     public boolean isStarted() {
@@ -225,29 +232,21 @@ public final class GameView extends SurfaceView {
 
     public void stop() {
       pointerId = -1;
+      _considerSingleTap &=
+          (System.currentTimeMillis() - _startDragTime) < MaxTapInterval;
     }
 
     public void dragTo(int newX, int newY) {
       _lastStoredX = newX;
       _lastStoredY = newY;
 
-      // only X is currently processed
-      /*
-      _lastAction = null;
-      _lastActionCount = 0;
-      int moveCount = (newX - lastX) / _stepDistance;
-
-      if(moveCount != 0) {
-        _lastAction = moveCount > 0 ? _positiveOffsetAction : _negativeOffsetAction;
-        // update lastX, set action to
-        //dragAction = LE
-        _lastActionCount = Math.abs(moveCount);
-        // fix lastX so it's round , so next movement will add its delta to remaining diff
-        lastX += moveCount * _stepDistance;
+      if(_considerSingleTap && Math.abs(_lastStoredX - _startX) > MinDragDistance) {
+        _considerSingleTap = false;
       }
+    }
 
-      return _lastAction;
-      */
+    public boolean isSingleTap() {
+      return _considerSingleTap;
     }
 
     public DragAxis getDragType() {
@@ -345,7 +344,9 @@ public final class GameView extends SurfaceView {
       for (DragTrack track : _tracksByType) {
         if(track.pointerId == pointerId){
           track.stop();
-          //Debug.print("   -- " + track._dragType);
+          if(track.isSingleTap()) {
+            Debug.print("   -- " + track._dragType + " is single");
+          }
           dragHappened = true;
           break;
         }
