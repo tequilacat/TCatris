@@ -93,6 +93,8 @@ public final class GameView extends SurfaceView {
    */
   private void initView(Context context) {
     _sounds = new Sounds(context);
+    // correct system value by 2
+    // TODO test if ok to derive drag ratio as e.g. 4*mindistance per 1 rotate/move
     DragTrack.MinDragDistance = ViewConfiguration.get(context).getScaledTouchSlop();
     DragTrack.MaxTapInterval = ViewConfiguration.get(context).getJumpTapTimeout();
 
@@ -211,6 +213,7 @@ public final class GameView extends SurfaceView {
     private int _lastStoredY;
     private long _startDragTime;
     private boolean _considerSingleTap;
+    private boolean _draggedMinDistance;
 
     public DragTrack(DragAxis dragType, int distance) {
       this._dragType = dragType;
@@ -220,6 +223,7 @@ public final class GameView extends SurfaceView {
 
     public void start(int x, int y, int pointerId) {
       this.pointerId = pointerId;
+      _draggedMinDistance = false;
       _considerSingleTap = true;
       _startX = x;
       _startY = y;
@@ -234,15 +238,25 @@ public final class GameView extends SurfaceView {
       pointerId = -1;
       _considerSingleTap &=
           (System.currentTimeMillis() - _startDragTime) < MaxTapInterval;
+      if(_considerSingleTap) {
+        Debug.print("Singletap: "+Math.abs(_lastStoredX - _startX) +" < " +  MinDragDistance);
+      }
     }
 
-    public void dragTo(int newX, int newY) {
+    public DragProgress dragTo(int newX, int newY) {
+      // if drag ever exceeds minDragDistance we return inProgress
+      DragProgress progress = DragProgress.InProgress;
       _lastStoredX = newX;
       _lastStoredY = newY;
 
-      if(_considerSingleTap && Math.abs(_lastStoredX - _startX) > MinDragDistance) {
+      _draggedMinDistance |= Math.abs(_lastStoredX - _startX) > MinDragDistance;
+
+      if(_considerSingleTap && _draggedMinDistance) {
+      //Math.abs(_lastStoredX - _startX) > MinDragDistance) {
         _considerSingleTap = false;
       }
+
+      return _draggedMinDistance ? DragProgress.InProgress : DragProgress.None;
     }
 
     public boolean isSingleTap() {
@@ -295,6 +309,10 @@ public final class GameView extends SurfaceView {
 
   private DragTrack[] _tracksByType;
 
+  enum DragProgress {
+    None, InProgress, SingleTap
+  }
+
   /**
    * for drag event returns the action for this drag gesture,
    * e.g. dragging specific button left or right will return LEFT or RIGHT actions
@@ -304,9 +322,8 @@ public final class GameView extends SurfaceView {
    * @param event
    * @return whether user has dragged a draggable zone
    */
-  private boolean trackDrag(MotionEvent event) {
-    boolean dragHappened = false;
-    //GameAction dragAction = null;
+  private DragProgress trackDrag(MotionEvent event) {
+    DragProgress dragResult = DragProgress.None;
     int action = MotionEventCompat.getActionMasked(event);
 
     if(action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN){
@@ -345,9 +362,12 @@ public final class GameView extends SurfaceView {
         if(track.pointerId == pointerId){
           track.stop();
           if(track.isSingleTap()) {
-            Debug.print("   -- " + track._dragType + " is single");
+            // Debug.print("   -- " + track._dragType + " is single "+track.);
+            dragResult = DragProgress.SingleTap;
+          } else {
+            dragResult = DragProgress.InProgress;
           }
-          dragHappened = true;
+
           break;
         }
       }
@@ -360,13 +380,14 @@ public final class GameView extends SurfaceView {
           int x = (int) MotionEventCompat.getX(event, pointerIndex), y = (int) MotionEventCompat.getY(event, pointerIndex);
 
           //track.dragTo(x, y);
-          track.dragTo(x, y);
-          dragHappened = true;
+          if(track.dragTo(x, y)==DragProgress.InProgress) {
+            dragResult = DragProgress.InProgress;
+          }
         }
       }
     }
 
-    return dragHappened;
+    return dragResult;
   }
 
   /**
@@ -377,26 +398,34 @@ public final class GameView extends SurfaceView {
   @Override
   public boolean onTouchEvent(MotionEvent event) {
 
-    boolean hasDragged = trackDrag(event);
+    DragProgress dragResult = trackDrag(event);
 
-    if(hasDragged) {
-      sendAction(GameAction.DRAG);
+    int actionId = MotionEventCompat.getActionMasked(event);
 
-    }else {
-      int actionId = MotionEventCompat.getActionMasked(event);
+    if (dragResult == DragProgress.InProgress) {
+      sendAction(GameAction.DRAG, null);
 
-      if (actionId == MotionEvent.ACTION_DOWN || actionId == MotionEvent.ACTION_POINTER_DOWN) {
+    } else if (dragResult == DragProgress.SingleTap ||
+      (actionId == MotionEvent.ACTION_UP || actionId == MotionEvent.ACTION_POINTER_UP)) {
 
-        int index = MotionEventCompat.getActionIndex(event);
-        int eventX = (int) MotionEventCompat.getX(event, index), eventY = (int) MotionEventCompat.getY(event, index);
-        ClickableZone zone = getZoneAt(eventX, eventY);
+      int index = MotionEventCompat.getActionIndex(event);
+      int eventX = (int) MotionEventCompat.getX(event, index), eventY = (int) MotionEventCompat.getY(event, index);
+      ClickableZone zone = getZoneAt(eventX, eventY);
 
-        if (zone != null) {
-          if (zone.type == ClickableZoneType.DROP_BUTTON) {
-            sendAction(GameAction.DROP);
-          } else if (zone.type == ClickableZoneType.PAUSE_BUTTON) {
-            ((MainActivity) getContext()).showScores();
+      if (zone != null) {
+        if (zone.type == ClickableZoneType.DROP_BUTTON) {
+          sendAction(GameAction.DROP, null);
+
+        } else if (zone.type == ClickableZoneType.PAUSE_BUTTON) {
+          ((MainActivity) getContext()).showScores();
+
+        } else if (zone.type == ClickableZoneType.AXIS_BUTTON) {
+//           get the direction and send action with specified impulse
+          GameImpulse impulse = getGame().getAxisImpulse(zone.axis, zone.isPositiveDirection);
+          if (impulse != null) {
+            sendAction(GameAction.IMPULSE, impulse);
           }
+
         }
       }
     }
@@ -408,27 +437,36 @@ public final class GameView extends SurfaceView {
 
   /**
    * udpates drag states and sends it and action to game thread
-   * @param action
+   * @param action action to pass to game thread
+   * @param impulse sent non-null only when action is GameAction.IMPULSE
    */
-  private void sendAction(GameAction action) {
+  private void sendAction(GameAction action, GameImpulse impulse) {
     for (DragTrack dt : _tracksByType) {
       _dragStates.setState(dt.getDragType(), dt.isStarted(), dt.isStarted()? dt.getDragValue() : 0);
     }
 
-    _gameRunner.sendAction(action, _dragStates);
+    _gameRunner.sendAction(action, impulse, _dragStates);
   }
 
   enum ClickableZoneType {
-    DROP_BUTTON, PAUSE_BUTTON,
+    DROP_BUTTON, PAUSE_BUTTON, AXIS_BUTTON,
   }
 
   static class ClickableZone {
+    private DragAxis axis = null;
+    private boolean isPositiveDirection = false;
     public Rect rect;
     public ClickableZoneType type;
 
     public ClickableZone(ClickableZoneType type, Rect rect) {
       this.type = type;
       this.rect = new Rect(rect);
+    }
+
+    public ClickableZone(Rect rect, DragAxis axis, boolean isPositiveDirection) {
+      this(ClickableZoneType.AXIS_BUTTON, rect);
+      this.axis = axis;
+      this.isPositiveDirection = isPositiveDirection;
     }
   }
 
@@ -474,8 +512,11 @@ public final class GameView extends SurfaceView {
     if (getGame() != null) {
       synchronized (_layoutLock) {
         _tracksByType = new DragTrack[]{
-            new DragTrack(DragAxis.ROTATE, (int) (w * 0.4 / 12)), // rotations per btn
-            new DragTrack(DragAxis.HORIZONTAL, (int) (w * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
+          new DragTrack(DragAxis.ROTATE, DragTrack.MinDragDistance * 2), // rotations per btn
+          new DragTrack(DragAxis.HORIZONTAL, (int) (w * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
+
+//            new DragTrack(DragAxis.ROTATE, (int) (w * 0.4 / 12)), // rotations per btn
+//            new DragTrack(DragAxis.HORIZONTAL, (int) (w * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
         };
 
         _scoreMargin = VisualResources.Defaults.HEADER_FONT_SIZE / 3;
@@ -505,7 +546,22 @@ public final class GameView extends SurfaceView {
         _clickableZones.add(new ClickableZone(ClickableZoneType.DROP_BUTTON, _buttons.get(1).rect));
         _clickableZones.add(new ClickableZone(ClickableZoneType.PAUSE_BUTTON, layoutParams.GameArea));
 
-        Debug.print("do game view_scores [" + getGame().getDescriptor().getId() + "]");
+        // add zones for halves of axis buttons
+        // Rotate button
+        Rect btnRect = _buttons.get(0).rect;
+        _clickableZones.add(new ClickableZone(new Rect(btnRect.left, btnRect.top,
+          btnRect.left + btnRect.width() / 2, btnRect.bottom), DragAxis.ROTATE, false));
+        _clickableZones.add(new ClickableZone(new Rect(btnRect.left + btnRect.width() / 2, btnRect.top,
+          btnRect.right, btnRect.bottom), DragAxis.ROTATE, true));
+
+        // Move button
+        btnRect = _buttons.get(2).rect;
+        _clickableZones.add(new ClickableZone(new Rect(btnRect.left, btnRect.top,
+          btnRect.left + btnRect.width() / 2, btnRect.bottom), DragAxis.HORIZONTAL, false));
+        _clickableZones.add(new ClickableZone(new Rect(btnRect.left + btnRect.width() / 2, btnRect.top,
+          btnRect.right, btnRect.bottom), DragAxis.HORIZONTAL, true));
+
+        //Debug.print("do game view_scores [" + getGame().getDescriptor().getId() + "]");
         getGame().layout(layoutParams);
       }
     }

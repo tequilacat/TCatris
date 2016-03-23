@@ -15,6 +15,7 @@ public abstract class GameRunner {
   }
 
   private GameAction _gameThreadAction;
+  private GameImpulse _currentImpulse;
   private final Object _gameChangeLock = new Object();
   private DynamicState _bgThreadDynamicState = new DynamicState(2);
 
@@ -76,6 +77,9 @@ public abstract class GameRunner {
           GameAction curAction = _gameThreadAction;
           _gameThreadAction = null;
 
+          GameImpulse currentImpulse = curAction == GameAction.IMPULSE ? _currentImpulse : null;
+          _currentImpulse = null;
+
           if (getGame().getState() == Tetris.LOST) {
             Debug.print("Lost: show scores, exit game thread");
             onGameLost();
@@ -93,46 +97,13 @@ public abstract class GameRunner {
             repaintType = ScreenPaintType.FULLSCREEN;
 
           } else { // ACTIVE: run action, see consequences
-            GameImpulse currentImpulse = null;
+            //GameImpulse currentImpulse = null;
 
-            for (DragAxis dt : DragAxis.values()) {
-              int pos = dt.ordinal();
+            GameImpulse dragImpulse = processDrag(curAction);
 
-              if (!_dragStates.isActive(dt)) {
-                _dtPositions[pos] = 0;
-                _bgThreadDynamicState.setState(pos, DynamicState.ValueState.NOT_TRACKED, 0);
-
-              } else if (curAction == GameAction.DRAG) {
-                DynamicState.ValueState newState;
-                double newValue;
-                double curValue = _dragStates.getValue(dt);
-                newValue = curValue - _dtPositions[pos];
-                double absDistance = Math.abs(newValue);
-                DragSensitivity sensitivity = getGame().getAxisSensitivity(dt);
-
-                if (absDistance < sensitivity.MIN) {
-                  // don't display if too small
-                  newState = DynamicState.ValueState.NOT_TRACKED;
-                  newValue = 0;
-
-                } else if (absDistance >= sensitivity.MAX) {
-                  // replace DRAG with one of impulses, reset init pos to current
-                  currentImpulse = getGame().getAxisImpulse(dt, newValue >= 0);
-                  curAction = GameAction.IMPULSE;
-                  _dtPositions[pos] = curValue;
-                  newState = DynamicState.ValueState.NOT_TRACKED;
-                  newValue = 0;
-                  //Debug.print("Drag results in game action: " + curAction);
-
-                } else {
-                  // in between - see if allowed, set valid/invalid
-                  GameImpulse impulse = getGame().getAxisImpulse(dt, newValue >= 0);
-                  newState = impulse == null ? DynamicState.ValueState.NOT_TRACKED :
-                      (getGame().isEffective(impulse) ? DynamicState.ValueState.VALID : DynamicState.ValueState.INVALID);
-                }
-
-                _bgThreadDynamicState.setState(pos, newState, newValue);
-              }
+            if(curAction == GameAction.DRAG && dragImpulse != null) {
+              curAction = GameAction.IMPULSE;
+              currentImpulse = dragImpulse;
             }
 
             switch (curAction) {
@@ -198,14 +169,66 @@ public abstract class GameRunner {
   }
 
   /**
+   * Processes drag offsets and finds if they result in another impulse.
+   * @param curAction
+   * @return
+   */
+  private GameImpulse processDrag(GameAction curAction) {
+    GameImpulse currentImpulse = null;
+
+    for (DragAxis dt : DragAxis.values()) {
+      int pos = dt.ordinal();
+
+      if (!_dragStates.isActive(dt)) {
+        _dtPositions[pos] = 0;
+        _bgThreadDynamicState.setState(pos, DynamicState.ValueState.NOT_TRACKED, 0);
+
+      } else if (curAction == GameAction.DRAG) {
+        DynamicState.ValueState newState;
+        double newValue;
+        double curValue = _dragStates.getValue(dt);
+        newValue = curValue - _dtPositions[pos];
+        double absDistance = Math.abs(newValue);
+        DragSensitivity sensitivity = getGame().getAxisSensitivity(dt);
+
+        if (absDistance < sensitivity.MIN) {
+          // don't display if too small
+          newState = DynamicState.ValueState.NOT_TRACKED;
+          newValue = 0;
+
+        } else if (absDistance >= sensitivity.MAX) {
+          // replace DRAG with one of impulses, reset init pos to current
+          currentImpulse = getGame().getAxisImpulse(dt, newValue >= 0);
+          //curAction = GameAction.IMPULSE;
+          _dtPositions[pos] = curValue;
+          newState = DynamicState.ValueState.NOT_TRACKED;
+          newValue = 0;
+          //Debug.print("Drag results in game action: " + curAction);
+
+        } else {
+          // in between - see if allowed, set valid/invalid
+          GameImpulse impulse = getGame().getAxisImpulse(dt, newValue >= 0);
+          newState = impulse == null ? DynamicState.ValueState.NOT_TRACKED :
+            (getGame().isEffective(impulse) ? DynamicState.ValueState.VALID : DynamicState.ValueState.INVALID);
+        }
+
+        _bgThreadDynamicState.setState(pos, newState, newValue);
+      }
+    }
+
+    return currentImpulse;
+  }
+  /**
    * Called from UI thread.
    * Sends action from GUI thread to the thread waking it from waiting
    * @param action
    */
-  public void sendAction(GameAction action, DragStates uiDragStates){
+  public void sendAction(GameAction action, GameImpulse impulse, DragStates uiDragStates){
 
     synchronized (_gameChangeLock) {
       _gameThreadAction = action;
+      _currentImpulse = impulse;
+
       // copy to thread drag control instance from ui-provided instance
       if(uiDragStates != null) {
         _dragStates.setFrom(uiDragStates);
@@ -301,6 +324,6 @@ public abstract class GameRunner {
 
   public void stop() {
     _isRunning = false;
-    sendAction(null, null);
+    sendAction(null, null, null);
   }
 }
