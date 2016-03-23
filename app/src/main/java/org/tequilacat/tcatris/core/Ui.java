@@ -191,6 +191,11 @@ public class Ui {
     }
   }
 
+  public static float getTextWidth(int textSize, String text) {
+    _textPainter.setTextSize(textSize);
+    return _textPainter.measureText(text);
+  }
+
   public static void paintScores(Canvas c, int currentScore, int oldScore, int left, int top, int width, int height, float margin) {
 
     Ui.fillRect(c, left, top, width, height, VisualResources.Defaults.SCORE_BG_COLOR);

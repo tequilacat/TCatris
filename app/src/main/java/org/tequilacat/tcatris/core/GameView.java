@@ -496,6 +496,11 @@ public final class GameView extends SurfaceView {
   private Rect _scoreArea = new Rect();
 
   /**
+   * shows number of current level
+   */
+  private Rect _levelArea = new Rect();
+
+  /**
    * separates color bars in score area
    */
   private float _scoreMargin;
@@ -522,7 +527,14 @@ public final class GameView extends SurfaceView {
         _scoreMargin = VisualResources.Defaults.HEADER_FONT_SIZE / 3;
         int scoreMargin = (int) _scoreMargin;
         int scoreAreaH = scoreMargin * 7;
-        _scoreArea.set(scoreMargin, scoreMargin, w - scoreMargin, scoreMargin + scoreAreaH);
+        int levelX = scoreMargin, statTop = scoreMargin;
+
+        // find width
+        _levelArea.set(levelX, statTop,
+          levelX + (int) Ui.getTextWidth(VisualResources.Defaults.HEADER_FONT_SIZE, "00") + scoreMargin * 2,
+          statTop + scoreAreaH);
+
+        _scoreArea.set(_levelArea.right + scoreMargin, statTop, w - scoreMargin, statTop + scoreAreaH);
 
         // compute proportional sizes of painted screen components
         _gameStatisticsArea.set(0, 0, w, _scoreArea.bottom);
@@ -591,8 +603,12 @@ public final class GameView extends SurfaceView {
         Ui.paintScores(c, game.getScore(), gs.getMaxScore(), _scoreArea.left, _scoreArea.top,
             _scoreArea.width(), _scoreArea.height(), _scoreMargin);
 
+        Ui.fillRect(c, _levelArea, VisualResources.Defaults.SCORE_BG_COLOR);
+        Ui.drawText(c, Integer.toString(game.getLevel()),
+          _levelArea.left + (int)_scoreMargin, _levelArea.top + (int)_scoreMargin,
+          VisualResources.Defaults.HEADER_FONT_SIZE, VisualResources.Defaults.SCORE_CUR_TEXTCOLOR_ALONE);
+
         // paint buttons
-        int index = 0;
 
         for (Button btn : _buttons) {
           int btnHeight = btn.rect.height();
@@ -605,8 +621,6 @@ public final class GameView extends SurfaceView {
             Ui.drawGlyph(c, gX - gliphSide / 2, btn.rect.top + btnHeight / 2 - gliphSide / 2, gliphSide, gliphSide, buttonGlyph);
             gX += glyphAreaWidth;
           }
-
-          index++;
         }
       }
 
