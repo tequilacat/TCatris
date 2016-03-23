@@ -11,10 +11,12 @@ import java.util.EnumSet;
 public abstract class Tetris {
 
   public enum CellState {
-    FALLING, SQUEEZED, SETTLED
+    FALLING, SQUEEZED, SETTLED, FALLEN_SHADOW,
   }
 
   private boolean _prefAdvanceLevel = false;
+  private boolean _prefShowDropTarget = false;
+
 
   private int myState = NOTINIT;
   public static final int NOTINIT = 0;
@@ -68,6 +70,9 @@ public abstract class Tetris {
     internalThrowInNewShape();
   }
 
+  public boolean isPrefShowDropTarget() {
+    return _prefShowDropTarget;
+  }
 
   public int getLevel() {
     return _level;
@@ -219,6 +224,8 @@ public abstract class Tetris {
    */
   public void initSettings(SharedPreferences preferences) {
     _prefAdvanceLevel = preferences.getBoolean(GameConstants.PREF_LEVEL_ADVANCE, false);
+    _prefShowDropTarget = preferences.getBoolean(GameConstants.PREF_SHOW_DROPTARGET, false);
+
     setLevel(getLevel());
   }
 
@@ -293,6 +300,7 @@ public abstract class Tetris {
     _allowedImpulses.clear();
     addEffectiveImpulses(_allowedImpulses);
     //Debug.print(">>> checkEffectiveImpulses: " + _allowedImpulses);
+    onShapeMoved();
   }
 
   private boolean internalDropCurrent(boolean toBottom) {
@@ -304,6 +312,13 @@ public abstract class Tetris {
 
     return moved;
   }
+
+  /**
+   * Called when falling shape has moved.
+   * Override to process new position of falling shape.
+   * Default implementation does nothing.
+   */
+  public void onShapeMoved() { }
 
   /**
    * Implementors must return all impulses

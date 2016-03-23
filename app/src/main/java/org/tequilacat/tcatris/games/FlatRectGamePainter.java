@@ -16,6 +16,10 @@ import org.tequilacat.tcatris.core.VisualResources;
 public class FlatRectGamePainter extends AbstractFlatGamePainter {
   private Paint _cellPainter = new Paint();
 
+  public FlatRectGamePainter() {
+    _cellPainter.setStyle(Paint.Style.STROKE);
+  }
+
   private final boolean _paintFieldBg = true;
 
   public static int getTypeColor(int cellType) {
@@ -43,7 +47,15 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
       Ui.drawRect(c, x, y, cellSize - 1, cellSize - 1, cellColor);
       Ui.fillRect(c, x + 1, y + 1, cellSize - 3, cellSize - 3, getFieldBackground());
 
-    } else { // settled
+    } else if (cellState == Tetris.CellState.FALLEN_SHADOW) {
+      int innerSize = cellSize * 6 / 10;
+      int margin = (cellSize - innerSize) >> 1;// fast /2
+      _cellPainter.setColor(ColorCodes.getDistinctColor(state - 1, ColorCodes.Lightness.Contrast));
+      _cellPainter.setStrokeWidth(VisualResources.Defaults.FALLEN_SHADOW_STROKE_WIDTH);
+      c.drawRect(x + margin, y + margin, x + margin + innerSize, y + margin + innerSize, _cellPainter);
+      //Ui.drawRect(c, x + margin, y + margin, innerSize, innerSize, blockColor);
+
+    } else if (cellState == Tetris.CellState.SETTLED) {
       Ui.fillRect(c, x, y, cellSize - 1, cellSize - 1, cellColor);
 
       int innerSize = cellSize * 6 / 10;
@@ -74,6 +86,8 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
       Ui.fillRect(g, layout.getFieldRect(), getFieldBackground());
 
       _cellPainter.setColor(VisualResources.Defaults.FIELD_LINE_COLOR);
+      _cellPainter.setStrokeWidth(0);
+
       final int cellSize = getGameScreenLayout().getCellSize();
 
       for (int x = left + cellSize; x < right; x += cellSize) {

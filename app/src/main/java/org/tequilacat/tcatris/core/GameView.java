@@ -20,15 +20,11 @@ import java.util.List;
 import static org.tequilacat.tcatris.core.GameRunner.GameAction;
 
 public final class GameView extends SurfaceView {
-
   private Tetris _currentGame;
   private Thread _gameThread;
-
-  private boolean _prefEnableSound;
-  private boolean _prefShowDropTarget;
-
   private boolean _gameStarted;
   private Sounds _sounds;
+  private boolean _prefEnableSound;
 
   private GameRunner _gameRunner = new GameRunner() {
     @Override
@@ -93,8 +89,6 @@ public final class GameView extends SurfaceView {
    */
   private void initView(Context context) {
     _sounds = new Sounds(context);
-    // correct system value by 2
-    // TODO test if ok to derive drag ratio as e.g. 4*mindistance per 1 rotate/move
     DragTrack.MinDragDistance = ViewConfiguration.get(context).getScaledTouchSlop();
     DragTrack.MaxTapInterval = ViewConfiguration.get(context).getJumpTapTimeout();
 
@@ -151,7 +145,6 @@ public final class GameView extends SurfaceView {
 
     SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
     _prefEnableSound = preferences.getBoolean(GameConstants.PREF_SOUND_ENABLE, false);
-    _prefShowDropTarget = preferences.getBoolean(GameConstants.PREF_SHOW_DROPTARGET, false);
     game.initSettings(preferences);
 
     _gameThread = new Thread() {
@@ -221,11 +214,10 @@ public final class GameView extends SurfaceView {
 
     public void stop() {
       pointerId = -1;
-      _considerSingleTap &=
-          (System.currentTimeMillis() - _startDragTime) < MaxTapInterval;
-      if(_considerSingleTap) {
-        Debug.print("Singletap: "+Math.abs(_lastStoredX - _startX) +" < " +  MinDragDistance);
-      }
+      _considerSingleTap &= (System.currentTimeMillis() - _startDragTime) < MaxTapInterval;
+//      if(_considerSingleTap) {
+//        Debug.print("Singletap: "+Math.abs(_lastStoredX - _startX) +" < " +  MinDragDistance);
+//      }
     }
 
     public DragProgress dragTo(int newX, int newY) {

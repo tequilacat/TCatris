@@ -30,6 +30,7 @@ public abstract class FlatGame extends Tetris {
   private FlatShape myNextShape;
 
   private AbstractFlatGamePainter _fieldPainter;
+  private int _finalCurShapeY;
 
   protected FlatGame(GameDescriptor descriptor, AbstractFlatGamePainter fieldPainter) {
     super(descriptor);
@@ -55,7 +56,6 @@ public abstract class FlatGame extends Tetris {
         field[i][j] = EMPTY;
 
     }
-
   }
 
   private static EnumSet<GameImpulse> _CheckedImpulses = EnumSet.of(GameImpulse.MOVE_LEFT, GameImpulse.MOVE_RIGHT,
@@ -91,6 +91,19 @@ public abstract class FlatGame extends Tetris {
     return moved;
   }
 
+  @Override
+  public void onShapeMoved() {
+    // find fallen position of current shape
+    int x = myFallingShape.getCenterX(), nextY = myFallingShape.getCenterY(), y = nextY + 1;
+
+    while (isShapePlaceable(myFallingShape, x, y)) {
+      nextY = y;
+      y++;
+    }
+    // y is last position at which shape can be placed, is current shape Y if shape cannot be moved
+    _finalCurShapeY = nextY;
+  }
+
   public int getCellValue(int i, int j) {
     return field[j][i];
   }
@@ -101,16 +114,26 @@ public abstract class FlatGame extends Tetris {
    * @return
    */
   private boolean isShapePlaceable(FlatShape aShape) {
+    return isShapePlaceable(aShape, aShape.getCenterX(), aShape.getCenterY());
+  }
+
+  /**
+   * Checks whether the given shape fits the field when centered at given coordinates
+   * @param aShape
+   * @param centerX
+   * @param centerY
+   * @return
+   */
+  private boolean isShapePlaceable(FlatShape aShape, int centerX, int centerY) {
     // check for not out of bounds, not not over existing
     boolean canPlace = true;
     int rowCount = getHeight(), colCount = getWidth();
+    int shapeCx = aShape.getCenterX(), shapeCy = aShape.getCenterY();
 
     for (int i = 0; i < aShape.size(); i++) {
-      int x = aShape.getX(i), y = aShape.getY(i);
-      // if( x<0 || y<0 || x>=getWidth() || y>=getHeight()
-      if (x < 0 || x >= colCount // || y>=getHeight()
-        || y >= rowCount
-        || (y >= 0 && field[y][x] != EMPTY)) {
+      int x = aShape.getX(i) - shapeCx + centerX, y = aShape.getY(i) - shapeCy + centerY;
+
+      if (x < 0 || x >= colCount || y >= rowCount || (y >= 0 && field[y][x] != EMPTY)) {
         canPlace = false;
         break;
       }
@@ -122,34 +145,31 @@ public abstract class FlatGame extends Tetris {
   /********************************
    * drops cur shape 1 level , or till bottom.
    *
-   * @returns if really have dropped it any level.
+   * @returns if successfully moved a shape
    ******************************/
   @Override
   protected boolean dropCurrent(boolean tillBottom) {
-    int downStep = 1;
-    boolean dropped = false;
+    //int downStep = 1;
+    //boolean dropped = false;
 
-    if (tillBottom) {
-      myFallingShape.moveBy(0, downStep);
+    // find y pos to settle
+    int finalY = -1, x = myFallingShape.getCenterX(), y = myFallingShape.getCenterY() + 1;
+    boolean shapeMoved = false;
 
-      while (isShapePlaceable(myFallingShape)) {
-        dropped = true;
-        myFallingShape.moveBy(0, downStep);
-      }
-      myFallingShape.moveBy(0, -downStep);
-
-    } else {
-      // move one row down
-      myFallingShape.moveBy(0, downStep);
-
-      if (!isShapePlaceable(myFallingShape)) {
-        // revert
-        myFallingShape.moveBy(0, -downStep);
-      } else {
-        dropped = true;
+    while(isShapePlaceable(myFallingShape, x, y)) {
+      finalY = y;
+      shapeMoved = true;
+      y++;
+      if (!tillBottom) {
+        break;
       }
     }
-    return dropped;
+
+    if(shapeMoved) {
+      myFallingShape.moveTo(x, finalY);
+    }
+
+    return shapeMoved;
   }
 
   @Override
@@ -298,8 +318,6 @@ public abstract class FlatGame extends Tetris {
             isValid = false;
             dx = 0;
           }
-//        RectF rect = new RectF(centerX0, centerY0, centerX0+cellSize, centerY0 + cellSize);
-          //g.drawArc(rect, 0, curValue*360, true, tmpPaint);
         }
       }
 
@@ -340,14 +358,31 @@ public abstract class FlatGame extends Tetris {
     int cols = getWidth(), rows = getHeight();
     Rect fieldRect = getGameScreenLayout().getFieldRect();
     int cellSize = getGameScreenLayout().getCellSize();
+    int shapeCenterY = shape.getCenterY();
 
-    for (int i = 0, len = shape.size(); i < len; i++) {
-      int x = shape.getX(i), y = shape.getY(i);
-      if (x >= 0 && x < cols && y >= 0 && y < rows) {
-        _fieldPainter.paintCellPix(c, fieldRect.left + x * cellSize,
-            fieldRect.top + y * cellSize, shape.getCellType(i), CellState.FALLING);
+    // first draw next figure if allowed
+    if(isPrefShowDropTarget()) {
+      for (int i = 0, len = shape.size(); i < len; i++) {
+        int x = shape.getX(i), y = shape.getY(i) + _finalCurShapeY - shapeCenterY,
+            xPos = fieldRect.left + x * cellSize;
+        if (x >= 0 && x < cols && y >= 0 && y < rows) {
+          if (_finalCurShapeY > shapeCenterY) {
+            _fieldPainter.paintCellPix(c, xPos, fieldRect.top + y * cellSize,
+                shape.getCellType(i), CellState.FALLEN_SHADOW);
+          }
+        }
       }
     }
+
+    for (int i = 0, len = shape.size(); i < len; i++) {
+      int x = shape.getX(i), y = shape.getY(i), xPos = fieldRect.left + x * cellSize;
+
+      if (x >= 0 && x < cols && y >= 0 && y < rows) {
+        _fieldPainter.paintCellPix(c, xPos, fieldRect.top + y * cellSize,
+            shape.getCellType(i), CellState.FALLING);
+      }
+    }
+
   }
 
   /**
