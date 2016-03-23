@@ -587,7 +587,9 @@ public final class GameView extends SurfaceView {
 
         Ui.fillRect(c, _levelArea, VisualResources.Defaults.SCORE_BG_COLOR);
         Ui.drawText(c, Integer.toString(game.getLevel()),
-            _levelArea.left + (int) _scoreMargin, _levelArea.top + (int) _scoreMargin,
+            _levelArea.left + (int) _scoreMargin,
+            (_levelArea.top + _levelArea.bottom)/2,
+            //_levelArea.top + (int) _scoreMargin,
             VisualResources.Defaults.HEADER_FONT_SIZE, VisualResources.Defaults.SCORE_CUR_TEXTCOLOR_ALONE);
 
         // paint buttons

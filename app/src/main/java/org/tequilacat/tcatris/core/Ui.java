@@ -31,11 +31,22 @@ public class Ui {
     _fillPainter.setStyle(Paint.Style.FILL);
   }
 
+  /**
+   * Draws Vertically centered text
+   * @param g
+   * @param text
+   * @param x
+   * @param y
+   * @param fontSize
+   * @param textColor
+   */
   public static void drawText(Canvas g, String text, int x, int y, int fontSize, int textColor) {
     _textPainter.setTextSize(fontSize);
     _textPainter.setColor(textColor);
     Paint.FontMetrics fm = _textPainter.getFontMetrics();
-    g.drawText(text, x, y - fm.ascent, _textPainter);
+    float textH = fm.descent - fm.ascent;
+    g.drawText(text, x, y - textH / 2  - fm.ascent, _textPainter);
+    //g.drawText(text, x, y - fm.ascent, _textPainter);
   }
 
   public static void drawRect(Canvas c, int x, int y, int w, int h, int fillColor) {
