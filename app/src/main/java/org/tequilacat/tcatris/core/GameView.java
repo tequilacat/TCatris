@@ -177,16 +177,6 @@ public final class GameView extends SurfaceView {
     }
   }
 
-/*
-  private static Ui.ButtonGlyph[] BTN_GLYPHS = new Ui.ButtonGlyph[] {
-    Ui.ButtonGlyph.LEFT, Ui.ButtonGlyph.RCCW, Ui.ButtonGlyph.DROP, Ui.ButtonGlyph.RCW, Ui.ButtonGlyph.RIGHT
-  };
-
-  private static final GameAction[] BUTTON_ACTIONS = new GameAction[]{
-    GameAction.LEFT, GameAction.ROTATE_CCW, GameAction.DROP, GameAction.ROTATE_CW, GameAction.RIGHT
-  };
-*/
-
   /**
    * stores info on dragged direction button
    */
@@ -198,15 +188,10 @@ public final class GameView extends SurfaceView {
     private final DragAxis _dragType;
     private final int _stepDistance;
 
-    // pointer id for which this track currently registers offset
+    /**
+     * pointer id for which this track currently registers offset
+     */
     public int pointerId;
-
-    // last coordinates
-    //private int lastX, lastY;
-
-    //GameAction _lastAction;
-    //int _lastActionCount;
-
     private int _startX;
     private int _startY;
     private int _lastStoredX;
@@ -245,15 +230,15 @@ public final class GameView extends SurfaceView {
 
     public DragProgress dragTo(int newX, int newY) {
       // if drag ever exceeds minDragDistance we return inProgress
-      DragProgress progress = DragProgress.InProgress;
       _lastStoredX = newX;
       _lastStoredY = newY;
 
-      _draggedMinDistance |= Math.abs(_lastStoredX - _startX) > MinDragDistance;
-
-      if(_considerSingleTap && _draggedMinDistance) {
-      //Math.abs(_lastStoredX - _startX) > MinDragDistance) {
+      if(!_draggedMinDistance && Math.abs(_lastStoredX - _startX) > MinDragDistance) {
+        // reset dx, dy, allow dragging
+        _draggedMinDistance = true;
         _considerSingleTap = false;
+        _startX = newX;
+        _startY = newY;
       }
 
       return _draggedMinDistance ? DragProgress.InProgress : DragProgress.None;
@@ -319,7 +304,7 @@ public final class GameView extends SurfaceView {
    * after dragging for certain distance.
    *
    * If drag resulted in action, returns this action and _lastDragActionCount is set to number of actions to take
-   * @param event
+   * @param event touch event to process
    * @return whether user has dragged a draggable zone
    */
   private DragProgress trackDrag(MotionEvent event) {
@@ -392,7 +377,7 @@ public final class GameView extends SurfaceView {
 
   /**
    * detects game action from touch event and sends it to game thread
-   * @param event
+   * @param event touch event to process
    * @return true
    */
   @Override
@@ -509,19 +494,16 @@ public final class GameView extends SurfaceView {
 
   /**
    * computes all areas to be displayed on screen
-   * @param w
-   * @param h
+   * @param w width of game screen
+   * @param h height of game screen
    */
   private void layoutGameScreen(int w, int h) {
     // define drag factors (pixels to cell movements) as fraction of screen dimensions
     if (getGame() != null) {
       synchronized (_layoutLock) {
         _tracksByType = new DragTrack[]{
-          new DragTrack(DragAxis.ROTATE, DragTrack.MinDragDistance * 2), // rotations per btn
-          new DragTrack(DragAxis.HORIZONTAL, (int) (w * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
-
-//            new DragTrack(DragAxis.ROTATE, (int) (w * 0.4 / 12)), // rotations per btn
-//            new DragTrack(DragAxis.HORIZONTAL, (int) (w * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
+            new DragTrack(DragAxis.ROTATE, (int) (w * 0.4 / 12)), // rotations per btn
+            new DragTrack(DragAxis.HORIZONTAL, (int) (w * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
         };
 
         _scoreMargin = VisualResources.Defaults.HEADER_FONT_SIZE / 3;
@@ -581,14 +563,14 @@ public final class GameView extends SurfaceView {
 
   /**
    * paints field or whole game screen
-   * @param c
-   * @param repaintAll
+   * @param c canvas to draw on
+   * @param repaintAll whether to redraw all game screen, not only field
    */
   private void paintGameScreen(Canvas c, boolean repaintAll, DynamicState dynamicState) {
     //repaintAll = true; Debug.print("paint all (debug)");
     // synch to avoid painting laid out components and layout itself
     synchronized (_layoutLock) {
-      final GameScreenLayout layout = getGame().getGameScreenLayout();
+      //final GameScreenLayout layout = getGame().getGameScreenLayout();
       //Rect fieldRect = view_scores.getFieldRect();
 
       // Debug.print("paint: " + (repaintAll ? "ALL" : "field only"));
@@ -605,8 +587,8 @@ public final class GameView extends SurfaceView {
 
         Ui.fillRect(c, _levelArea, VisualResources.Defaults.SCORE_BG_COLOR);
         Ui.drawText(c, Integer.toString(game.getLevel()),
-          _levelArea.left + (int)_scoreMargin, _levelArea.top + (int)_scoreMargin,
-          VisualResources.Defaults.HEADER_FONT_SIZE, VisualResources.Defaults.SCORE_CUR_TEXTCOLOR_ALONE);
+            _levelArea.left + (int) _scoreMargin, _levelArea.top + (int) _scoreMargin,
+            VisualResources.Defaults.HEADER_FONT_SIZE, VisualResources.Defaults.SCORE_CUR_TEXTCOLOR_ALONE);
 
         // paint buttons
 

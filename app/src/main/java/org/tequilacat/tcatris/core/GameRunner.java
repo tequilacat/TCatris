@@ -2,7 +2,6 @@ package org.tequilacat.tcatris.core;
 
 import android.graphics.Canvas;
 import android.graphics.Rect;
-import android.view.SoundEffectConstants;
 import android.view.SurfaceHolder;
 
 /**
@@ -170,8 +169,8 @@ public abstract class GameRunner {
 
   /**
    * Processes drag offsets and finds if they result in another impulse.
-   * @param curAction
-   * @return
+   * @param curAction action for which this drag state is actual
+   * @return impulse if drag exceeds certain threshold or null
    */
   private GameImpulse processDrag(GameAction curAction) {
     GameImpulse currentImpulse = null;
