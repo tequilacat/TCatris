@@ -271,7 +271,7 @@ public abstract class GameRunner {
       }
 
       long end = System.currentTimeMillis();
-      Debug.print("Repaint [" + paintType + "] took " + (end - start) + " ms");
+      // Debug.print("Repaint [" + paintType + "] took " + (end - start) + " ms");
     }
   }
 

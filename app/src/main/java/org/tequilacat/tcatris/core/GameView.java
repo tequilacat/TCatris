@@ -433,13 +433,13 @@ public final class GameView extends SurfaceView {
   }
 
   static class Button {
-    public final Ui.ButtonGlyph glyph;
+    public final Ui.ButtonGlyph[] glyphs;
     public final Rect rect;
     public final DragAxis dragType;
 
-    public Button(DragAxis dragType, Ui.ButtonGlyph glyph, int x, int y, int w, int h) {
+    public Button(DragAxis dragType, Ui.ButtonGlyph[] glyphs, int x, int y, int w, int h) {
       this.dragType = dragType;
-      this.glyph = glyph;
+      this.glyphs = glyphs;
       rect = new Rect(x, y, x + w, y + h);
     }
   }
@@ -489,9 +489,14 @@ public final class GameView extends SurfaceView {
         int buttonHeight = h / 10, buttonY = h - buttonHeight, buttonWidth = w / 5, buttonX = 0;
 
         _buttons.clear();
-        _buttons.add(new Button(DragAxis.ROTATE, Ui.ButtonGlyph.RCCW, buttonX, buttonY, buttonWidth * 2, buttonHeight));
-        _buttons.add(new Button(null, Ui.ButtonGlyph.DROP, buttonX + buttonWidth * 2, buttonY, buttonWidth, buttonHeight));
-        _buttons.add(new Button(DragAxis.HORIZONTAL, Ui.ButtonGlyph.RIGHT, buttonX + buttonWidth * 3, buttonY, buttonWidth * 2, buttonHeight));
+        _buttons.add(new Button(DragAxis.ROTATE,
+          new Ui.ButtonGlyph[]{Ui.ButtonGlyph.RCCW, Ui.ButtonGlyph.RCW},
+          buttonX, buttonY, buttonWidth * 2, buttonHeight));
+        _buttons.add(new Button(null, new Ui.ButtonGlyph[]{Ui.ButtonGlyph.DROP},
+          buttonX + buttonWidth * 2, buttonY, buttonWidth, buttonHeight));
+        _buttons.add(new Button(DragAxis.HORIZONTAL,
+          new Ui.ButtonGlyph[]{Ui.ButtonGlyph.LEFT, Ui.ButtonGlyph.RIGHT},
+          buttonX + buttonWidth * 3, buttonY, buttonWidth * 2, buttonHeight));
 
         LayoutParameters layoutParams = new LayoutParameters();
         layoutParams.GameArea = new Rect(0, _gameStatisticsArea.bottom, w, h - buttonHeight - _gameStatisticsArea.height());
@@ -534,25 +539,17 @@ public final class GameView extends SurfaceView {
         int index = 0;
 
         for (Button btn : _buttons) {
-          Ui.draw3dRect(c, btn.rect);
-
           int btnHeight = btn.rect.height();
-          // compute glyph area
-          int h = (int) (btnHeight * 0.75), top = btn.rect.top + (btnHeight - h) / 2;
-          int left = btn.rect.left, w = btn.rect.width();
-          int side = Math.min(w, h);
+          int glyphAreaWidth = btn.rect.width() / btn.glyphs.length, gX = btn.rect.left + glyphAreaWidth / 2;
+          float btnRadius = btnHeight * 0.45f;
+          int gliphSide = (int) (btnRadius * 1.5f);
 
-          // hardcode axis displayed on button
-          if(index == 1) {
-            // single drop
-            Ui.drawGlyph(c, left + (w - side) / 2, top + (h - side) / 2, side, side, btn.glyph);
-          }else if(index == 0) {
-            Ui.drawGlyph(c, left, top, side, side, Ui.ButtonGlyph.RCCW);
-            Ui.drawGlyph(c, left + w - side, top, side, side, Ui.ButtonGlyph.RCW);
-          } else { // index == 2 - move left right
-            Ui.drawGlyph(c, left, top, side, side, Ui.ButtonGlyph.LEFT);
-            Ui.drawGlyph(c, left + w - side, top, side, side, Ui.ButtonGlyph.RIGHT);
+          for (Ui.ButtonGlyph buttonGlyph : btn.glyphs) {
+            Ui.drawRoundButton(c, gX, btn.rect.top + btnHeight / 2, btnRadius, ColorCodes.red, 0xffffbaba);
+            Ui.drawGlyph(c, gX - gliphSide / 2, btn.rect.top + btnHeight / 2 - gliphSide / 2, gliphSide, gliphSide, buttonGlyph);
+            gX += glyphAreaWidth;
           }
+
           index++;
         }
       }

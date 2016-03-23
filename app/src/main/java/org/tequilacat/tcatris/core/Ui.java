@@ -7,7 +7,6 @@ import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.NinePatchDrawable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -300,6 +299,23 @@ public class Ui {
     _scoreTextPainter.setColor(curScoreColor);
     c.drawText(strCurScore, curScoreTextLeft, curScoreCenterY - textHeight / 2 - fm.ascent,
         _scoreTextPainter);
+  }
+
+  private static final RectF _rbOval = new RectF();
+
+  private static void fillCircle(Canvas c, float cx, float cy, float radius, int color) {
+    _fillPainter.setColor(color);
+    _rbOval.set(cx-radius, cy-radius, cx+ radius, cy+ radius);
+    c.drawOval(_rbOval, _fillPainter);
+  }
+
+  static float dx = -0.08f, radRatio = 0.8f;
+  static float dx2 = 0.1f, radRatio2 = 0.9f;
+
+  public static void drawRoundButton(Canvas c, float cx, float cy, float radius, int mainColor, int flashColor) {
+    fillCircle(c, cx, cy, radius, mainColor);
+    fillCircle(c, cx + radius * dx, cy + radius * dx, radius * radRatio, flashColor);
+    fillCircle(c, cx + radius * dx2, cy + radius * dx2, radius * radRatio2, mainColor);
   }
 }
 
