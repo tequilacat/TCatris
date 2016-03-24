@@ -448,13 +448,14 @@ public final class GameView extends SurfaceView {
   }
 
   static class Button {
-    public final Ui.ButtonGlyph[] glyphs;
+    //public final Ui.ButtonGlyph[] glyphs;
+    public final Tetris.ImpulseSemantics[] arrowSemantics;
     public final Rect rect;
     public final DragAxis dragType;
 
-    public Button(DragAxis dragType, Ui.ButtonGlyph[] glyphs, int x, int y, int w, int h) {
+    public Button(DragAxis dragType, Tetris.ImpulseSemantics[] semantics, int x, int y, int w, int h) {
       this.dragType = dragType;
-      this.glyphs = glyphs;
+      this.arrowSemantics = semantics;
       rect = new Rect(x, y, x + w, y + h);
     }
   }
@@ -491,7 +492,9 @@ public final class GameView extends SurfaceView {
    */
   private void layoutGameScreen(int w, int h) {
     // define drag factors (pixels to cell movements) as fraction of screen dimensions
-    if (getGame() != null) {
+    Tetris game = getGame();
+
+    if (game != null) {
       synchronized (_layoutLock) {
         _tracksByType = new DragTrack[]{
             new DragTrack(DragAxis.ROTATE, (int) (w * 0.4 / 12)), // rotations per btn
@@ -505,8 +508,8 @@ public final class GameView extends SurfaceView {
 
         // find width
         _levelArea.set(levelX, statTop,
-          levelX + (int) Ui.getTextWidth(VisualResources.Defaults.HEADER_FONT_SIZE, "00") + scoreMargin * 2,
-          statTop + scoreAreaH);
+            levelX + (int) Ui.getTextWidth(VisualResources.Defaults.HEADER_FONT_SIZE, "00") + scoreMargin * 2,
+            statTop + scoreAreaH);
 
         _scoreArea.set(_levelArea.right + scoreMargin, statTop, w - scoreMargin, statTop + scoreAreaH);
 
@@ -515,15 +518,24 @@ public final class GameView extends SurfaceView {
 
         int buttonHeight = h / 10, buttonY = h - buttonHeight, buttonWidth = w / 5, buttonX = 0;
 
+
         _buttons.clear();
         _buttons.add(new Button(DragAxis.ROTATE,
-          new Ui.ButtonGlyph[]{Ui.ButtonGlyph.RCCW, Ui.ButtonGlyph.RCW},
-          buttonX, buttonY, buttonWidth * 2, buttonHeight));
-        _buttons.add(new Button(null, new Ui.ButtonGlyph[]{Ui.ButtonGlyph.DROP},
-          buttonX + buttonWidth * 2, buttonY, buttonWidth, buttonHeight));
+            new Tetris.ImpulseSemantics[] {
+                game.getImpulseSemantics(game.getAxisImpulse(DragAxis.ROTATE, false)),
+                game.getImpulseSemantics(game.getAxisImpulse(DragAxis.ROTATE, true)),
+            },
+            buttonX, buttonY, buttonWidth * 2, buttonHeight));
+
+        _buttons.add(new Button(null, new Tetris.ImpulseSemantics[]{Tetris.ImpulseSemantics.MOVE_DOWN},
+            buttonX + buttonWidth * 2, buttonY, buttonWidth, buttonHeight));
+
         _buttons.add(new Button(DragAxis.HORIZONTAL,
-          new Ui.ButtonGlyph[]{Ui.ButtonGlyph.LEFT, Ui.ButtonGlyph.RIGHT},
-          buttonX + buttonWidth * 3, buttonY, buttonWidth * 2, buttonHeight));
+            new Tetris.ImpulseSemantics[] {
+                game.getImpulseSemantics(game.getAxisImpulse(DragAxis.HORIZONTAL, false)),
+                game.getImpulseSemantics(game.getAxisImpulse(DragAxis.HORIZONTAL, true)),
+            },
+            buttonX + buttonWidth * 3, buttonY, buttonWidth * 2, buttonHeight));
 
         LayoutParameters layoutParams = new LayoutParameters();
         layoutParams.GameArea = new Rect(0, _gameStatisticsArea.bottom, w, h - buttonHeight - _gameStatisticsArea.height());
@@ -536,16 +548,16 @@ public final class GameView extends SurfaceView {
         // Rotate button
         Rect btnRect = _buttons.get(0).rect;
         _clickableZones.add(new ClickableZone(new Rect(btnRect.left, btnRect.top,
-          btnRect.left + btnRect.width() / 2, btnRect.bottom), DragAxis.ROTATE, false));
+            btnRect.left + btnRect.width() / 2, btnRect.bottom), DragAxis.ROTATE, false));
         _clickableZones.add(new ClickableZone(new Rect(btnRect.left + btnRect.width() / 2, btnRect.top,
-          btnRect.right, btnRect.bottom), DragAxis.ROTATE, true));
+            btnRect.right, btnRect.bottom), DragAxis.ROTATE, true));
 
         // Move button
         btnRect = _buttons.get(2).rect;
         _clickableZones.add(new ClickableZone(new Rect(btnRect.left, btnRect.top,
-          btnRect.left + btnRect.width() / 2, btnRect.bottom), DragAxis.HORIZONTAL, false));
+            btnRect.left + btnRect.width() / 2, btnRect.bottom), DragAxis.HORIZONTAL, false));
         _clickableZones.add(new ClickableZone(new Rect(btnRect.left + btnRect.width() / 2, btnRect.top,
-          btnRect.right, btnRect.bottom), DragAxis.HORIZONTAL, true));
+            btnRect.right, btnRect.bottom), DragAxis.HORIZONTAL, true));
 
         //Debug.print("do game view_scores [" + getGame().getDescriptor().getId() + "]");
         getGame().layout(layoutParams);
@@ -588,13 +600,14 @@ public final class GameView extends SurfaceView {
 
         for (Button btn : _buttons) {
           int btnHeight = btn.rect.height();
-          int glyphAreaWidth = btn.rect.width() / btn.glyphs.length, gX = btn.rect.left + glyphAreaWidth / 2;
+          int glyphAreaWidth = btn.rect.width() / btn.arrowSemantics.length, gX = btn.rect.left + glyphAreaWidth / 2;
           float btnRadius = btnHeight * 0.45f;
           int gliphSide = (int) (btnRadius * 1.5f);
 
-          for (Ui.ButtonGlyph buttonGlyph : btn.glyphs) {
+          for (Tetris.ImpulseSemantics buttonGlyph : btn.arrowSemantics) {
             Ui.drawRoundButton(c, gX, btn.rect.top + btnHeight / 2, btnRadius, ColorCodes.red, 0xffffbaba);
-            Ui.drawGlyph(c, gX - gliphSide / 2, btn.rect.top + btnHeight / 2 - gliphSide / 2, gliphSide, gliphSide, buttonGlyph);
+            Ui.drawGlyph(c, gX - gliphSide / 2, btn.rect.top + btnHeight / 2 - gliphSide / 2,
+                gliphSide, gliphSide, buttonGlyph);
             gX += glyphAreaWidth;
           }
         }

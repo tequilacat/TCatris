@@ -11,9 +11,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
-import android.graphics.RectF;
 
-import org.tequilacat.tcatris.core.ColorCodes;
 import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.DragAxis;
 import org.tequilacat.tcatris.core.DragSensitivity;
@@ -21,6 +19,7 @@ import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
 import org.tequilacat.tcatris.core.LayoutParameters;
+import org.tequilacat.tcatris.core.Tetris;
 import org.tequilacat.tcatris.core.VisualResources;
 
 import java.util.EnumSet;
@@ -163,6 +162,40 @@ public class Columns extends FlatGame {
     }
 
     return impulse;
+  }
+
+  @Override
+  public ImpulseSemantics getImpulseSemantics(GameImpulse impulse) {
+    ImpulseSemantics semantics;
+
+    if(impulse == GameImpulse.MOVE_LEFT) {
+      semantics = ImpulseSemantics.MOVE_LEFT;
+
+    }else if(impulse == GameImpulse.MOVE_RIGHT) {
+      semantics = ImpulseSemantics.MOVE_RIGHT;
+
+    }else if(myGameType == FIGTYPE_ROTATE) {
+      if(impulse == GameImpulse.ROTATE_CW) {
+        semantics = ImpulseSemantics.ROTATE_CW;
+      }else if(impulse == GameImpulse.ROTATE_CCW) {
+        semantics = ImpulseSemantics.ROTATE_CCW;
+      }else {
+        semantics = null;
+      }
+
+    }else {
+      if(impulse == GameImpulse.SHIFT_FORWARD) {
+        semantics = myGameType == FIGTYPE_VERT ? ImpulseSemantics.SHIFT_DOWN : ImpulseSemantics.SHIFT_RIGHT;
+
+      }else if(impulse == GameImpulse.SHIFT_BACKWARD) {
+        semantics = myGameType == FIGTYPE_VERT ? ImpulseSemantics.SHIFT_UP : ImpulseSemantics.SHIFT_LEFT;
+
+      }else {
+        semantics = null;
+      }
+    }
+
+    return semantics;
   }
 
   @Override

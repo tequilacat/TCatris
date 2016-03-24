@@ -9,6 +9,7 @@ import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 
 /**************************************************
@@ -89,6 +90,9 @@ public class Ui {
     LEFT, RIGHT, RCW, RCCW, DROP,
   }
 
+  private static EnumMap<Tetris.ImpulseSemantics, Path> _gameImpulseGlyph
+      = new EnumMap<>(Tetris.ImpulseSemantics.class);
+
   private static List<Path> GLYPH_PATHS;
   private static final Paint _buttonGlyphFillPainter = new Paint();
   private static final Paint _buttonGlyphStrokePainter = new Paint();
@@ -164,11 +168,28 @@ public class Ui {
     arrowRightPath.lineTo(side * 0.2f, side * 0.6f);
     arrowRightPath.close();
 
+    
+    Path shiftRightPath = new Path();
+    shiftRightPath.moveTo(0.4f, 0.3f);
+    shiftRightPath.lineTo(0.5f, 0.3f);
+    shiftRightPath.lineTo(0.5f, 0f);
+    shiftRightPath.lineTo(1f, 0.5f);
+    shiftRightPath.lineTo(0.5f, 1f);
+    shiftRightPath.lineTo(0.5f, 0.7f);
+    shiftRightPath.lineTo(0.4f, 0.7f);
+    shiftRightPath.close();
+
+    shiftRightPath.addRect(0f, 0.3f, 0.15f, 0.7f, Path.Direction.CW);
+    shiftRightPath.addRect(0.2f, 0.3f, 0.35f, 0.7f, Path.Direction.CW);
+
     // create buttons
     GLYPH_PATHS = new ArrayList<>();
 
     GLYPH_PATHS.add(rotated(arrowRightPath, 180)); // left
+
     GLYPH_PATHS.add(arrowRightPath); // right
+    //GLYPH_PATHS.add(shiftRightPath); // right
+
 //    GLYPH_PATHS.add(rotated(arrowRightPath, 45)); // CW
 //    GLYPH_PATHS.add(rotated(arrowRightPath, 135)); // CCW
     GLYPH_PATHS.add(mirror(ccwArrow)); // CW
@@ -177,28 +198,45 @@ public class Ui {
     GLYPH_PATHS.add(rotated(arrowRightPath, 90)); // DROP
 
 
+    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.MOVE_LEFT, rotated(arrowRightPath, 180));
+    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.MOVE_RIGHT, arrowRightPath);
+    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.MOVE_UP, rotated(arrowRightPath, -90));
+    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.MOVE_DOWN, rotated(arrowRightPath, 90));
 
+    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.ROTATE_CCW, ccwArrow);
+    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.ROTATE_CW, mirror(ccwArrow));
+
+    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.SHIFT_RIGHT, shiftRightPath);
+    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.SHIFT_LEFT, mirror(shiftRightPath));
+    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.SHIFT_UP, rotated(shiftRightPath, -90));
+    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.SHIFT_DOWN, rotated(shiftRightPath, 90));
 
     //ccwArrow.rMoveTo(0.3f, -0.2f);
   }
-
+/*
   public static void drawGlyph(Canvas c, Rect bounds, ButtonGlyph glyph){
     drawGlyph(c, bounds.left, bounds.top, bounds.width(), bounds.height(), glyph);
   }
 
-  public static void drawGlyph(Canvas c, int x, int y, int w, int h, ButtonGlyph glyph){
-    // test case: fill rect with green
-    final int index = glyph.ordinal();
+  public static void drawGlyph(Canvas c, int x, int y, int w, int h, ButtonGlyph glyph){*/
+  public static void drawGlyph(Canvas c, int x, int y, int w, int h, Tetris.ImpulseSemantics semantics) {
+    if (semantics != null) {
+      Path path = _gameImpulseGlyph.get(semantics);
 
-    if(index < GLYPH_PATHS.size()) {
-      Path path = GLYPH_PATHS.get(index);
-      c.save();
-      c.translate(x, y);
-      c.scale(w, h);
+      // test case: fill rect with green
+    /*final int index = glyph.ordinal();
 
-      c.drawPath(path, _buttonGlyphFillPainter);
-      c.drawPath(path, _buttonGlyphStrokePainter);
-      c.restore();
+    if (index < GLYPH_PATHS.size()) {
+      Path path = GLYPH_PATHS.get(index);*/
+      if (path != null) {
+        c.save();
+        c.translate(x, y);
+        c.scale(w, h);
+
+        c.drawPath(path, _buttonGlyphFillPainter);
+        c.drawPath(path, _buttonGlyphStrokePainter);
+        c.restore();
+      }
     }
   }
 

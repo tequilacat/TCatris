@@ -14,6 +14,12 @@ public abstract class Tetris {
     FALLING, SQUEEZED, SETTLED, FALLEN_SHADOW,
   }
 
+  public enum ImpulseSemantics {
+    MOVE_LEFT, MOVE_RIGHT, MOVE_UP, MOVE_DOWN,
+    ROTATE_CW, ROTATE_CCW,
+    SHIFT_LEFT, SHIFT_RIGHT, SHIFT_UP, SHIFT_DOWN,
+  }
+
   private boolean _prefAdvanceLevel = false;
   private boolean _prefShowDropTarget = false;
 
@@ -198,6 +204,13 @@ public abstract class Tetris {
    * @return impulse for the game
    */
   public abstract GameImpulse getAxisImpulse(DragAxis axis, boolean positiveDirection);
+
+  /**
+   * Game-specific meaning of an impulse, used to visually represent an impulse to a user.
+   * @param impulse an impulse
+   * @return impulse semantics
+   */
+  public abstract ImpulseSemantics getImpulseSemantics(GameImpulse impulse);
 
   /**
    * defines game-specific sensitivity along specified axis

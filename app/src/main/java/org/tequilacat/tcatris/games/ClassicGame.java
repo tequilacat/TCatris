@@ -9,6 +9,7 @@ import android.graphics.Rect;
 import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
+import org.tequilacat.tcatris.core.Tetris;
 
 import java.util.EnumSet;
 
@@ -59,6 +60,17 @@ public class ClassicGame extends FlatGame {
   public ClassicGame(GameDescriptor descriptor) {
     super(descriptor, new FlatRectGamePainter());
     mySqueezable = new boolean[getHeight()];
+  }
+
+  @Override
+  public ImpulseSemantics getImpulseSemantics(GameImpulse impulse) {
+    switch (impulse){
+      case MOVE_LEFT: return ImpulseSemantics.MOVE_LEFT;
+      case MOVE_RIGHT: return ImpulseSemantics.MOVE_RIGHT;
+      case ROTATE_CW: return ImpulseSemantics.ROTATE_CW;
+      case ROTATE_CCW: return ImpulseSemantics.ROTATE_CCW;
+      default: return null;
+    }
   }
 
   @Override
