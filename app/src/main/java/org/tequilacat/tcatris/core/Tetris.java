@@ -24,6 +24,8 @@ public abstract class Tetris {
   private boolean _prefShowDropTarget = false;
 
 
+  private Scoreboard.GameScores _scoreboard;
+
   private int myState = NOTINIT;
   public static final int NOTINIT = 0;
   public static final int ACTIVE = 1;
@@ -57,7 +59,7 @@ public abstract class Tetris {
     int whSep = gameParams.indexOf(':');
 
     myFieldWidth = Integer.parseInt(gameParams.substring(0, whSep));
-    myFieldHeight = Integer.parseInt(gameParams.substring(whSep+1, lastSep));
+    myFieldHeight = Integer.parseInt(gameParams.substring(whSep + 1, lastSep));
 
     configure(gameParams.substring(lastSep + 1));
   }
@@ -67,6 +69,10 @@ public abstract class Tetris {
   }
 
   public void initGame() {
+    _scoreboard = Scoreboard.instance().getGameScores(getDescriptor().getId());
+    _score = -1;
+    setScore(0); // now it equals so next time setScore will propagate
+
     myState = 0;
     myCanSqueeze = false;
     myLastScored = 0;
@@ -85,9 +91,9 @@ public abstract class Tetris {
   }
 
   protected void setLevel(int level) {
-    if(!_prefAdvanceLevel) {
+    if (!_prefAdvanceLevel) {
       _level = 1;
-    }else if (level < 1) {
+    } else if (level < 1) {
       _level = 1;
     } else if (level > GameConstants.MAX_LEVEL) {
       _level = GameConstants.MAX_LEVEL;
@@ -116,7 +122,10 @@ public abstract class Tetris {
   }
 
   protected void setScore(int score) {
-    _score = score;
+    if (score != _score) {
+      _score = score;
+      _scoreboard.setScore(_score);
+    }
   }
 
   /**
@@ -154,12 +163,13 @@ public abstract class Tetris {
 
   /**
    * Calls implementation of acquireFallenShape() and refreshes available impulses
+   *
    * @return result of called acquireFallenShape()
    */
   private boolean internalAcquireFallenShape() {
     boolean canContinue = acquireFallenShape();
 
-    if(canContinue) {
+    if (canContinue) {
       checkEffectiveImpulses();
     }
 
@@ -173,7 +183,7 @@ public abstract class Tetris {
   private void internalThrowInNewShape() {
     myState = throwInNewShape() ? ACTIVE : LOST;
 
-    if(myState == ACTIVE) {
+    if (myState == ACTIVE) {
       checkEffectiveImpulses();
     }
   }
@@ -191,14 +201,17 @@ public abstract class Tetris {
   /**
    * remaining specs of the gamedef line.
    * default implementation does nothing.
+   *
    * @param specSettings
    */
-  protected void configure(String specSettings) {}
+  protected void configure(String specSettings) {
+  }
 
   public abstract void layout(LayoutParameters layoutParams);
 
   /**
    * returns game impulse for specified axis and direction
+   *
    * @param axis
    * @param positiveDirection used as sign along the axis (>=0 or <0)
    * @return impulse for the game
@@ -207,6 +220,7 @@ public abstract class Tetris {
 
   /**
    * Game-specific meaning of an impulse, used to visually represent an impulse to a user.
+   *
    * @param impulse an impulse
    * @return impulse semantics
    */
@@ -214,16 +228,23 @@ public abstract class Tetris {
 
   /**
    * defines game-specific sensitivity along specified axis
+   *
    * @param axis
    * @return
    */
   public DragSensitivity getAxisSensitivity(DragAxis axis) {
     DragSensitivity sensitivity;
 
-    switch (axis){
-      case ROTATE: sensitivity = DragSensitivity.ROTATE; break;
-      case HORIZONTAL: sensitivity = DragSensitivity.MOVE; break;
-      default: sensitivity = null;break;
+    switch (axis) {
+      case ROTATE:
+        sensitivity = DragSensitivity.ROTATE;
+        break;
+      case HORIZONTAL:
+        sensitivity = DragSensitivity.MOVE;
+        break;
+      default:
+        sensitivity = null;
+        break;
     }
 
     return sensitivity;
@@ -233,6 +254,7 @@ public abstract class Tetris {
    * Adjusts game settings from preferences instance.
    * Can be called anytime during lifecycle of a game, at least once before main game cycle.
    * base implementation should always be called.
+   *
    * @param preferences
    */
   public void initSettings(SharedPreferences preferences) {
@@ -252,12 +274,12 @@ public abstract class Tetris {
 
   /**
    * copies fallen shape into field
+   *
    * @return if all of shape cells are within field (and game can continue)
    */
   protected abstract boolean acquireFallenShape();
 
   /**
-   *
    * @return whether this squeeze leads to next possible squeezes
    */
   protected abstract boolean squeeze();
@@ -266,7 +288,8 @@ public abstract class Tetris {
 
   /**
    * paints game field
-   * @param g canvas to draw to
+   *
+   * @param g            canvas to draw to
    * @param dynamicState props of current move state
    */
   public abstract void paintField(Canvas g, DynamicState dynamicState);
@@ -277,6 +300,7 @@ public abstract class Tetris {
 
   /**
    * add flash or vibration here when some cells are collapsed
+   *
    * @return if squeeze succeeded
    */
   private boolean internalSqueeze() {
@@ -290,17 +314,15 @@ public abstract class Tetris {
   private EnumSet<GameImpulse> _allowedImpulses = EnumSet.noneOf(GameImpulse.class);
 
   /**
-   *
+   * @param impulse action affecting game state
    * @return whether given impulse is understood by the game type
    * and whether it's allowed by field configuration in current state
-   * @param impulse action affecting game state
    */
   public boolean isEffective(GameImpulse impulse) {
     return _allowedImpulses.contains(impulse);
   }
 
   /**
-   *
    * @return impulses supported by this kind of game
    */
   public abstract EnumSet<GameImpulse> getSupportedImpulses();
@@ -319,7 +341,7 @@ public abstract class Tetris {
   private boolean internalDropCurrent(boolean toBottom) {
     boolean moved = dropCurrent(toBottom);
 
-    if(moved) {
+    if (moved) {
       checkEffectiveImpulses();
     }
 
@@ -331,23 +353,25 @@ public abstract class Tetris {
    * Override to process new position of falling shape.
    * Default implementation does nothing.
    */
-  public void onShapeMoved() { }
+  public void onShapeMoved() {
+  }
 
   /**
    * Implementors must return all impulses
+   *
    * @return list of
    */
   public abstract void addEffectiveImpulses(EnumSet<GameImpulse> actionSet);
 
   /**
    * tries to change game state by issuing impulse affecting it.
+   *
    * @param impulse
    * @return whether the state has changed
    */
   public abstract boolean doAction(GameImpulse impulse);
 
   /**
-   *
    * @param doDrop if falling shape must be dropped to bottom
    * @return whether state changes globally and whole screen to be repainted
    */
@@ -364,15 +388,15 @@ public abstract class Tetris {
       repaintAll = true;
       //return true;
 
-    }else if (internalDropCurrent(doDrop)) {
+    } else if (internalDropCurrent(doDrop)) {
       repaintAll = false;
       //return false;
 
-    }else if (!internalAcquireFallenShape()) {
+    } else if (!internalAcquireFallenShape()) {
       myState = LOST;
       repaintAll = true;
 
-    }else {
+    } else {
       myCanSqueeze = computeCanSqueeze();
 
       if (myCanSqueeze) {

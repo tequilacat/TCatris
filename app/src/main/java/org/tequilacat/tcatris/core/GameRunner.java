@@ -125,7 +125,7 @@ public abstract class GameRunner {
                   }
                 }
 
-                Scoreboard.instance().getGameScores(getGame().getDescriptor().getId()).setScore(getGame().getScore());
+                // Scoreboard.instance().getGameScores(getGame().getDescriptor().getId()).setScore(getGame().getScore());
                 repaintType = gameStateChanged ? ScreenPaintType.FULLSCREEN : ScreenPaintType.FIELD_ONLY;
                 nextTickMoment = WAIT_CYCLE; // reset timer to wait next
                 break;

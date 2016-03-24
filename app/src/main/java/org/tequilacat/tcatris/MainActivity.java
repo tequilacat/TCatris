@@ -1,6 +1,8 @@
 package org.tequilacat.tcatris;
 
+import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -8,6 +10,7 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
@@ -18,7 +21,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,32 +35,22 @@ import org.tequilacat.tcatris.core.Tetris;
 import org.tequilacat.tcatris.core.VisualResources;
 
 import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-  private static final String SCOREBOARD_PARCEL_KEY = "scoreboard_parcel_key";
+  private static final String SCOREBOARD_PACKEDPREFS_KEY = "scoreboard_parcel_key";
   private static final String SCORE_PREFBANK_NAME = "scores";
-
-  private GameSelectorFragment _gameSelectorFragment;
-  private GameViewFragment _gameSurfaceFragment;
-  private ScoreFragment _scoreFragment;
-
-  private List<MainActivityFragment> _fragments = new ArrayList<>();
-
-  private Tetris _currentGame;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+    Debug.print("Activity.onCreate");
+
     // set preferences from XML
     PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
-
-    setCurrentGame(null);
 
     // the sound vol buttons will control sound of FX
     setVolumeControlStream(AudioManager.STREAM_MUSIC);
@@ -72,89 +64,156 @@ public class MainActivity extends AppCompatActivity {
 
     // fill game list
     GameList.init();
+
+    // now do only on first time:
+    //if(savedInstanceState ==null) {
+    //  setCurrentGame(null);
     // init scores from saved preferences
     SharedPreferences prefs = getSharedPreferences(SCORE_PREFBANK_NAME, MODE_PRIVATE);
-    Scoreboard.setState(prefs.getString(SCOREBOARD_PARCEL_KEY, null));
+    Scoreboard.setState(prefs.getString(SCOREBOARD_PACKEDPREFS_KEY, null));
 
-    _gameSelectorFragment = new GameSelectorFragment();
-    _gameSurfaceFragment = new GameViewFragment();
-    _scoreFragment = new ScoreFragment();
 
-    _fragments = Arrays.asList(_gameSelectorFragment, _gameSurfaceFragment, _scoreFragment);
+//    Fragment f1 = getFragmentManager().findFragmentByTag(GameSelectorFragment.Id.getId());
+//    Fragment f2 = getFragmentManager().findFragmentByTag(GameViewFragment.Id.getId());
+//    Fragment f3 = getFragmentManager().findFragmentByTag(ScoreFragment.Id.getId());
+//    Debug.print("Fragments: " + f1 + ", " + f2 + ", " + f3);
 
-    FragmentTransaction transaction = getFragmentManager().beginTransaction();
-
-    for (Fragment fragment : _fragments) {
-      transaction.add(R.id.main_layout, fragment);
-      transaction.hide(fragment);
-    }
-    transaction.commit();
-
-    showFragment(_gameSelectorFragment);
+    if(savedInstanceState == null) {
+      showFragment(GameSelectorFragment.Id);
+    }// else consider it's same - already shown
   }
+
 
   /**
    * shows specified fragment
    *
-   * @param fragment
+   * @param fragmentId fragment ID to show
    */
-  private void showFragment(MainActivityFragment fragment) {
+  private MainActivityFragment showFragment(MainActivityFragment.FragmentId fragmentId) {
+
+  //  Debug.print("showFragment(" + fragmentId.getId() + ")");
     FragmentTransaction transaction = getFragmentManager().beginTransaction();
 
-    for (Fragment aFragment : _fragments) {
-      if (aFragment != fragment) {
-        transaction.hide(aFragment);
-      }
+    MainActivityFragment fragment = (MainActivityFragment) getFragmentManager().findFragmentByTag(fragmentId.getId());
+
+    if(fragment == null) {
+      fragment = fragmentId.create();
+//      Debug.print("   >> Create fragment " + fragmentId);
     }
 
-    if (fragment.isShowToolbar()) {
-      getSupportActionBar().show();
-    } else {
-      getSupportActionBar().hide();
-    }
-
-    if(fragment == _gameSelectorFragment) {
+    /*if (fragment instanceof GameSelectorFragment) {
       getSupportActionBar().setTitle(R.string.app_name);
 
-    }else if(fragment == _scoreFragment) {
+    } else if (fragment instanceof ScoreFragment) {
       getSupportActionBar().setTitle(String.format("%s: %s",
           getString(R.string.app_name), getCurrentGame().getDescriptor().getLabel()
-          ));
+      ));
+    }
+    */
+    transaction.replace(R.id.main_layout, fragment, fragmentId.getId());
+    transaction.commit();
+    return fragment;
+  }
+
+  private PersistentFragment getData() {
+    FragmentManager fm = getFragmentManager();
+    PersistentFragment fragment = (PersistentFragment) fm.findFragmentByTag(
+        PersistentFragment.Id.getId());
+
+    if (fragment == null) {
+      fragment = new PersistentFragment();
+      fragment.setRetainInstance(true);
+      fm.beginTransaction().add(fragment, PersistentFragment.Id.getId()).commit();
     }
 
-    transaction.show(fragment);
-    transaction.commit();
-  }
-
-  public Tetris getCurrentGame() {
-    return _currentGame;
-  }
-
-  public void setCurrentGame(Tetris currentGame) {
-    _currentGame = currentGame;
+    return fragment;
   }
 
   public abstract static class MainActivityFragment extends Fragment {
-    private boolean _showToolbar;
+    private final boolean _manageToolbar;
+    private final boolean _showToolbar;
+
+    public enum FragmentId {
+      GameSelector(GameSelectorFragment.class.getName()),
+      ScoreList(ScoreFragment.class.getName()),
+      GameView(GameViewFragment.class.getName()),
+      Persistent(PersistentFragment.class.getName());
+
+      private String _className;
+
+      FragmentId(String className) {
+        _className = className;
+      }
+
+      public MainActivityFragment create() {
+        try {
+          return (MainActivityFragment)Class.forName(_className).newInstance();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+        return null;
+      }
+
+      public String getId() {
+        return name();
+      }
+    }
+
+    public MainActivityFragment() {
+      _showToolbar = false;
+      _manageToolbar = false;
+    }
 
     public MainActivityFragment(boolean showToolbar) {
       _showToolbar = showToolbar;
+      _manageToolbar = true;
     }
 
     public boolean isShowToolbar() {
       return _showToolbar;
     }
 
-    public void setShowToolbar(boolean showToolbar) {
-      _showToolbar = showToolbar;
-    }
-
     protected MainActivity getMainActivity() {
       return (MainActivity) getActivity();
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+      super.onActivityCreated(savedInstanceState);
+
+      if(_manageToolbar) {
+        ActionBar actionBar = getMainActivity().getSupportActionBar();
+
+        if(actionBar != null) {
+          Debug.print("Fragment " + getClass().getName() + ".toobar = " + (isShowToolbar() ? "show" : "hide"));
+
+          if (isShowToolbar()) {
+            actionBar.show();
+          } else {
+            actionBar.hide();
+          }
+        }
+      }
+    }
+  }
+
+  public static class PersistentFragment extends MainActivityFragment {
+    public static final FragmentId Id = FragmentId.Persistent;
+
+    private Tetris _game;
+
+    public Tetris getCurrentGame() {
+      return _game;
+    }
+
+    public void setCurrentGame(Tetris game) {
+      _game = game;
     }
   }
 
   public static class GameSelectorFragment extends MainActivityFragment {
+    public static final FragmentId Id = FragmentId.GameSelector;
+
     public GameSelectorFragment() {
       super(true);
     }
@@ -162,12 +221,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
+      //Debug.print("GameSelectorFragment.onCreate");
       setHasOptionsMenu(true);
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
       super.onCreateOptionsMenu(menu, inflater);
+     // Debug.print("GameSelectorFragment.onCreateOptionsMenu");
       inflater.inflate(R.menu.gameselector_menu, menu);
     }
 
@@ -193,6 +254,8 @@ public class MainActivity extends AppCompatActivity {
   }
 
   public static class GameViewFragment extends MainActivityFragment {
+    public static final FragmentId Id = FragmentId.GameView;
+
     public GameViewFragment() {
       super(false);
     }
@@ -200,37 +263,45 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
+     // Debug.print("GameViewFragment.onCreate");
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-      return inflater.inflate(R.layout.view_gamesurface, container, false);
+      GameView view = (GameView) inflater.inflate(R.layout.view_gamesurface, container, false);
+      view.setGame(getMainActivity().getData().getCurrentGame());
+      return view;
     }
   }
 
   public static class ScoreFragment extends MainActivityFragment {
-
+    public static final FragmentId Id = FragmentId.ScoreList;
     private static java.text.DateFormat TIMESTAMP_FORMAT =
         DateFormat.getDateTimeInstance();
 
     public ScoreFragment() {
       super(true);
+      //Debug.print("ScoreFragment::ScoreFragment");
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
+      //Debug.print("ScoreFragment.onCreate : " + this);
       setHasOptionsMenu(true);
     }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
       super.onCreateOptionsMenu(menu, inflater);
+//      Debug.print("ScoreFragment.onCreateOptionsMenu : " + this);
       inflater.inflate(R.menu.score_menu, menu);
 
-      if (getMainActivity().getCurrentGame() != null) { // fix crash when waking up without a game
-        boolean isGameActive = getMainActivity().getCurrentGame().getState() != Tetris.LOST;
+      Tetris game = getMainActivity().getData().getCurrentGame();
+
+      if (game != null) { // fix crash when waking up without a game
+        boolean isGameActive = game.getState() != Tetris.LOST;
         menu.findItem(R.id.mnu_back_to_game).setVisible(isGameActive);
         menu.findItem(R.id.mnu_play_again).setVisible(!isGameActive);
       }
@@ -239,14 +310,18 @@ public class MainActivity extends AppCompatActivity {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-      return inflater.inflate(R.layout.view_scores, container, false);
+//      Debug.print("ScoreFragment.onCreateView : " + this);
+      View view = inflater.inflate(R.layout.view_scores, container, false);
+      loadScores(view);
+      return view;
     }
 
-    public void loadScores() {
-      Tetris game = getMainActivity().getCurrentGame();
+    private void loadScores(View view) {
+      //View view = getView();
+      Tetris game = getMainActivity().getData().getCurrentGame();
       final Scoreboard.GameScores gs = Scoreboard.instance().getGameScores(game.getDescriptor().getId());
 
-      ListView scoreListView = (ListView) getActivity().findViewById(R.id.lvScoreList);
+      ListView scoreListView = (ListView) view.findViewById(R.id.lvScoreList);
 
       ArrayAdapter<Scoreboard.ScoreEntry> adapter = new ArrayAdapter<Scoreboard.ScoreEntry>(
           getActivity(),
@@ -273,12 +348,12 @@ public class MainActivity extends AppCompatActivity {
       scoreListView.setAdapter(adapter);
 
       // if current score did not make into roaster show message
-      TextView scoreTooLowText = (TextView) getActivity().findViewById(R.id.scoreOutOfRoasterText);
+      TextView scoreTooLowText = (TextView) view.findViewById(R.id.scoreOutOfRoasterText);
       scoreTooLowText.setText(gs.containsCurrentScore() ? null :
           String.format(getString(R.string.current_score_too_low), game.getScore()));
 
       // create score view title
-      TextView scoreViewTitle = (TextView) getView().findViewById(R.id.scoreViewTitle);
+      TextView scoreViewTitle = (TextView) view.findViewById(R.id.scoreViewTitle);
       scoreViewTitle.setText(String.format(getString(R.string.top_scores),
           game.getDescriptor().getLabel()));
     }
@@ -292,7 +367,7 @@ public class MainActivity extends AppCompatActivity {
     super.onPause();
 
     SharedPreferences.Editor prefEditor = getSharedPreferences(SCORE_PREFBANK_NAME, MODE_PRIVATE).edit();
-    prefEditor.putString(SCOREBOARD_PARCEL_KEY, Scoreboard.getState());
+    prefEditor.putString(SCOREBOARD_PACKEDPREFS_KEY, Scoreboard.getState());
     prefEditor.apply();
   }
 
@@ -306,7 +381,7 @@ public class MainActivity extends AppCompatActivity {
       backFromScores();
 
     } else if (itemId == R.id.mnu_selectgame) {
-      showFragment(_gameSelectorFragment);
+      showFragment(GameSelectorFragment.Id);
 
     } else if (itemId == R.id.mnu_settings) {
       showSettings();
@@ -326,11 +401,11 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void runGame(GameDescriptor gameDescriptor) {
-    setCurrentGame(GameList.instance().createGame(gameDescriptor));
-    restartGame();
-    GameView gameView = (GameView) findViewById(R.id.gameView);
-    gameView.setGame(getCurrentGame());
-    showFragment(_gameSurfaceFragment);
+    Tetris game = GameList.instance().createGame(gameDescriptor);
+    game.initGame();
+    getData().setCurrentGame(game);
+
+    showFragment(GameViewFragment.Id);
   }
 
   /**
@@ -340,7 +415,9 @@ public class MainActivity extends AppCompatActivity {
   @Override
   public void onBackPressed() {
     Debug.print("Back is pressed");
+    // TODO process back button depending on top fragment
 
+/*
     if (_gameSurfaceFragment.isVisible()) {
       showScores();
 
@@ -349,34 +426,32 @@ public class MainActivity extends AppCompatActivity {
 
     } else if (_scoreFragment.isVisible()) {
       backFromScores();
-    }
+    }*/
   }
 
   /**
    * Just reinit current game , no thread work here
    */
-  private void restartGame() {
-    getCurrentGame().initGame();
-    // create new slot
-    Scoreboard.instance().getGameScores(getCurrentGame().getDescriptor().getId()).setScore(0);
-  }
+//  private void restartGame(Tetris game) {
+//    game.initGame();
+//  }
 
   /**
    * Called on pause, or when game is lost.
    * Shows scores screen.
    */
   public void showScores() {
-    // fill scores with current score
-    _scoreFragment.loadScores();
-    showFragment(_scoreFragment);
+    showFragment(ScoreFragment.Id);
   }
 
   private void backFromScores() {
     Debug.print("restart/continue after scores");
-    if (getCurrentGame().getState() == Tetris.LOST) {
-      restartGame();
+    Tetris game = getData().getCurrentGame();
+
+    if (game.getState() == Tetris.LOST) {
+      game.initGame();
     }
-    showFragment(_gameSurfaceFragment);
+    showFragment(GameViewFragment.Id);
   }
 
   private void showSettings() {
