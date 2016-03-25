@@ -211,6 +211,9 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
+  /**
+   * fragment starting game of a chosen type
+   */
   public static class GameSelectorFragment extends MainActivityFragment {
     public static final FragmentId Id = FragmentId.GameSelector;
 
@@ -230,6 +233,17 @@ public class MainActivity extends AppCompatActivity {
       super.onCreateOptionsMenu(menu, inflater);
      // Debug.print("GameSelectorFragment.onCreateOptionsMenu");
       inflater.inflate(R.menu.gameselector_menu, menu);
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+      super.onActivityCreated(savedInstanceState);
+      // update activity header
+      ActionBar actionBar = getMainActivity().getSupportActionBar();
+
+      if (actionBar != null) {
+        actionBar.setTitle(R.string.app_name);
+      }
     }
 
     @Nullable
@@ -253,6 +267,9 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
+  /**
+   * main gaming area fragment
+   */
   public static class GameViewFragment extends MainActivityFragment {
     public static final FragmentId Id = FragmentId.GameView;
 
@@ -275,6 +292,9 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
+  /**
+   * Fragment displaying scores in the app
+   */
   public static class ScoreFragment extends MainActivityFragment {
     public static final FragmentId Id = FragmentId.ScoreList;
     private static java.text.DateFormat TIMESTAMP_FORMAT =
@@ -291,6 +311,24 @@ public class MainActivity extends AppCompatActivity {
       //Debug.print("ScoreFragment.onCreate : " + this);
       setHasOptionsMenu(true);
     }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+      super.onActivityCreated(savedInstanceState);
+      // update activity header
+      ActionBar actionBar = getMainActivity().getSupportActionBar();
+
+      if (actionBar != null) {
+        actionBar.setTitle(String.format("%s: %s",
+            getString(R.string.app_name),
+            String.format(getActivity().getString(R.string.top_scores),
+                getMainActivity().getData().getCurrentGame().getDescriptor().getLabel())
+        ));
+      }
+    }
+
+    //.setTitle(String.format("%s: %s",
+      //        getString(R.string.app_name), getCurrentGame().getDescriptor().getLabel()
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -351,11 +389,6 @@ public class MainActivity extends AppCompatActivity {
       TextView scoreTooLowText = (TextView) view.findViewById(R.id.scoreOutOfRoasterText);
       scoreTooLowText.setText(gs.containsCurrentScore() ? null :
           String.format(getString(R.string.current_score_too_low), game.getScore()));
-
-      // create score view title
-      TextView scoreViewTitle = (TextView) view.findViewById(R.id.scoreViewTitle);
-      scoreViewTitle.setText(String.format(getString(R.string.top_scores),
-          game.getDescriptor().getLabel()));
     }
   }
 
@@ -415,8 +448,17 @@ public class MainActivity extends AppCompatActivity {
   @Override
   public void onBackPressed() {
     Debug.print("Back is pressed");
-    // TODO process back button depending on top fragment
+    FragmentManager fm = getFragmentManager();
+    Fragment fragment;
 
+    if ((fragment = fm.findFragmentByTag(GameSelectorFragment.Id.getId())) != null && fragment.isVisible()) {
+      super.onBackPressed();
+    } else if ((fragment = fm.findFragmentByTag(GameViewFragment.Id.getId())) != null && fragment.isVisible()) {
+      showScores();
+
+    } else if ((fragment = fm.findFragmentByTag(ScoreFragment.Id.getId())) != null && fragment.isVisible()) {
+      backFromScores();
+    }
 /*
     if (_gameSurfaceFragment.isVisible()) {
       showScores();
@@ -430,13 +472,6 @@ public class MainActivity extends AppCompatActivity {
   }
 
   /**
-   * Just reinit current game , no thread work here
-   */
-//  private void restartGame(Tetris game) {
-//    game.initGame();
-//  }
-
-  /**
    * Called on pause, or when game is lost.
    * Shows scores screen.
    */
@@ -445,7 +480,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void backFromScores() {
-    Debug.print("restart/continue after scores");
+//    Debug.print("restart/continue after scores");
     Tetris game = getData().getCurrentGame();
 
     if (game.getState() == Tetris.LOST) {
