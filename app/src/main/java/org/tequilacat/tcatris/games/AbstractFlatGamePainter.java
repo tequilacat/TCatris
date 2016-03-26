@@ -21,8 +21,6 @@ public abstract class AbstractFlatGamePainter {
   private Object _shapeSignature = null;
   private Paint _shapeContourPaint = new Paint();
 
-  private static final float CONTOUR_FACTOR = 1.1f;
-
   public AbstractFlatGamePainter(){
     float strokeWidth = VisualResources.Defaults.DYN_SHAPE_STROKE_WIDTH;
 
@@ -65,14 +63,6 @@ public abstract class AbstractFlatGamePainter {
    */
   public abstract void paintFieldBackground(Canvas g);
 
-  /**
-   * Returns color of field.
-   * Defaults to color of cell type #0, ABrickGame.getTypeColor(0),
-   * may be overwritten in implementations
-   * @return color of field
-   */
-  protected abstract int getFieldBackground();
-
   public void drawShapeContour(Canvas c, int centerX, int centerY, boolean isValid, float rotateByDegrees) {
     _shapeContourPaint.setColor(isValid ?
         VisualResources.Defaults.DYN_SHAPE_STROKE_VALID : VisualResources.Defaults.DYN_SHAPE_STROKE_INVALID);
@@ -90,9 +80,17 @@ public abstract class AbstractFlatGamePainter {
   }
 
   /**
-   * creates shape contour if needed (if current shape geometry differs
+   * Modifies shapeContourPath to represent given shape
+   * @param shape
+   * @param shapeContourPath
    */
-  protected Path updateCurrentShapeContour(FlatShape fallingShape) {
+  protected abstract void updateCurrentShapeContour(FlatShape shape, Path shapeContourPath);
+
+
+  /**
+   * creates shape contour if needed (if current shape geometry differs)
+   */
+  public void updateCurrentShapeContour(FlatShape fallingShape) {
 
     if (fallingShape == null) {
       //Debug.print("updateCurrentShapeContour: nullify");
@@ -103,20 +101,8 @@ public abstract class AbstractFlatGamePainter {
       //Debug.print("updateCurrentShapeContour: recreate path");
       _shapeSignature = fallingShape.generateSignature();
       _shapeContourPath.reset();
-      //_shapeContourPath = new Path();
-      int cx = fallingShape.getCenterX(), cy = fallingShape.getCenterY();
-      int cellSize = (int)(getGameScreenLayout().getCellSize() * CONTOUR_FACTOR); // factor X 2
-      int x0 = -cellSize >> 1, y0 = x0;
-
-      for(int i = 0; i < fallingShape.size(); i++) {
-        int cellX = (fallingShape.getX(i) - cx) * cellSize + x0;
-        int cellY = (fallingShape.getY(i) - cy) * cellSize + y0;
-
-        _shapeContourPath.addRect(cellX, cellY, cellX + cellSize, cellY + cellSize, Path.Direction.CW);
-      }
+      updateCurrentShapeContour(fallingShape, _shapeContourPath);
     }
-
-    return _shapeContourPath;
   }
 
 }

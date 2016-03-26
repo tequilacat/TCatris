@@ -368,7 +368,7 @@ public class ColorShiftGame extends FlatGame {
 
   @Override
   protected boolean isSqueezable(int x, int y) {
-    return (_cellsToSqueeze != null) && canSqueeze() && _cellsToSqueeze[y][x];
+    return canSqueeze() && _cellsToSqueeze[y][x];
   }
 
   @Override

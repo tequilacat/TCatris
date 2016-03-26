@@ -4,16 +4,13 @@
 
 package org.tequilacat.tcatris.games;
 
-import android.graphics.Rect;
-
 import org.tequilacat.tcatris.core.GameDescriptor;
-import org.tequilacat.tcatris.core.GameImpulse;
 
-public class ClassicGame extends FlatGame {
+public class ClassicGame extends AbstractRotationGame {
 
   boolean mySqueezable[];
 
-  private static final FlatShape shapes[] = {
+  private static final FlatShape _StaticShapes[] = {
     new FlatRectShape(new int[]{
       0, 0, 1, 1, 0, 1, 1, -1, 1, 0, 1, 1
     }), new FlatRectShape(new int[]{
@@ -31,62 +28,18 @@ public class ClassicGame extends FlatGame {
   })
   };
 
-  private static int _maxNextWidth;
-  private static int _maxNextHeight;
-
   static {
-    Rect bounds = new Rect();
-    _maxNextWidth = 0;
-    _maxNextHeight = 0;
-
-    for (FlatShape shape : shapes) {
-      shape.getBounds(bounds);
-      int w = bounds.width(), h = bounds.height();
-
-      if (_maxNextWidth < w) {
-        _maxNextWidth = w;
-      }
-
-      if (_maxNextHeight < h) {
-        _maxNextHeight = h;
-      }
-    }
+    autoAssignColors(_StaticShapes);
   }
 
   public ClassicGame(GameDescriptor descriptor) {
-    super(descriptor, new FlatRectGamePainter());
+    super(descriptor, new FlatRectGamePainter(), _StaticShapes);
     mySqueezable = new boolean[getHeight()];
-  }
-
-  @Override
-  public ImpulseSemantics getImpulseSemantics(GameImpulse impulse) {
-    switch (impulse){
-      case MOVE_LEFT: return ImpulseSemantics.MOVE_LEFT;
-      case MOVE_RIGHT: return ImpulseSemantics.MOVE_RIGHT;
-      case ROTATE_CW: return ImpulseSemantics.ROTATE_CW;
-      case ROTATE_CCW: return ImpulseSemantics.ROTATE_CCW;
-      default: return null;
-    }
-  }
-
-  @Override
-  protected int getMaxNextWidth() {
-    return _maxNextWidth;
-  }
-
-  @Override
-  protected int getMaxNextHeight() {
-    return _maxNextHeight;
   }
 
   @Override
   protected boolean isSqueezable(int x, int y) {
     return (mySqueezable != null) && canSqueeze() && mySqueezable[y];
-  }
-
-  @Override
-  protected FlatShape createNext() {
-    return shapes[getRandomInt(shapes.length)].createCopy();
   }
 
   @Override

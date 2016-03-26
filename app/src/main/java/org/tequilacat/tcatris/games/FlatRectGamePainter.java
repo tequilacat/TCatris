@@ -2,10 +2,12 @@ package org.tequilacat.tcatris.games;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
 
 import org.tequilacat.tcatris.core.ABrickGame;
 import org.tequilacat.tcatris.core.ColorCodes;
+import org.tequilacat.tcatris.core.GameConstants;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.Ui;
 import org.tequilacat.tcatris.core.VisualResources;
@@ -20,16 +22,8 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
     _cellPainter.setStyle(Paint.Style.STROKE);
   }
 
-  private final boolean _paintFieldBg = true;
-
   public static int getTypeColor(int cellType) {
     return ColorCodes.getDistinctColor(cellType - 1, ColorCodes.Lightness.Normal);
-        //_distinctiveColors[cellType];
-  }
-
-  @Override
-  public int getFieldBackground() {
-    return VisualResources.Defaults.FIELD_BG_COLOR;
   }
 
   @Override
@@ -45,7 +39,7 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
 
     } else if (cellState == ABrickGame.CellState.SQUEEZED) {
       Ui.drawRect(c, x, y, cellSize - 1, cellSize - 1, cellColor);
-      Ui.fillRect(c, x + 1, y + 1, cellSize - 3, cellSize - 3, getFieldBackground());
+      Ui.fillRect(c, x + 1, y + 1, cellSize - 3, cellSize - 3, VisualResources.Defaults.FIELD_BG_COLOR);
 
     } else if (cellState == ABrickGame.CellState.FALLEN_SHADOW) {
       int innerSize = cellSize * 6 / 10;
@@ -74,30 +68,41 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
   @Override
   public void paintFieldBackground(Canvas g) {
     // do nothing or fill the rect
-    if (_paintFieldBg) {
-      final GameScreenLayout layout = getGameScreenLayout();
-      final Rect fieldRect = layout.getFieldRect();
-      final int fieldWidth = fieldRect.width(), fieldHeight = fieldRect.height(),
+
+    final GameScreenLayout layout = getGameScreenLayout();
+    final Rect fieldRect = layout.getFieldRect();
+    final int // fieldWidth = fieldRect.width(), fieldHeight = fieldRect.height(),
         right = fieldRect.right, left = fieldRect.left,
         top = fieldRect.top, bottom = fieldRect.bottom;
-      //final int fieldWidth = getGameScreenLayout().getFieldRect().width(),
-      //        fieldHeight = getGameScreenLayout().getFieldRect().height();
 
-      Ui.fillRect(g, layout.getFieldRect(), getFieldBackground());
+    Ui.fillRect(g, layout.getFieldRect(), VisualResources.Defaults.FIELD_BG_COLOR);
 
-      _cellPainter.setColor(VisualResources.Defaults.FIELD_LINE_COLOR);
-      _cellPainter.setStrokeWidth(0);
+    _cellPainter.setColor(VisualResources.Defaults.FIELD_LINE_COLOR);
+    _cellPainter.setStrokeWidth(0);
 
-      final int cellSize = getGameScreenLayout().getCellSize();
+    final int cellSize = getGameScreenLayout().getCellSize();
 
-      for (int x = left + cellSize; x < right; x += cellSize) {
-        g.drawLine(x, top, x, bottom, _cellPainter);
-      }
-
-      for (int y = top + cellSize; y < bottom; y += cellSize) {
-        g.drawLine(left, y, right, y, _cellPainter);
-      }
+    for (int x = left + cellSize; x < right; x += cellSize) {
+      g.drawLine(x, top, x, bottom, _cellPainter);
     }
 
+    for (int y = top + cellSize; y < bottom; y += cellSize) {
+      g.drawLine(left, y, right, y, _cellPainter);
+    }
+  }
+
+  @Override
+  protected void updateCurrentShapeContour(FlatShape fallingShape, Path shapeContourPath) {
+//_shapeContourPath = new Path();
+    int cx = fallingShape.getCenterX(), cy = fallingShape.getCenterY();
+    int cellSize = (int)(getGameScreenLayout().getCellSize() * GameConstants.CONTOUR_FACTOR); // factor X 2
+    int x0 = -cellSize >> 1, y0 = x0;
+
+    for(int i = 0; i < fallingShape.size(); i++) {
+      int cellX = (fallingShape.getX(i) - cx) * cellSize + x0;
+      int cellY = (fallingShape.getY(i) - cy) * cellSize + y0;
+
+      shapeContourPath.addRect(cellX, cellY, cellX + cellSize, cellY + cellSize, Path.Direction.CW);
+    }
   }
 }

@@ -436,7 +436,7 @@ public abstract class FlatGame extends ABrickGame {
   @Override
   public void paintNext(Canvas g) {
     Rect nextRect = getGameScreenLayout().getNextShapeRect();
-    Ui.fillRect(g, nextRect, _fieldPainter.getFieldBackground());
+    Ui.fillRect(g, nextRect, VisualResources.Defaults.FIELD_BG_COLOR);
 
     int cellSize = getGameScreenLayout().getCellSize();
     FlatShape shape = getNextShape();
