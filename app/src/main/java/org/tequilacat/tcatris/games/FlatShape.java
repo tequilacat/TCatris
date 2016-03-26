@@ -1,17 +1,13 @@
-// Decompiled by Jad v1.5.8f. Copyright 2001 Pavel Kouznetsov.
-// Jad home page: http://www.kpdus.com/jad.html
-// Decompiler options: packimports(3) 
-
 package org.tequilacat.tcatris.games;
 
 import android.graphics.Rect;
 
 import org.tequilacat.tcatris.core.GameImpulse;
 
-public class FlatShape {
+public abstract class FlatShape {
   private int myCenterX;
   private int myCenterY;
-  private int[] myData;
+  protected int[] myData;
 
 
   /**************************************************
@@ -22,35 +18,30 @@ public class FlatShape {
     myCenterY = 0;
   }
 
-  /**************************************************
-   **************************************************/
-//    public FlatShape(int cellCount){
-//        myData = new int[cellCount*3];
-//        myCenterX = 0;
-//        myCenterY = 0;
-//    }
+  /**
+   * creates copy of the specified shape
+   * @return deep copy of the shape
+   */
+  public abstract FlatShape createCopy();
 
-  /**************************************************
-   **************************************************/
-  public FlatShape(FlatShape other) {
-    myCenterX = other.myCenterX;
-    myCenterY = other.myCenterY;
-    myData = new int[other.myData.length];
-    System.arraycopy(other.myData, 0, myData, 0, other.myData.length);
+  /**
+   * copies data from other shape to this
+   * @param fromOther source shape
+   */
+  protected void copyFields(FlatShape fromOther) {
+    myCenterX = fromOther.myCenterX;
+    myCenterY = fromOther.myCenterY;
+    myData = new int[fromOther.myData.length];
+    System.arraycopy(fromOther.myData, 0, myData, 0, fromOther.myData.length);
   }
 
   public int size() {
     return myData.length / 3;
   }
 
-  public void moveTo(int x, int y) {
-    myCenterX = x;
-    myCenterY = y;
-  }
-
   /**
    * Computes the shape bounds in cell units and puts to bounds rect
-   * @param bounds
+   * @param bounds target rect whose values to be set
    */
   public void getBounds(Rect bounds) {
     int minCol = 0, maxCol = 0, minRow = 0, maxRow = 0;
@@ -79,49 +70,46 @@ public class FlatShape {
   }
 
   /**
+   * Sets center of the shape to specified coordinates
+   * @param x new center X
+   * @param y new center Y
+   */
+  public void moveTo(int x, int y) {
+    myCenterX = x;
+    myCenterY = y;
+  }
+
+  /**
    * modifies center of the shape by given offset
    *
-   * @param deltaX
-   * @param deltaY
+   * @param deltaX x offset
+   * @param deltaY y offset
    */
   public void moveBy(int deltaX, int deltaY) {
     myCenterX += deltaX;
     myCenterY += deltaY;
   }
 
-  private void rotate(int rotationDir) {
-    if (rotationDir != 0) {
-
-      for (int i = 0; i < myData.length; i += 3) {
-        int x = myData[i], y = myData[i + 1];
-        if (x != 0 || y != 0) {
-          if (rotationDir > 0) {
-            // clockwise
-            myData[i] = -y;
-            myData[i + 1] = x;
-          } else {
-            myData[i] = y;
-            myData[i + 1] = -x;
-          }
-        }
-      }
-    }
-  }
+  /**
+   * rotates according to coordinate system of the shape implementation
+   * @param rotationDir whether rotation is Clockwise
+   */
+  protected abstract void rotate(int rotationDir);
 
   /**
    * returns transformed copy of this shape
-   * @param impulse
-   * @return
+   * @param impulse action impulse modifying the shape
+   * @return transformed shape or null if transformation is not possible
    */
   public FlatShape transformed(GameImpulse impulse) {
-    FlatShape shape = new FlatShape(this);
+    FlatShape shape = this.createCopy();
     return shape.transform(impulse) ? shape : null;
   }
 
   /**
    * transforms current shape
-   * @param impulse
-   * @return
+   * @param impulse action impulse modifying the shape
+   * @return whether transformation has succeeded
    */
   public boolean transform(GameImpulse impulse) {
     boolean modified = true;
@@ -158,26 +146,47 @@ public class FlatShape {
 
 
   /**
+   * Gets X coord of i-th cell for shape centered at its current position
    *
-   * @param i
+   * @param i index of cell
    * @return absolute cell X coord of i'th cell
    */
   public int getX(int i) {
-    return myData[(i << 1) + i] + myCenterX;
+    return getX(i, myCenterX, myCenterY);
   }
 
   /**
-   *
-   * @param i
+   * Gets Y coord of i-th cell for shape centered at its current position
+   * @param i index of cell
    * * @return absolute cell Y coord of i'th cell
    */
   public int getY(int i) {
     // quick *3
-    return myData[(i << 1) + i + 1] + myCenterY;
+    return getY(i, myCenterX, myCenterY);
   }
 
-  /**************************************************
-   **************************************************/
+  /**
+   * gets X coord of i-th cell assuming shape is centered at centerX, centerY
+   * @param i cell index
+   * @param centerX center X
+   * @param centerY center Y
+   * @return x coordinate of specified cell
+   */
+  public abstract int getX(int i, int centerX, int centerY);
+  /**
+   * gets Y coord of i-th cell assuming shape is centered at centerX, centerY
+   * @param i cell index
+   * @param centerX center X
+   * @param centerY center Y
+   * @return y coordinate of specified cell
+   */
+  public abstract int getY(int i, int centerX, int centerY);
+
+  /**
+   * changes cell type
+   * @param i cell index
+   * @param cellType new value for cell type
+   */
   public void setCellType(int i, int cellType) {
     // quick *3
     myData[(i << 1) + i + 2] = cellType;

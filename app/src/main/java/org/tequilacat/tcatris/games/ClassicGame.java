@@ -14,19 +14,19 @@ public class ClassicGame extends FlatGame {
   boolean mySqueezable[];
 
   private static final FlatShape shapes[] = {
-    new FlatShape(new int[]{
+    new FlatRectShape(new int[]{
       0, 0, 1, 1, 0, 1, 1, -1, 1, 0, 1, 1
-    }), new FlatShape(new int[]{
+    }), new FlatRectShape(new int[]{
     0, 0, 6, 0, -1, 6, 1, 0, 6, 1, 1, 6
-  }), new FlatShape(new int[]{
+  }), new FlatRectShape(new int[]{
     0, 0, 2, 1, -1, 2, 0, -1, 2, 0, 1, 2
-  }), new FlatShape(new int[]{
+  }), new FlatRectShape(new int[]{
     0, 0, 7, 0, -1, 7, 0, 1, 7, 1, 1, 7
-  }), new FlatShape(new int[]{
+  }), new FlatRectShape(new int[]{
     0, 0, 3, 0, -1, 3, 0, 1, 3, 0, 2, 3
-  }), new FlatShape(new int[]{
+  }), new FlatRectShape(new int[]{
     0, 0, 4, 1, 0, 4, 1, 1, 4, 0, 1, 4
-  }), new FlatShape(new int[]{
+  }), new FlatRectShape(new int[]{
     0, 0, 5, 0, -1, 5, 0, 1, 5, 1, 0, 5
   })
   };
@@ -86,7 +86,7 @@ public class ClassicGame extends FlatGame {
 
   @Override
   protected FlatShape createNext() {
-    return new FlatShape(shapes[getRandomInt(shapes.length)]);
+    return shapes[getRandomInt(shapes.length)].createCopy();
   }
 
   @Override

@@ -74,16 +74,18 @@ public class ColorShiftGame extends FlatGame {
     return _gameType == ColorGameType.SHIFT_HORIZONTALLY ? 1 : 3;
   }
 
-  /**************************************
-   * creates new (mutable) shape
-   **************************************/
+  /**
+   * Creates new shape
+   * @return a shape
+   */
   @Override
   public FlatShape createNext() {
     int c1 = 1 + getRandomInt(N_FIGURES);
     int c2 = 1 + getRandomInt(N_FIGURES);
     int c3 = 1 + getRandomInt(N_FIGURES);
 
-    FlatShape fs = new FlatShape(new int[]{0, -1, c1, 0, 0, c2, 0, 1, c3});
+    FlatShape fs = new FlatRectShape(new int[]{0, -1, c1, 0, 0, c2, 0, 1, c3});
+
     if (_gameType == ColorGameType.SHIFT_HORIZONTALLY) {
       fs.transform(GameImpulse.ROTATE_CW);
     }
