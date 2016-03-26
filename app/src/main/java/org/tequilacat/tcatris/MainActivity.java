@@ -64,18 +64,8 @@ public class MainActivity extends AppCompatActivity {
     // fill game list
     GameList.init();
 
-    // now do only on first time:
-    //if(savedInstanceState ==null) {
-    //  setCurrentGame(null);
-    // init scores from saved preferences
     SharedPreferences prefs = getSharedPreferences(SCORE_PREFBANK_NAME, MODE_PRIVATE);
     Scoreboard.setState(prefs.getString(SCOREBOARD_PACKEDPREFS_KEY, null));
-
-
-//    Fragment f1 = getFragmentManager().findFragmentByTag(GameSelectorFragment.Id.getId());
-//    Fragment f2 = getFragmentManager().findFragmentByTag(GameViewFragment.Id.getId());
-//    Fragment f3 = getFragmentManager().findFragmentByTag(ScoreFragment.Id.getId());
-//    Debug.print("Fragments: " + f1 + ", " + f2 + ", " + f3);
 
     if(savedInstanceState == null) {
       showFragment(GameSelectorFragment.Id);
@@ -97,23 +87,17 @@ public class MainActivity extends AppCompatActivity {
 
     if(fragment == null) {
       fragment = fragmentId.create();
-//      Debug.print("   >> Create fragment " + fragmentId);
     }
 
-    /*if (fragment instanceof GameSelectorFragment) {
-      getSupportActionBar().setTitle(R.string.app_name);
-
-    } else if (fragment instanceof ScoreFragment) {
-      getSupportActionBar().setTitle(String.format("%s: %s",
-          getString(R.string.app_name), getCurrentGame().getDescriptor().getLabel()
-      ));
-    }
-    */
     transaction.replace(R.id.main_layout, fragment, fragmentId.getId());
     transaction.commit();
     return fragment;
   }
 
+  /**
+   *
+   * @return persistent fragment containing activity data, retained during configuration changes
+   */
   private PersistentFragment getData() {
     FragmentManager fm = getFragmentManager();
     PersistentFragment fragment = (PersistentFragment) fm.findFragmentByTag(

@@ -539,7 +539,7 @@ public final class GameView extends SurfaceView {
             buttonX + buttonWidth * 3, buttonY, buttonWidth * 2, buttonHeight));
 
         LayoutParameters layoutParams = new LayoutParameters();
-        layoutParams.GameArea = new Rect(0, _gameStatisticsArea.bottom, w, h - buttonHeight - _gameStatisticsArea.height());
+        layoutParams.GameArea = new Rect(0, _gameStatisticsArea.bottom, w, h - buttonHeight); // - _gameStatisticsArea.height());
 
         _clickableZones.clear();
         _clickableZones.add(new ClickableZone(ClickableZoneType.DROP_BUTTON, _buttons.get(1).rect));
