@@ -1,0 +1,6 @@
+[
+  {class='ClassicGame', label='Tetris', dim = {width=10,height=15}},
+  {class='ColorShiftGame', label='Xixit', dim={width=5,height=12}, gameType=SHIFT_VERTICALLY},
+  {class='ColorShiftGame', label='HorizColumns', dim={width=8,height=15}, gameType=SHIFT_HORIZONTALLY},
+  {class='ColorShiftGame', label='Trix', dim={width=8,height=15}, gameType=ROTATE}
+]

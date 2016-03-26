@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
     Scoreboard.setState(prefs.getString(SCOREBOARD_PACKEDPREFS_KEY, null));
 
     if(getData().getGameDescriptors() == null) {
-      getData().setGameDescriptors(GameList.readAvailableGameTypes());
+      getData().setGameDescriptors(GameList.readAvailableGameTypes(getResources()));
     }
 
     if(savedInstanceState == null) {

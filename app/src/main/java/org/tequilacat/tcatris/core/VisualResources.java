@@ -8,7 +8,7 @@ import android.graphics.drawable.NinePatchDrawable;
 import org.tequilacat.tcatris.R;
 
 /**
- * Created by avo on 11.03.2016.
+ * Styles colors and sizes read from app resources
  */
 public class VisualResources {
   public static VisualResources Defaults;
