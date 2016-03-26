@@ -7,9 +7,16 @@ package org.tequilacat.tcatris.games;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import org.tequilacat.tcatris.core.ABrickGame;
+import org.tequilacat.tcatris.core.Dimensions;
 import org.tequilacat.tcatris.core.DragAxis;
 import org.tequilacat.tcatris.core.DynamicState;
+import org.tequilacat.tcatris.core.GameConstants;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
 import org.tequilacat.tcatris.core.GameScreenLayout;
@@ -23,6 +30,7 @@ public abstract class FlatGame extends ABrickGame {
   // int myCellSize;
 
   public static final int EMPTY = 0;
+  private final Dimensions _fieldDimensions;
 
   protected int field[][];
   int _shapesThrown;
@@ -35,10 +43,32 @@ public abstract class FlatGame extends ABrickGame {
   protected FlatGame(GameDescriptor descriptor, AbstractFlatGamePainter fieldPainter) {
     super(descriptor);
     _fieldPainter = fieldPainter;
+    _fieldDimensions = new Gson().fromJson(descriptor.getGameParameters().get(
+        GameConstants.JSON_DIMENSIONS), Dimensions.class);
   }
 
   protected AbstractFlatGamePainter getGamePainter() {
     return _fieldPainter;
+  }
+
+
+  /**
+   * @return width of game field in cells
+   */
+  public final int getWidth() {
+    return _fieldDimensions.width;
+  }
+
+  /**
+   * @return height of game field in cells
+   */
+  public final int getHeight() {
+    return _fieldDimensions.height;
+  }
+
+  @Override
+  public int getMoveDimension() {
+    return getWidth();
   }
 
   /**

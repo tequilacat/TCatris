@@ -12,9 +12,12 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 
+import com.google.gson.Gson;
+
 import org.tequilacat.tcatris.core.DragAxis;
 import org.tequilacat.tcatris.core.DragSensitivity;
 import org.tequilacat.tcatris.core.DynamicState;
+import org.tequilacat.tcatris.core.GameConstants;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
 import org.tequilacat.tcatris.core.LayoutParameters;
@@ -22,29 +25,29 @@ import org.tequilacat.tcatris.core.VisualResources;
 
 import java.util.EnumSet;
 
-public class Columns extends FlatGame {
+public class ColorShiftGame extends FlatGame {
 
   int myLastScores;
   private static final int N_FIGURES = 5;
   private boolean _cellsToSqueeze[][];
   private boolean _isSqueezable;
 
-  // default is xixit
-  // "columns" same but shapes are vertical
-  // "trix" same but shapes are rotated
+  private enum ColorGameType {
+    SHIFT_HORIZONTALLY, SHIFT_VERTICALLY, ROTATE;
+  }
 
-  private int myGameType;
-  private static final int FIGTYPE_VERT = 0;
-  private static final int FIGTYPE_HORZ = 1;
-  private static final int FIGTYPE_ROTATE = 2;
+  private ColorGameType _gameType;
 
   private static Path _shiftedCellPath = new Path();
   private static Path _arrowPath = new Path();
   private static Paint _shiftedCellFill = new Paint();
   private static Paint _shiftedCellStroke = new Paint();
 
-  public Columns(GameDescriptor descriptor) {
+  public ColorShiftGame(GameDescriptor descriptor) {
     super(descriptor, new FlatRectGamePainter());
+
+    _gameType = new Gson().fromJson(descriptor.getGameParameters().get(GameConstants.JSON_GAMETYPE),
+        ColorGameType.class);
 
     _cellsToSqueeze = new boolean[getHeight()][getWidth()];
 
@@ -52,38 +55,23 @@ public class Columns extends FlatGame {
     _shiftedCellStroke.setColor(VisualResources.Defaults.FIELD_LINE_COLOR);
 
     _shiftedCellFill.setStyle(Paint.Style.FILL);
-    //_shiftedCellFill.setColor(ColorCodes.darkYellow);
   }
 
   /**
-   *
    * @return whether this game shifts cells instead of rotating
    */
   private boolean isColorShifting() {
-    return myGameType != FIGTYPE_ROTATE;
+    return _gameType != ColorGameType.ROTATE;
   }
 
   @Override
   protected int getMaxNextWidth() {
-    return myGameType == FIGTYPE_HORZ ? 3 : 1;
+    return _gameType == ColorGameType.SHIFT_HORIZONTALLY ? 3 : 1;
   }
 
   @Override
   protected int getMaxNextHeight() {
-    return myGameType == FIGTYPE_HORZ ? 1 : 3;
-  }
-
-  /**************************************************
-   **************************************************/
-  @Override
-  protected void configure(String specSettings) {
-    if ("columns".equals(specSettings)) {// was horz
-      myGameType = FIGTYPE_HORZ;
-    } else if ("xixit".equals(specSettings)) { // was vert
-      myGameType = FIGTYPE_VERT;
-    } else {
-      myGameType = FIGTYPE_ROTATE; // was trix
-    }
+    return _gameType == ColorGameType.SHIFT_HORIZONTALLY ? 1 : 3;
   }
 
   /**************************************
@@ -96,7 +84,7 @@ public class Columns extends FlatGame {
     int c3 = 1 + getRandomInt(N_FIGURES);
 
     FlatShape fs = new FlatShape(new int[]{0, -1, c1, 0, 0, c2, 0, 1, c3});
-    if (myGameType == FIGTYPE_HORZ) {
+    if (_gameType == ColorGameType.SHIFT_HORIZONTALLY) {
       fs.transform(GameImpulse.ROTATE_CW);
     }
     return fs;
@@ -104,6 +92,7 @@ public class Columns extends FlatGame {
 
   /**
    * For colorshifting games returns null maning game does not support rotation
+   *
    * @return rotation axis
    */
   public DragAxis getRotationAxis() {
@@ -127,7 +116,7 @@ public class Columns extends FlatGame {
       actionSet.add(GameImpulse.SHIFT_BACKWARD);
       actionSet.add(GameImpulse.SHIFT_FORWARD);
     }
-      // now test in base class which handles move and rotate
+    // now test in base class which handles move and rotate
     super.addEffectiveImpulses(actionSet);
   }
 
@@ -144,8 +133,8 @@ public class Columns extends FlatGame {
     // for color shift return shift impulses instead of rotating
     GameImpulse impulse;
 
-    if(isColorShifting() && axis == DragAxis.ROTATE) {
-  //    impulse = positiveDirection ? GameImpulse.SHIFT_FORWARD : GameImpulse.SHIFT_BACKWARD;
+    if (isColorShifting() && axis == DragAxis.ROTATE) {
+      //    impulse = positiveDirection ? GameImpulse.SHIFT_FORWARD : GameImpulse.SHIFT_BACKWARD;
 
       if (positiveDirection) {
         impulse = POSITIVE_SHIFT;
@@ -155,7 +144,7 @@ public class Columns extends FlatGame {
         impulse = GameImpulse.SHIFT_BACKWARD;
       }
 
-    }else {
+    } else {
       impulse = super.getAxisImpulse(axis, positiveDirection);
     }
 
@@ -166,29 +155,29 @@ public class Columns extends FlatGame {
   public ImpulseSemantics getImpulseSemantics(GameImpulse impulse) {
     ImpulseSemantics semantics;
 
-    if(impulse == GameImpulse.MOVE_LEFT) {
+    if (impulse == GameImpulse.MOVE_LEFT) {
       semantics = ImpulseSemantics.MOVE_LEFT;
 
-    }else if(impulse == GameImpulse.MOVE_RIGHT) {
+    } else if (impulse == GameImpulse.MOVE_RIGHT) {
       semantics = ImpulseSemantics.MOVE_RIGHT;
 
-    }else if(myGameType == FIGTYPE_ROTATE) {
-      if(impulse == GameImpulse.ROTATE_CW) {
+    } else if (_gameType == ColorGameType.ROTATE) {
+      if (impulse == GameImpulse.ROTATE_CW) {
         semantics = ImpulseSemantics.ROTATE_CW;
-      }else if(impulse == GameImpulse.ROTATE_CCW) {
+      } else if (impulse == GameImpulse.ROTATE_CCW) {
         semantics = ImpulseSemantics.ROTATE_CCW;
-      }else {
+      } else {
         semantics = null;
       }
 
-    }else {
-      if(impulse == GameImpulse.SHIFT_FORWARD) {
-        semantics = myGameType == FIGTYPE_VERT ? ImpulseSemantics.SHIFT_DOWN : ImpulseSemantics.SHIFT_RIGHT;
+    } else {
+      if (impulse == GameImpulse.SHIFT_FORWARD) {
+        semantics = _gameType == ColorGameType.SHIFT_VERTICALLY ? ImpulseSemantics.SHIFT_DOWN : ImpulseSemantics.SHIFT_RIGHT;
 
-      }else if(impulse == GameImpulse.SHIFT_BACKWARD) {
-        semantics = myGameType == FIGTYPE_VERT ? ImpulseSemantics.SHIFT_UP : ImpulseSemantics.SHIFT_LEFT;
+      } else if (impulse == GameImpulse.SHIFT_BACKWARD) {
+        semantics = _gameType == ColorGameType.SHIFT_VERTICALLY ? ImpulseSemantics.SHIFT_UP : ImpulseSemantics.SHIFT_LEFT;
 
-      }else {
+      } else {
         semantics = null;
       }
     }
@@ -203,7 +192,7 @@ public class Columns extends FlatGame {
     int cellSize = getGameScreenLayout().getCellSize();
     float x0 = -cellSize / 2, y0 = -cellSize / 2;
 
-    _shiftedCellPath = new Path();
+    _shiftedCellPath.reset();// = new Path();
     _shiftedCellPath.moveTo(x0, y0);
     _shiftedCellPath.lineTo(x0 + cellSize, y0);
     _shiftedCellPath.lineTo(x0 + cellSize * 1.2f, 0);
@@ -255,11 +244,11 @@ public class Columns extends FlatGame {
     int angle;
     float dx, dy;
 
-    if(myGameType==FIGTYPE_VERT) {
+    if (_gameType == ColorGameType.SHIFT_VERTICALLY) {
       angle = isForward ? 90 : -90;
       dx = 0;
       dy = isForward ? cellSize : -cellSize;
-    }else {
+    } else {
       angle = isForward ? 0 : 180;
       dx = isForward ? cellSize : -cellSize;
       dy = 0;
@@ -330,8 +319,8 @@ public class Columns extends FlatGame {
   protected void paintFallingShape(Canvas c, DynamicState dynamicState) {
     super.paintFallingShape(c, dynamicState);
 
-    if(isColorShifting()) {
-    //if(false) {
+    if (isColorShifting()) {
+      //if(false) {
       float value = dynamicState.getValue(DragAxis.ROTATE.ordinal());
 
       if (Math.abs(value) >= DragSensitivity.COLORSHIFT.MIN) {
@@ -363,7 +352,7 @@ public class Columns extends FlatGame {
     //int dir = (isShapeCoDirected != (impulse == GameImpulse.SHIFT_BACKWARD)) ? -1 : 1;
 
     int i = (dir > 0) ? 0 : shape.size() - 1, count = shape.size(),
-      newPos = i + dir, firstValue = shape.getCellType(i);
+        newPos = i + dir, firstValue = shape.getCellType(i);
 
     while (--count > 0) {
       shape.setCellType(i, shape.getCellType(newPos));
@@ -418,6 +407,7 @@ public class Columns extends FlatGame {
 
   /**
    * Runs along direction, marks all 3 and more cells as toRemove.
+   *
    * @param x0
    * @param y0
    * @param dx
@@ -496,7 +486,7 @@ public class Columns extends FlatGame {
           dst--;
         }
       }
-      while(dst >= 0) {
+      while (dst >= 0) {
         field[dst][x] = EMPTY;
         dst--;
       }

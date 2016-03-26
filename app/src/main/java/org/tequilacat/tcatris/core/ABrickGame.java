@@ -37,9 +37,6 @@ public abstract class ABrickGame {
 
   protected int myLastScored;
 
-  private int myFieldWidth;
-  private int myFieldHeight;
-
   private int _level;
   private int _score;
 
@@ -55,15 +52,15 @@ public abstract class ABrickGame {
     // 5:13:
     // 5:13:specificparams
     _descriptor = descriptor;
-    String gameParams = descriptor.getGameParameters();
+    /*String gameParams = descriptor.getGameParameters();
 
     int lastSep = gameParams.lastIndexOf(':');
     int whSep = gameParams.indexOf(':');
 
     myFieldWidth = Integer.parseInt(gameParams.substring(0, whSep));
     myFieldHeight = Integer.parseInt(gameParams.substring(whSep + 1, lastSep));
-
     configure(gameParams.substring(lastSep + 1));
+    */
   }
 
   public GameDescriptor getDescriptor() {
@@ -130,20 +127,6 @@ public abstract class ABrickGame {
     }
   }
 
-  /**
-   * @return width of game field in cells
-   */
-  public final int getWidth() {
-    return myFieldWidth;
-  }
-
-  /**
-   * @return height of game field in cells
-   */
-  public final int getHeight() {
-    return myFieldHeight;
-  }
-
   private synchronized int nextRandom(int i) {
     seed = seed * 0x5deece66dL + 11L & 0xffffffffffffL;
     return (int) (seed >>> 48 - i);
@@ -201,13 +184,11 @@ public abstract class ABrickGame {
   }
 
   /**
-   * remaining specs of the gamedef line.
-   * default implementation does nothing.
-   *
-   * @param specSettings
+   * Count of clicks required to completely move a shape from side to side.
+   * Used to compute drag ratio.
+   * @return count of clicks/cells
    */
-  protected void configure(String specSettings) {
-  }
+  public abstract int getMoveDimension();
 
   public abstract void layout(LayoutParameters layoutParams);
 

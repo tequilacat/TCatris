@@ -498,7 +498,7 @@ public final class GameView extends SurfaceView {
       synchronized (_layoutLock) {
         _tracksByType = new DragTrack[]{
             new DragTrack(DragAxis.ROTATE, (int) (w * 0.4 / 12)), // rotations per btn
-            new DragTrack(DragAxis.HORIZONTAL, (int) (w * 0.4 / getGame().getWidth() / 2)), // [W]*2 movements per button
+            new DragTrack(DragAxis.HORIZONTAL, (int) (w * 0.4 / getGame().getMoveDimension() / 2)), // [W]*2 movements per button
         };
 
         _scoreMargin = VisualResources.Defaults.HEADER_FONT_SIZE / 3;

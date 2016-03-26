@@ -1,79 +1,34 @@
 package org.tequilacat.tcatris.core;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by avo on 24.02.2016.
+ * Reads types of games available in the application from JSon definitions
  */
 public class GameList {
 
   private static final String[] GameDefinitions = new String[]{
-      "ClassicGame:Tetris:10:15:",
-      "Columns:Xixit:5:12:xixit",
-      "Columns:Columns:8:15:columns",
-      "Columns:Trix:8:15:trix"
+      "{class='ClassicGame', label='Tetris', dim = {width=10,height=15}}",
+      "{class='ColorShiftGame', label='Xixit', dim={width=5,height=12}, gameType=SHIFT_VERTICALLY}",
+      "{class='ColorShiftGame', label='HorizColumns', dim={width=8,height=15}, gameType=SHIFT_HORIZONTALLY}",
+      "{class='ColorShiftGame', label='Trix', dim={width=8,height=15}, gameType=ROTATE}",
   };
 
-  private static GameList _instance;
+  public static List<GameDescriptor> readAvailableGameTypes() {
+    List<GameDescriptor> descriptors = new ArrayList<>();
+    //Gson gson = new Gson();
+    JsonParser parser = new JsonParser();
 
-  private List<GameDescriptor> _descriptors = new ArrayList<>();
-
-  public static GameList instance() {
-    return _instance;
-  }
-
-  public static void init() {
-    _instance = new GameList();
-  }
-
-  private GameList() {
-    // classname:label:w:h:optionalParams
-
-    for(String mayBeDesc: GameDefinitions) {
-      int sep1 = mayBeDesc.indexOf(':'), sep2 = mayBeDesc.indexOf(':', sep1 + 1);
-      _descriptors.add(new GameDescriptor("org.tequilacat.tcatris.games." + mayBeDesc.substring(0, sep1),
-          mayBeDesc.substring(sep1 + 1, sep2), mayBeDesc.substring(sep2 + 1)));
-    }
-  }
-
-  public GameDescriptor findDescriptor(String gameId) {
-    GameDescriptor found = null;
-
-    for(GameDescriptor descriptor : _descriptors){
-      if(descriptor.getId().equals(gameId)) {
-        found = descriptor;
-        break;
-      }
+    for (String gameDescriptor : GameDefinitions) {
+      JsonObject jsonObj = parser.parse(gameDescriptor).getAsJsonObject();
+      descriptors.add(new GameDescriptor(jsonObj));
     }
 
-    return found;
+    return descriptors;
   }
-
-  /**
-   *
-   * @return available game types
-   */
-  public List<GameDescriptor> getGameDescriptors() {
-    return _descriptors;
-  }
-
-  /**
-   * Creates game of given type, inits from last saved props
-   * */
-  public ABrickGame createGame(GameDescriptor descriptor) {
-    ABrickGame game = null;
-
-    try {
-      Class<?> gameClass = Class.forName(descriptor.getGameClassName());
-      game = (ABrickGame)gameClass.getDeclaredConstructor(GameDescriptor.class).newInstance(descriptor);
-    } catch (Exception e) {
-      // TODO process error when creating a game
-      Debug.print("Error creating game: " + e);
-    }
-
-    return game;
-  }
-
-
 }

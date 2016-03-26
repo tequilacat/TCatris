@@ -62,10 +62,13 @@ public class MainActivity extends AppCompatActivity {
     setSupportActionBar(myToolbar);
 
     // fill game list
-    GameList.init();
 
     SharedPreferences prefs = getSharedPreferences(SCORE_PREFBANK_NAME, MODE_PRIVATE);
     Scoreboard.setState(prefs.getString(SCOREBOARD_PACKEDPREFS_KEY, null));
+
+    if(getData().getGameDescriptors() == null) {
+      getData().setGameDescriptors(GameList.readAvailableGameTypes());
+    }
 
     if(savedInstanceState == null) {
       showFragment(GameSelectorFragment.Id);
@@ -183,6 +186,7 @@ public class MainActivity extends AppCompatActivity {
   public static class PersistentFragment extends MainActivityFragment {
     public static final FragmentId Id = FragmentId.Persistent;
 
+    private List<GameDescriptor> _gameDescriptors;
     private ABrickGame _game;
 
     public ABrickGame getCurrentGame() {
@@ -191,6 +195,14 @@ public class MainActivity extends AppCompatActivity {
 
     public void setCurrentGame(ABrickGame game) {
       _game = game;
+    }
+
+    public List<GameDescriptor> getGameDescriptors() {
+      return _gameDescriptors;
+    }
+
+    public void setGameDescriptors(List<GameDescriptor> gameDescriptors) {
+      _gameDescriptors = gameDescriptors;
     }
   }
 
@@ -234,7 +246,7 @@ public class MainActivity extends AppCompatActivity {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
       View view = inflater.inflate(R.layout.view_gameselector, container, false);
 
-      final List<GameDescriptor> gameTypes = GameList.instance().getGameDescriptors();
+      final List<GameDescriptor> gameTypes = getMainActivity().getData().getGameDescriptors();
       final ArrayAdapter<GameDescriptor> adapter = new ArrayAdapter<>(getMainActivity(),
           android.R.layout.simple_list_item_1, gameTypes);
 
@@ -309,9 +321,6 @@ public class MainActivity extends AppCompatActivity {
         ));
       }
     }
-
-    //.setTitle(String.format("%s: %s",
-      //        getString(R.string.app_name), getCurrentGame().getDescriptor().getLabel()
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -420,7 +429,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void runGame(GameDescriptor gameDescriptor) {
-    ABrickGame game = GameList.instance().createGame(gameDescriptor);
+    ABrickGame game = gameDescriptor.createGame();// GameList.instance().createGame(gameDescriptor);
     game.initGame();
     getData().setCurrentGame(game);
 
