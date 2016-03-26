@@ -516,7 +516,8 @@ public final class GameView extends SurfaceView {
         // compute proportional sizes of painted screen components
         _gameStatisticsArea.set(0, 0, w, _scoreArea.bottom);
 
-        int buttonHeight = h / 10, buttonY = h - buttonHeight, buttonWidth = w / 5, buttonX = 0;
+        int buttonHeight = VisualResources.Defaults.BUTTONAREA_HEIGHT,
+            buttonY = h - buttonHeight, buttonWidth = w / 5, buttonX = 0;
 
 
         _buttons.clear();

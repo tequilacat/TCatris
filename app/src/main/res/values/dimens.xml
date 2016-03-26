@@ -5,7 +5,7 @@
     <dimen name="canvas_score_font_size">18sp</dimen>
 
     <dimen name="margin_size">16dp</dimen>
-    <dimen name="buttonarea_height">40dp</dimen>
+    <dimen name="buttonarea_height">60dp</dimen>
 
     <dimen name="dynaShapeStrokeWidth">2dp</dimen>
     <dimen name="fallenShadowStrokeWidth">1dp</dimen>

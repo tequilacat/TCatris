@@ -5,6 +5,7 @@
               xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
+              android:layout_margin="20dp"
               android:orientation="vertical">
 
     <!--<TextView
@@ -15,10 +16,18 @@
         android:text="@string/top_scores"
         android:textSize="@dimen/title_font_size"/>
 -->
+    <TextView
+        android:id="@+id/gameStatusText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/title_font_size"
+        android:text="@string/msg_gamestatus_failed">
+    </TextView>
+
     <ListView
         android:id="@+id/lvScoreList"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
         android:layout_margin="10dp"
         android:layout_weight="1">
     </ListView>
@@ -27,7 +36,8 @@
         android:id="@+id/scoreOutOfRoasterText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/smalltitle_font_size">
+        android:textSize="@dimen/smalltitle_font_size"
+        android:text="@string/current_score_too_low">
     </TextView>
 
 </LinearLayout>

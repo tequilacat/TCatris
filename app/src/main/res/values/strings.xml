@@ -1,20 +1,16 @@
 <resources>
     <string name="app_name">TCatris</string>
 
-    <string name="title_activity_gameselector">Choose game</string>
-    <string name="msg_app_paused">Game is paused</string>
-    <string name="btn_ok">Ok</string>
-
     <string name="msg_score">score</string>
     <string name="select_game">Select game</string>
-    <string name="title_activity_main">MainActivity</string>
     <string name="top_scores">%s top scores</string>
     <string name="current_score">You</string>
     <string name="current_score_too_low">Current score (%d) isn\'t high enough to make it into scoreboard</string>
-    <string name="btn_back">Back</string>
     <string name="btn_play_again">Play again</string>
     <string name="btn_continue">Continue</string>
-    <string name="btn_select_game">Select game</string>
+
+    <string name="msg_gamestatus_failed">Game is finished\nPress Back to restart</string>
+    <string name="msg_gamestatus_paused">Game is paused\nPress Back to resume</string>
 
     <string name="mnu_help">Help</string>
     <string name="mnu_about">About</string>

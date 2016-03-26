@@ -23,6 +23,4 @@
     <item
         android:id="@+id/mnu_about"
         android:title="@string/mnu_about"/>
-    <!--<item android:id="@+id/mnu_help"-->
-    <!--android:title="@string/mnu_help" />-->
 </menu>

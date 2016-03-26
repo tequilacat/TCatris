@@ -342,6 +342,9 @@ public class MainActivity extends AppCompatActivity {
         boolean isGameActive = game.getState() != Tetris.LOST;
         menu.findItem(R.id.mnu_back_to_game).setVisible(isGameActive);
         menu.findItem(R.id.mnu_play_again).setVisible(!isGameActive);
+        ((TextView) getView().findViewById(R.id.gameStatusText)).setText(getActivity().getText(
+                isGameActive ? R.string.msg_gamestatus_paused : R.string.msg_gamestatus_failed)
+        );
       }
     }
 
@@ -459,16 +462,6 @@ public class MainActivity extends AppCompatActivity {
     } else if ((fragment = fm.findFragmentByTag(ScoreFragment.Id.getId())) != null && fragment.isVisible()) {
       backFromScores();
     }
-/*
-    if (_gameSurfaceFragment.isVisible()) {
-      showScores();
-
-    } else if (_gameSelectorFragment.isVisible()) {
-      super.onBackPressed();
-
-    } else if (_scoreFragment.isVisible()) {
-      backFromScores();
-    }*/
   }
 
   /**
