@@ -51,13 +51,13 @@ public abstract class GameRunner {
 
   private DragStates _dragStates;
   private SurfaceHolder _surfaceHolder;
-  private Tetris _currentGame;
+  private ABrickGame _currentGame;
 
   /**
    * Runs in thread, waits according to game timer or till ui input,
    * analyses _gameThreadAction value passed from UI thread to change game state.
    */
-  public void runGame(SurfaceHolder surfaceHolder, Tetris game) {
+  public void runGame(SurfaceHolder surfaceHolder, ABrickGame game) {
     _surfaceHolder = surfaceHolder;
     _currentGame = game;
 
@@ -79,7 +79,7 @@ public abstract class GameRunner {
           GameImpulse currentImpulse = curAction == GameAction.IMPULSE ? _currentImpulse : null;
           _currentImpulse = null;
 
-          if (getGame().getState() == Tetris.LOST) {
+          if (getGame().getState() == ABrickGame.LOST) {
             Debug.print("Lost: show scores, exit game thread");
             onGameLost();
             break;
@@ -317,7 +317,7 @@ public abstract class GameRunner {
    */
   public void onGameLost() {}
 
-  private Tetris getGame() {
+  private ABrickGame getGame() {
     return _currentGame;
   }
 

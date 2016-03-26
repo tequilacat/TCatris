@@ -6,9 +6,11 @@ import android.graphics.Canvas;
 import java.util.EnumSet;
 
 /**
- * implements game logic
+ * Abstraction of game of falling bricks creating "squeezing" combinations.
+ * Does not impose 2d structure of rectangular w/h field,
+ * keeps state of game field implemented by descendants
  */
-public abstract class Tetris {
+public abstract class ABrickGame {
 
   public enum CellState {
     FALLING, SQUEEZED, SETTLED, FALLEN_SHADOW,
@@ -46,7 +48,7 @@ public abstract class Tetris {
 
   /**************************************************
    **************************************************/
-  public Tetris(GameDescriptor descriptor) {
+  public ABrickGame(GameDescriptor descriptor) {
     //String gameLabel, String gameDescriptor
     // byte[] gameData, String gameLabel, int fWidth, int fHeight, int nextWidth, int nextHeight){
     // example:

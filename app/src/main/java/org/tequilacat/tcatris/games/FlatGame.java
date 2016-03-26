@@ -7,19 +7,19 @@ package org.tequilacat.tcatris.games;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 
+import org.tequilacat.tcatris.core.ABrickGame;
 import org.tequilacat.tcatris.core.DragAxis;
 import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.LayoutParameters;
-import org.tequilacat.tcatris.core.Tetris;
 import org.tequilacat.tcatris.core.Ui;
 import org.tequilacat.tcatris.core.VisualResources;
 
 import java.util.EnumSet;
 
-public abstract class FlatGame extends Tetris {
+public abstract class FlatGame extends ABrickGame {
   // int myCellSize;
 
   public static final int EMPTY = 0;
@@ -45,7 +45,6 @@ public abstract class FlatGame extends Tetris {
    * resets game to initial step
    */
   public void init() {
-    setScore(0);
     myFallingShape = null;
     myNextShape = null;
     _shapesThrown = 0;

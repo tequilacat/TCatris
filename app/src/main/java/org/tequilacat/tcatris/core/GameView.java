@@ -20,7 +20,7 @@ import java.util.List;
 import static org.tequilacat.tcatris.core.GameRunner.GameAction;
 
 public final class GameView extends SurfaceView {
-  private Tetris _currentGame;
+  private ABrickGame _currentGame;
   private Thread _gameThread;
   private boolean _gameStarted;
   private Sounds _sounds;
@@ -130,16 +130,16 @@ public final class GameView extends SurfaceView {
     layoutGameScreen(w, h);
   }
 
-  public void setGame(Tetris game) {
+  public void setGame(ABrickGame game) {
     _currentGame = game;
   }
 
-  public Tetris getGame() {
+  public ABrickGame getGame() {
     return _currentGame;
   }
 
   private void gameStart(final SurfaceHolder surfaceHolder) {
-    final Tetris game = getGame();
+    final ABrickGame game = getGame();
     _dragStates = new GameRunner.DragStates();
     Debug.print("game start");
 
@@ -449,11 +449,11 @@ public final class GameView extends SurfaceView {
 
   static class Button {
     //public final Ui.ButtonGlyph[] glyphs;
-    public final Tetris.ImpulseSemantics[] arrowSemantics;
+    public final ABrickGame.ImpulseSemantics[] arrowSemantics;
     public final Rect rect;
     public final DragAxis dragType;
 
-    public Button(DragAxis dragType, Tetris.ImpulseSemantics[] semantics, int x, int y, int w, int h) {
+    public Button(DragAxis dragType, ABrickGame.ImpulseSemantics[] semantics, int x, int y, int w, int h) {
       this.dragType = dragType;
       this.arrowSemantics = semantics;
       rect = new Rect(x, y, x + w, y + h);
@@ -492,7 +492,7 @@ public final class GameView extends SurfaceView {
    */
   private void layoutGameScreen(int w, int h) {
     // define drag factors (pixels to cell movements) as fraction of screen dimensions
-    Tetris game = getGame();
+    ABrickGame game = getGame();
 
     if (game != null) {
       synchronized (_layoutLock) {
@@ -522,17 +522,17 @@ public final class GameView extends SurfaceView {
 
         _buttons.clear();
         _buttons.add(new Button(DragAxis.ROTATE,
-            new Tetris.ImpulseSemantics[] {
+            new ABrickGame.ImpulseSemantics[] {
                 game.getImpulseSemantics(game.getAxisImpulse(DragAxis.ROTATE, false)),
                 game.getImpulseSemantics(game.getAxisImpulse(DragAxis.ROTATE, true)),
             },
             buttonX, buttonY, buttonWidth * 2, buttonHeight));
 
-        _buttons.add(new Button(null, new Tetris.ImpulseSemantics[]{Tetris.ImpulseSemantics.MOVE_DOWN},
+        _buttons.add(new Button(null, new ABrickGame.ImpulseSemantics[]{ABrickGame.ImpulseSemantics.MOVE_DOWN},
             buttonX + buttonWidth * 2, buttonY, buttonWidth, buttonHeight));
 
         _buttons.add(new Button(DragAxis.HORIZONTAL,
-            new Tetris.ImpulseSemantics[] {
+            new ABrickGame.ImpulseSemantics[] {
                 game.getImpulseSemantics(game.getAxisImpulse(DragAxis.HORIZONTAL, false)),
                 game.getImpulseSemantics(game.getAxisImpulse(DragAxis.HORIZONTAL, true)),
             },
@@ -579,7 +579,7 @@ public final class GameView extends SurfaceView {
       //Rect fieldRect = view_scores.getFieldRect();
 
       // Debug.print("paint: " + (repaintAll ? "ALL" : "field only"));
-      final Tetris game = getGame();
+      final ABrickGame game = getGame();
 
       if (repaintAll) {
         c.drawColor(VisualResources.Defaults.SCREEN_BG_COLOR);
@@ -605,7 +605,7 @@ public final class GameView extends SurfaceView {
           float btnRadius = btnHeight * 0.45f;
           int gliphSide = (int) (btnRadius * 1.5f);
 
-          for (Tetris.ImpulseSemantics buttonGlyph : btn.arrowSemantics) {
+          for (ABrickGame.ImpulseSemantics buttonGlyph : btn.arrowSemantics) {
             Ui.drawRoundButton(c, gX, btn.rect.top + btnHeight / 2, btnRadius, ColorCodes.red, 0xffffbaba);
             Ui.drawGlyph(c, gX - gliphSide / 2, btn.rect.top + btnHeight / 2 - gliphSide / 2,
                 gliphSide, gliphSide, buttonGlyph);

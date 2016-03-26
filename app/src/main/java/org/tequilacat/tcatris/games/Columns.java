@@ -12,14 +12,12 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 
-import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.DragAxis;
 import org.tequilacat.tcatris.core.DragSensitivity;
 import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
 import org.tequilacat.tcatris.core.LayoutParameters;
-import org.tequilacat.tcatris.core.Tetris;
 import org.tequilacat.tcatris.core.VisualResources;
 
 import java.util.EnumSet;

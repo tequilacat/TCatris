@@ -5,10 +5,8 @@ import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 
-import org.tequilacat.tcatris.core.Debug;
+import org.tequilacat.tcatris.core.ABrickGame;
 import org.tequilacat.tcatris.core.GameScreenLayout;
-import org.tequilacat.tcatris.core.Tetris;
-import org.tequilacat.tcatris.core.Ui;
 import org.tequilacat.tcatris.core.VisualResources;
 
 /**
@@ -58,7 +56,7 @@ public abstract class AbstractFlatGamePainter {
    * @param state
    * @param cellState
    */
-  public abstract void paintCellPix(Canvas c, int x, int y, int state, Tetris.CellState cellState);
+  public abstract void paintCellPix(Canvas c, int x, int y, int state, ABrickGame.CellState cellState);
 
 
   /**
@@ -69,7 +67,7 @@ public abstract class AbstractFlatGamePainter {
 
   /**
    * Returns color of field.
-   * Defaults to color of cell type #0, Tetris.getTypeColor(0),
+   * Defaults to color of cell type #0, ABrickGame.getTypeColor(0),
    * may be overwritten in implementations
    * @return color of field
    */

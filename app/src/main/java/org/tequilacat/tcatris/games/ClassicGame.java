@@ -6,12 +6,8 @@ package org.tequilacat.tcatris.games;
 
 import android.graphics.Rect;
 
-import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
-import org.tequilacat.tcatris.core.Tetris;
-
-import java.util.EnumSet;
 
 public class ClassicGame extends FlatGame {
 

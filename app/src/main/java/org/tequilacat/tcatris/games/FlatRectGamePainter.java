@@ -4,9 +4,9 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
+import org.tequilacat.tcatris.core.ABrickGame;
 import org.tequilacat.tcatris.core.ColorCodes;
 import org.tequilacat.tcatris.core.GameScreenLayout;
-import org.tequilacat.tcatris.core.Tetris;
 import org.tequilacat.tcatris.core.Ui;
 import org.tequilacat.tcatris.core.VisualResources;
 
@@ -33,21 +33,21 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
   }
 
   @Override
-  public void paintCellPix(Canvas c, int x, int y, int state, Tetris.CellState cellState) {
+  public void paintCellPix(Canvas c, int x, int y, int state, ABrickGame.CellState cellState) {
     final int cellSize = getGameScreenLayout().getCellSize();
     int cellColor = getTypeColor(state);
 
     if (state == FlatGame.EMPTY) {
       // nothing
 
-    } else if (cellState == Tetris.CellState.FALLING) {
+    } else if (cellState == ABrickGame.CellState.FALLING) {
       Ui.fillRect(c, x, y, cellSize - 1, cellSize - 1, cellColor);
 
-    } else if (cellState == Tetris.CellState.SQUEEZED) {
+    } else if (cellState == ABrickGame.CellState.SQUEEZED) {
       Ui.drawRect(c, x, y, cellSize - 1, cellSize - 1, cellColor);
       Ui.fillRect(c, x + 1, y + 1, cellSize - 3, cellSize - 3, getFieldBackground());
 
-    } else if (cellState == Tetris.CellState.FALLEN_SHADOW) {
+    } else if (cellState == ABrickGame.CellState.FALLEN_SHADOW) {
       int innerSize = cellSize * 6 / 10;
       int margin = (cellSize - innerSize) >> 1;// fast /2
       _cellPainter.setColor(ColorCodes.getDistinctColor(state - 1, ColorCodes.Lightness.Contrast));
@@ -55,7 +55,7 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
       c.drawRect(x + margin, y + margin, x + margin + innerSize, y + margin + innerSize, _cellPainter);
       //Ui.drawRect(c, x + margin, y + margin, innerSize, innerSize, blockColor);
 
-    } else if (cellState == Tetris.CellState.SETTLED) {
+    } else if (cellState == ABrickGame.CellState.SETTLED) {
       Ui.fillRect(c, x, y, cellSize - 1, cellSize - 1, cellColor);
 
       int innerSize = cellSize * 6 / 10;

@@ -1,6 +1,5 @@
 package org.tequilacat.tcatris;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
@@ -26,12 +25,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
+import org.tequilacat.tcatris.core.ABrickGame;
 import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameList;
 import org.tequilacat.tcatris.core.GameView;
 import org.tequilacat.tcatris.core.Scoreboard;
-import org.tequilacat.tcatris.core.Tetris;
 import org.tequilacat.tcatris.core.VisualResources;
 
 import java.text.DateFormat;
@@ -200,13 +199,13 @@ public class MainActivity extends AppCompatActivity {
   public static class PersistentFragment extends MainActivityFragment {
     public static final FragmentId Id = FragmentId.Persistent;
 
-    private Tetris _game;
+    private ABrickGame _game;
 
-    public Tetris getCurrentGame() {
+    public ABrickGame getCurrentGame() {
       return _game;
     }
 
-    public void setCurrentGame(Tetris game) {
+    public void setCurrentGame(ABrickGame game) {
       _game = game;
     }
   }
@@ -336,10 +335,10 @@ public class MainActivity extends AppCompatActivity {
 //      Debug.print("ScoreFragment.onCreateOptionsMenu : " + this);
       inflater.inflate(R.menu.score_menu, menu);
 
-      Tetris game = getMainActivity().getData().getCurrentGame();
+      ABrickGame game = getMainActivity().getData().getCurrentGame();
 
       if (game != null) { // fix crash when waking up without a game
-        boolean isGameActive = game.getState() != Tetris.LOST;
+        boolean isGameActive = game.getState() != ABrickGame.LOST;
         menu.findItem(R.id.mnu_back_to_game).setVisible(isGameActive);
         menu.findItem(R.id.mnu_play_again).setVisible(!isGameActive);
         ((TextView) getView().findViewById(R.id.gameStatusText)).setText(getActivity().getText(
@@ -359,7 +358,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadScores(View view) {
       //View view = getView();
-      Tetris game = getMainActivity().getData().getCurrentGame();
+      ABrickGame game = getMainActivity().getData().getCurrentGame();
       final Scoreboard.GameScores gs = Scoreboard.instance().getGameScores(game.getDescriptor().getId());
 
       ListView scoreListView = (ListView) view.findViewById(R.id.lvScoreList);
@@ -437,7 +436,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void runGame(GameDescriptor gameDescriptor) {
-    Tetris game = GameList.instance().createGame(gameDescriptor);
+    ABrickGame game = GameList.instance().createGame(gameDescriptor);
     game.initGame();
     getData().setCurrentGame(game);
 
@@ -474,9 +473,9 @@ public class MainActivity extends AppCompatActivity {
 
   private void backFromScores() {
 //    Debug.print("restart/continue after scores");
-    Tetris game = getData().getCurrentGame();
+    ABrickGame game = getData().getCurrentGame();
 
-    if (game.getState() == Tetris.LOST) {
+    if (game.getState() == ABrickGame.LOST) {
       game.initGame();
     }
     showFragment(GameViewFragment.Id);

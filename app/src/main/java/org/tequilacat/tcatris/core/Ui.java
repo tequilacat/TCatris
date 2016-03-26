@@ -90,8 +90,8 @@ public class Ui {
     LEFT, RIGHT, RCW, RCCW, DROP,
   }
 
-  private static EnumMap<Tetris.ImpulseSemantics, Path> _gameImpulseGlyph
-      = new EnumMap<>(Tetris.ImpulseSemantics.class);
+  private static EnumMap<ABrickGame.ImpulseSemantics, Path> _gameImpulseGlyph
+      = new EnumMap<>(ABrickGame.ImpulseSemantics.class);
 
   private static List<Path> GLYPH_PATHS;
   private static final Paint _buttonGlyphFillPainter = new Paint();
@@ -198,18 +198,18 @@ public class Ui {
     GLYPH_PATHS.add(rotated(arrowRightPath, 90)); // DROP
 
 
-    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.MOVE_LEFT, rotated(arrowRightPath, 180));
-    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.MOVE_RIGHT, arrowRightPath);
-    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.MOVE_UP, rotated(arrowRightPath, -90));
-    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.MOVE_DOWN, rotated(arrowRightPath, 90));
+    _gameImpulseGlyph.put(ABrickGame.ImpulseSemantics.MOVE_LEFT, rotated(arrowRightPath, 180));
+    _gameImpulseGlyph.put(ABrickGame.ImpulseSemantics.MOVE_RIGHT, arrowRightPath);
+    _gameImpulseGlyph.put(ABrickGame.ImpulseSemantics.MOVE_UP, rotated(arrowRightPath, -90));
+    _gameImpulseGlyph.put(ABrickGame.ImpulseSemantics.MOVE_DOWN, rotated(arrowRightPath, 90));
 
-    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.ROTATE_CCW, ccwArrow);
-    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.ROTATE_CW, mirror(ccwArrow));
+    _gameImpulseGlyph.put(ABrickGame.ImpulseSemantics.ROTATE_CCW, ccwArrow);
+    _gameImpulseGlyph.put(ABrickGame.ImpulseSemantics.ROTATE_CW, mirror(ccwArrow));
 
-    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.SHIFT_RIGHT, shiftRightPath);
-    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.SHIFT_LEFT, mirror(shiftRightPath));
-    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.SHIFT_UP, rotated(shiftRightPath, -90));
-    _gameImpulseGlyph.put(Tetris.ImpulseSemantics.SHIFT_DOWN, rotated(shiftRightPath, 90));
+    _gameImpulseGlyph.put(ABrickGame.ImpulseSemantics.SHIFT_RIGHT, shiftRightPath);
+    _gameImpulseGlyph.put(ABrickGame.ImpulseSemantics.SHIFT_LEFT, mirror(shiftRightPath));
+    _gameImpulseGlyph.put(ABrickGame.ImpulseSemantics.SHIFT_UP, rotated(shiftRightPath, -90));
+    _gameImpulseGlyph.put(ABrickGame.ImpulseSemantics.SHIFT_DOWN, rotated(shiftRightPath, 90));
 
     //ccwArrow.rMoveTo(0.3f, -0.2f);
   }
@@ -219,7 +219,7 @@ public class Ui {
   }
 
   public static void drawGlyph(Canvas c, int x, int y, int w, int h, ButtonGlyph glyph){*/
-  public static void drawGlyph(Canvas c, int x, int y, int w, int h, Tetris.ImpulseSemantics semantics) {
+  public static void drawGlyph(Canvas c, int x, int y, int w, int h, ABrickGame.ImpulseSemantics semantics) {
     if (semantics != null) {
       Path path = _gameImpulseGlyph.get(semantics);
 

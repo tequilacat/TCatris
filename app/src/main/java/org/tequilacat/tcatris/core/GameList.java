@@ -1,7 +1,5 @@
 package org.tequilacat.tcatris.core;
 
-import java.io.Reader;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,12 +61,12 @@ public class GameList {
   /**
    * Creates game of given type, inits from last saved props
    * */
-  public Tetris createGame(GameDescriptor descriptor) {
-    Tetris game = null;
+  public ABrickGame createGame(GameDescriptor descriptor) {
+    ABrickGame game = null;
 
     try {
       Class<?> gameClass = Class.forName(descriptor.getGameClassName());
-      game = (Tetris)gameClass.getDeclaredConstructor(GameDescriptor.class).newInstance(descriptor);
+      game = (ABrickGame)gameClass.getDeclaredConstructor(GameDescriptor.class).newInstance(descriptor);
     } catch (Exception e) {
       // TODO process error when creating a game
       Debug.print("Error creating game: " + e);
