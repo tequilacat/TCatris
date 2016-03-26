@@ -17,7 +17,7 @@ public abstract class AbstractFlatGamePainter {
 
   private GameScreenLayout _gameScreenLayout;
 
-  private Path _shapeContourPath;
+  private Path _shapeContourPath = new Path();
   private Object _shapeSignature = null;
   private Paint _shapeContourPaint = new Paint();
 
@@ -77,7 +77,7 @@ public abstract class AbstractFlatGamePainter {
     _shapeContourPaint.setColor(isValid ?
         VisualResources.Defaults.DYN_SHAPE_STROKE_VALID : VisualResources.Defaults.DYN_SHAPE_STROKE_INVALID);
 
-    if (_shapeContourPath != null) {
+    if (!_shapeContourPath.isEmpty()) {
       c.save();
       c.clipRect(getGameScreenLayout().getFieldRect());
       c.translate(centerX, centerY);
@@ -93,14 +93,17 @@ public abstract class AbstractFlatGamePainter {
    * creates shape contour if needed (if current shape geometry differs
    */
   protected Path updateCurrentShapeContour(FlatShape fallingShape) {
+
     if (fallingShape == null) {
       //Debug.print("updateCurrentShapeContour: nullify");
-      _shapeContourPath = null;
+//      _shapeContourPath = null;
+      _shapeContourPath.reset();
 
     } else if(!fallingShape.signatureEquals(_shapeSignature)) {
       //Debug.print("updateCurrentShapeContour: recreate path");
       _shapeSignature = fallingShape.generateSignature();
-      _shapeContourPath = new Path();
+      _shapeContourPath.reset();
+      //_shapeContourPath = new Path();
       int cx = fallingShape.getCenterX(), cy = fallingShape.getCenterY();
       int cellSize = (int)(getGameScreenLayout().getCellSize() * CONTOUR_FACTOR); // factor X 2
       int x0 = -cellSize >> 1, y0 = x0;

@@ -151,16 +151,14 @@ public abstract class FlatGame extends ABrickGame {
    * @param aShape
    * @param centerX
    * @param centerY
-   * @return
+   * @return whether the shape can be moved to these coords
    */
   private boolean isShapePlaceable(FlatShape aShape, int centerX, int centerY) {
     // check for not out of bounds, not not over existing
     boolean canPlace = true;
     int rowCount = getHeight(), colCount = getWidth();
-    //int shapeCx = aShape.getCenterX(), shapeCy = aShape.getCenterY();
 
     for (int i = 0; i < aShape.size(); i++) {
-      //int x = aShape.getX(i) - shapeCx + centerX, y = aShape.getY(i) - shapeCy + centerY;
       int x = aShape.getX(i, centerX, centerY), y = aShape.getY(i, centerX, centerY);
 
       if (x < 0 || x >= colCount || y >= rowCount || (y >= 0 && field[y][x] != EMPTY)) {
@@ -175,7 +173,7 @@ public abstract class FlatGame extends ABrickGame {
   /********************************
    * drops cur shape 1 level , or till bottom.
    *
-   * @returns if successfully moved a shape
+   * @return if successfully moved a shape
    ******************************/
   @Override
   protected boolean dropCurrent(boolean tillBottom) {
