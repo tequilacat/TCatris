@@ -599,17 +599,26 @@ public final class GameView extends SurfaceView {
 
         // paint buttons
 
+        int buttonMargin = 4;
+
         for (Button btn : _buttons) {
           int btnHeight = btn.rect.height();
           int glyphAreaWidth = btn.rect.width() / btn.arrowSemantics.length, gX = btn.rect.left + glyphAreaWidth / 2;
           float btnRadius = btnHeight * 0.45f;
           int gliphSide = (int) (btnRadius * 1.5f);
 
+          int roundedX = btn.rect.left, roundedY = btn.rect.top,
+              roundedWidth = glyphAreaWidth, roundedHeight = btn.rect.height();
+
           for (ABrickGame.ImpulseSemantics buttonGlyph : btn.arrowSemantics) {
-            Ui.drawRoundButton(c, gX, btn.rect.top + btnHeight / 2, btnRadius, ColorCodes.red, 0xffffbaba);
+            Ui.drawRoundedButton(c, roundedX + buttonMargin, roundedY + buttonMargin,
+                roundedWidth - buttonMargin - buttonMargin,
+                roundedHeight - buttonMargin - buttonMargin, ColorCodes.red, 0xffffbaba);
+            //Ui.drawRoundButton(c, gX, btn.rect.top + btnHeight / 2, btnRadius, ColorCodes.red, 0xffffbaba);
             Ui.drawGlyph(c, gX - gliphSide / 2, btn.rect.top + btnHeight / 2 - gliphSide / 2,
                 gliphSide, gliphSide, buttonGlyph);
             gX += glyphAreaWidth;
+            roundedX += glyphAreaWidth;
           }
         }
       }

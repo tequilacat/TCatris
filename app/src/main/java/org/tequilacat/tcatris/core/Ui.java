@@ -371,5 +371,33 @@ public class Ui {
     fillCircle(c, cx + radius * dx, cy + radius * dx, radius * radRatio, flashColor);
     fillCircle(c, cx + radius * dx2, cy + radius * dx2, radius * radRatio2, mainColor);
   }
+
+  public static void drawRoundedButton(Canvas c, float left, float top, float width, float height,
+                                       int mainColor, int flashColor) {
+    float r = Math.min(width, height) / 4;
+    _rbOval.set(left, top, left + width, top + height);
+    _fillPainter.setColor(mainColor);
+    c.drawRoundRect(_rbOval, r, r, _fillPainter);
+
+    // modify to draw glimpse
+/*
+    _fillPainter.setColor(flashColor);
+    float len = width / 3;
+    float flashR = r/5;
+    _rbOval.set(left + r, top + r, left + len, top + flashR * 2);
+    c.drawRoundRect(_rbOval, flashR, flashR, _fillPainter);
+*/
+    // horz glimpse
+    top += height * 0.05;
+    left += r;
+    width -= (r + r);
+
+    height = (int) (height / 3.5);
+    r = height / 2;
+
+    _rbOval.set(left, top, left + width, top + height);
+    _fillPainter.setColor(flashColor);
+    c.drawRoundRect(_rbOval, r, r, _fillPainter);
+  }
 }
 
