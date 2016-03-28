@@ -90,7 +90,7 @@ public class HextrisPainter extends AbstractFlatGamePainter {
     }else if(cellState == ABrickGame.CellState.FALLEN_SHADOW) {
       path = _scaledHexaPathEmpty;
       _hexPaint.setColor(ColorCodes.getDistinctColor(state - 1, ColorCodes.Lightness.Contrast));
-      _hexPaint.setStyle(Paint.Style.FILL);
+      _hexPaint.setStyle(Paint.Style.STROKE);
 
     }else if(cellState == ABrickGame.CellState.SETTLED) {
       path = _scaledHexaPath;
@@ -127,8 +127,8 @@ public class HextrisPainter extends AbstractFlatGamePainter {
     if(cellField == FieldId.NextField) {
       y = _cachedNextFieldCenterY + _cachedCellSize * row; // TODO fix next Y
     }else {
-      y = (int) (_cachedFieldRect.top + (_hexHalfHeight + _hexHalfHeight) * row);
-      if ((row & 1) == 0) {
+      y = (int) (_cachedFieldRect.top + (_hexHalfHeight + _hexHalfHeight) * row + _hexHalfHeight);
+      if ((col & 1) == 1) {
         y += (int) _hexHalfHeight;
       }
     }
