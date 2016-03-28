@@ -13,7 +13,7 @@ public class HextrisGame extends AbstractRotationGame {
 
 //  @Override
 //  protected FlatShape createNext() {
-//    return HextrisShape.getStaticShapes()[0].createCopy();
+//    return HextrisShape.getStaticShapes()[1].createCopy();
 //  }
 
   @Override

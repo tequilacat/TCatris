@@ -52,8 +52,9 @@ public class HextrisShape extends FlatShape {
     };
 
     _staticShapes = new FlatShape[encodedShapes.length];
-    _rotateCw = toBytes("ACDEFGBIJKLMNOPQRSH");
-    _rotateCcw = toBytes("AGBCDEFSHIJKLMNOPQR");
+    //                    ABCDEFGHIJKLMNOPQRS
+    _rotateCw =  toBytes("ACDEFGBJKLMNOPQRSHI");
+    _rotateCcw = toBytes("AGBCDEFRSHIJKLMNOPQ");
 
     for (int i = 0; i < encodedShapes.length; i++) {
       _staticShapes[i] = new HextrisShape(i + 1, toBytes(encodedShapes[i]));
