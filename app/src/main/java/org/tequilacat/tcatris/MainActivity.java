@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -334,9 +335,14 @@ public class MainActivity extends AppCompatActivity {
         boolean isGameActive = game.getState() != ABrickGame.LOST;
         menu.findItem(R.id.mnu_back_to_game).setVisible(isGameActive);
         menu.findItem(R.id.mnu_play_again).setVisible(!isGameActive);
-        ((TextView) getView().findViewById(R.id.gameStatusText)).setText(getActivity().getText(
-                isGameActive ? R.string.msg_gamestatus_paused : R.string.msg_gamestatus_failed)
+
+        Button restartResume = (Button) getView().findViewById(R.id.btnRestartResume);
+        restartResume.setText(getActivity().getText(
+            isGameActive ? R.string.msg_gamestatus_paused : R.string.msg_gamestatus_failed)
         );
+        restartResume.setCompoundDrawablesWithIntrinsicBounds(
+          isGameActive ? R.drawable.ic_arrow_back_24dp : R.drawable.ic_refresh_24dp,
+          0, 0, 0);
       }
     }
 
@@ -350,7 +356,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadScores(View view) {
-      //View view = getView();
       ABrickGame game = getMainActivity().getData().getCurrentGame();
       final Scoreboard.GameScores gs = Scoreboard.instance().getGameScores(game.getDescriptor().getId());
 
@@ -358,7 +363,6 @@ public class MainActivity extends AppCompatActivity {
 
       ArrayAdapter<Scoreboard.ScoreEntry> adapter = new ArrayAdapter<Scoreboard.ScoreEntry>(
           getActivity(),
-          //android.R.layout.simple_list_item_2,
           android.R.layout.simple_list_item_activated_2,
           android.R.id.text1, gs.getEntries()) {
         @Override
@@ -442,7 +446,6 @@ public class MainActivity extends AppCompatActivity {
    */
   @Override
   public void onBackPressed() {
-    Debug.print("Back is pressed");
     FragmentManager fm = getFragmentManager();
     Fragment fragment;
 
@@ -464,8 +467,11 @@ public class MainActivity extends AppCompatActivity {
     showFragment(ScoreFragment.Id);
   }
 
+  public void onRestartResume(View view) {
+    backFromScores();
+  }
+
   private void backFromScores() {
-//    Debug.print("restart/continue after scores");
     ABrickGame game = getData().getCurrentGame();
 
     if (game.getState() == ABrickGame.LOST) {

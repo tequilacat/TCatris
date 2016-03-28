@@ -5,8 +5,8 @@
               xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
-              android:layout_margin="20dp"
               android:orientation="vertical">
+    <!--android:layout_margin="20dp"-->
 
     <ListView
         android:id="@+id/lvScoreList"
@@ -24,12 +24,13 @@
         android:text="@string/current_score_too_low">
     </TextView>
 
-    <TextView
-        android:id="@+id/gameStatusText"
+    <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/title_font_size"
-        android:text="@string/msg_gamestatus_failed">
-    </TextView>
+        android:id="@+id/btnRestartResume"
+        android:text="@string/msg_gamestatus_failed"
+        android:gravity="center"
 
+        android:onClick="onRestartResume"
+        />
 </LinearLayout>
