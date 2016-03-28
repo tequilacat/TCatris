@@ -11,10 +11,10 @@ public class HextrisGame extends AbstractRotationGame {
     super(descriptor, new HextrisPainter(), HextrisShape.getStaticShapes());
   }
 
-  @Override
-  protected FlatShape createNext() {
-    return HextrisShape.getStaticShapes()[0].createCopy();
-  }
+//  @Override
+//  protected FlatShape createNext() {
+//    return HextrisShape.getStaticShapes()[0].createCopy();
+//  }
 
   @Override
   protected boolean isSqueezable(int i, int j) {

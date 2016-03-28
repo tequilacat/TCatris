@@ -107,13 +107,11 @@ public class HextrisPainter extends AbstractFlatGamePainter {
     }
   }
 
-  // TODO override getCenterX, getCenterY
-
   protected int getCenterX(int col, int row, FieldId cellField) {
     final int x;
 
     if(cellField == FieldId.NextField) {
-      x = _cachedNextFieldCenterX + _cachedCellSize * col; // TODO fix next X
+      x = (int)(_cachedNextFieldCenterX + _dx * col);
     }else {
       x = (int) (_cachedFieldRect.left + _hexHalfWidth + _dx * col);
     }
@@ -122,15 +120,16 @@ public class HextrisPainter extends AbstractFlatGamePainter {
   }
 
   protected int getCenterY(int col, int row, FieldId cellField) {
-    int y;
+    int y = (int) ((_hexHalfHeight + _hexHalfHeight) * row + _hexHalfHeight);
+
+    if ((col & 1) == 1) {
+      y += (int) _hexHalfHeight;
+    }
 
     if(cellField == FieldId.NextField) {
-      y = _cachedNextFieldCenterY + _cachedCellSize * row; // TODO fix next Y
+      y += _cachedNextFieldCenterY;
     }else {
-      y = (int) (_cachedFieldRect.top + (_hexHalfHeight + _hexHalfHeight) * row + _hexHalfHeight);
-      if ((col & 1) == 1) {
-        y += (int) _hexHalfHeight;
-      }
+      y += _cachedFieldRect.top;
     }
 
     return y;
