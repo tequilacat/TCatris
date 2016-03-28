@@ -22,13 +22,11 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
     _cellPainter.setStyle(Paint.Style.STROKE);
   }
 
-  public static int getTypeColor(int cellType) {
-    return ColorCodes.getDistinctColor(cellType - 1, ColorCodes.Lightness.Normal);
-  }
-
   @Override
   public void paintCellPix(Canvas c, int x, int y, int state, ABrickGame.CellState cellState) {
-    final int cellSize = getGameScreenLayout().getCellSize();
+    final int cellSize = _cachedCellSize, halfCellSize = cellSize >> 1;
+    x -= halfCellSize;
+    y -= halfCellSize;
     int cellColor = getTypeColor(state);
 
     if (state == FlatGame.EMPTY) {
@@ -39,7 +37,7 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
 
     } else if (cellState == ABrickGame.CellState.SQUEEZED) {
       Ui.drawRect(c, x, y, cellSize - 1, cellSize - 1, cellColor);
-      Ui.fillRect(c, x + 1, y + 1, cellSize - 3, cellSize - 3, VisualResources.Defaults.FIELD_BG_COLOR);
+      Ui.fillRect(c, x + 1, y + 1, cellSize - 3, cellSize - 3, getFieldBgColor());
 
     } else if (cellState == ABrickGame.CellState.FALLEN_SHADOW) {
       int innerSize = cellSize * 6 / 10;
@@ -56,17 +54,11 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
       int margin = (cellSize - innerSize) >> 1;// fast /2
       final int blockColor = ColorCodes.getDistinctColor(state - 1, ColorCodes.Lightness.Contrast);
       Ui.fillRect(c, x + margin, y + margin, innerSize, innerSize, blockColor);
-
-//      _cellPainter.setColor(ColorCodes.black);
-//      x += 3;
-//      y += 3;
-//      c.drawLine(x, y, x + cellSize - 8, y, _cellPainter);
-//      c.drawLine(x, y, x, y + cellSize - 8, _cellPainter);
     }
   }
 
   @Override
-  public void paintFieldBackground(Canvas g) {
+  public void paintField(Canvas g, FlatGame game) {
     // do nothing or fill the rect
 
     final GameScreenLayout layout = getGameScreenLayout();
@@ -75,7 +67,7 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
         right = fieldRect.right, left = fieldRect.left,
         top = fieldRect.top, bottom = fieldRect.bottom;
 
-    Ui.fillRect(g, layout.getFieldRect(), VisualResources.Defaults.FIELD_BG_COLOR);
+    Ui.fillRect(g, layout.getFieldRect(), getFieldBgColor());
 
     _cellPainter.setColor(VisualResources.Defaults.FIELD_LINE_COLOR);
     _cellPainter.setStrokeWidth(0);
@@ -89,16 +81,37 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
     for (int y = top + cellSize; y < bottom; y += cellSize) {
       g.drawLine(left, y, right, y, _cellPainter);
     }
+
+    // paint field contents here
+    int pixY = fieldRect.top + (_cachedCellSize >> 1);
+    int gameRows = game.getHeight(), gameCols = game.getWidth();
+
+    for (int y = 0; y < gameRows; y++) {
+      int pixX = fieldRect.left + (_cachedCellSize >> 1);
+
+      for (int x = 0; x < gameCols; x++) {
+        // settled
+        int cellValue = game.getCellValue(x, y);
+
+        if (cellValue != FlatGame.EMPTY) {
+          paintCellPix(g, pixX, pixY, cellValue,
+              game.isSqueezable(x, y) ? ABrickGame.CellState.SQUEEZED : ABrickGame.CellState.SETTLED);
+        }
+        pixX += cellSize;
+      }
+
+      pixY += cellSize;
+    }
   }
 
   @Override
   protected void updateCurrentShapeContour(FlatShape fallingShape, Path shapeContourPath) {
 //_shapeContourPath = new Path();
     int cx = fallingShape.getCenterX(), cy = fallingShape.getCenterY();
-    int cellSize = (int)(getGameScreenLayout().getCellSize() * GameConstants.CONTOUR_FACTOR); // factor X 2
+    int cellSize = (int) (getGameScreenLayout().getCellSize() * GameConstants.CONTOUR_FACTOR); // factor X 2
     int x0 = -cellSize >> 1, y0 = x0;
 
-    for(int i = 0; i < fallingShape.size(); i++) {
+    for (int i = 0; i < fallingShape.size(); i++) {
       int cellX = (fallingShape.getX(i) - cx) * cellSize + x0;
       int cellY = (fallingShape.getY(i) - cy) * cellSize + y0;
 

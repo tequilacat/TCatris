@@ -8,9 +8,6 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import org.tequilacat.tcatris.core.ABrickGame;
 import org.tequilacat.tcatris.core.Dimensions;
@@ -27,7 +24,6 @@ import org.tequilacat.tcatris.core.VisualResources;
 import java.util.EnumSet;
 
 public abstract class FlatGame extends ABrickGame {
-  // int myCellSize;
 
   public static final int EMPTY = 0;
   private final Dimensions _fieldDimensions;
@@ -42,6 +38,7 @@ public abstract class FlatGame extends ABrickGame {
 
   protected FlatGame(GameDescriptor descriptor, AbstractFlatGamePainter fieldPainter) {
     super(descriptor);
+
     _fieldPainter = fieldPainter;
     _fieldDimensions = new Gson().fromJson(descriptor.getGameParameters().get(
         GameConstants.JSON_DIMENSIONS), Dimensions.class);
@@ -80,10 +77,11 @@ public abstract class FlatGame extends ABrickGame {
     _shapesThrown = 0;
     countStep();
     field = new int[getHeight()][getWidth()];
-    for (int i = 0; i < getHeight(); i++) {
-      for (int j = 0; j < getWidth(); j++)
-        field[i][j] = EMPTY;
 
+    for (int i = 0; i < getHeight(); i++) {
+      for (int j = 0; j < getWidth(); j++) {
+        field[i][j] = EMPTY;
+      }
     }
   }
 
@@ -177,9 +175,6 @@ public abstract class FlatGame extends ABrickGame {
    ******************************/
   @Override
   protected boolean dropCurrent(boolean tillBottom) {
-    //int downStep = 1;
-    //boolean dropped = false;
-
     // find y pos to settle
     int finalY = -1, x = myFallingShape.getCenterX(), y = myFallingShape.getCenterY() + 1;
     boolean shapeMoved = false;
@@ -253,7 +248,6 @@ public abstract class FlatGame extends ABrickGame {
     int MARGIN = VisualResources.Defaults.MARGIN_SIZE;
     int VERT_SPACING = MARGIN;
 
-    //LayoutParameters layoutParams = new LayoutParameters();
     int screenWidth = layoutParams.GameArea.width(), screenHeight = layoutParams.GameArea.height();
 
     int glassWidth = this.getWidth(), glassHeight = this.getHeight();
@@ -287,8 +281,6 @@ public abstract class FlatGame extends ABrickGame {
       layoutParams.GameArea.left + fieldX0, layoutParams.GameArea.top + fieldY0,
       fieldWidth, fieldHeight,
       nextShapeX, nextShapeY, nextShapeWidth, nextShapeHeight));
-//        layoutParams.GameArea.left + myNextShapeX0, layoutParams.GameArea.top + myNextShapeY0,
-//        this.getMaxShapeWidth() * cellSize, this.getMaxShapeHeight() * cellSize));
 
     _fieldPainter.init(getGameScreenLayout());
   }
@@ -303,32 +295,13 @@ public abstract class FlatGame extends ABrickGame {
    */
   @Override
   public void paintField(Canvas g, DynamicState dynamicState) {
-    Rect fieldRect = getGameScreenLayout().getFieldRect();
-    int cellSize = getGameScreenLayout().getCellSize();
-    int pixY = fieldRect.top;
+    // paints field background and field cells
+    _fieldPainter.paintField(g, this);
 
-    _fieldPainter.paintFieldBackground(g);
-
-    for (int y = 0; y < getHeight(); y++) {
-      int pixX = fieldRect.left;
-
-      for (int x = 0; x < getWidth(); x++) {
-        // settled
-        _fieldPainter.paintCellPix(g, pixX, pixY, getCellValue(x, y),
-          isSqueezable(x, y) ? CellState.SQUEEZED : CellState.SETTLED);
-        pixX += cellSize;
-      }
-
-      pixY += cellSize;
-    }
-
+    // display falling shape
     if (getState() == ACTIVE && !canSqueeze()) {
-      FlatShape shape = getCurrentShape();
 
-      int centerX0 = fieldRect.left + shape.getCenterX() * cellSize;
-      int centerY0 = fieldRect.top + shape.getCenterY() * cellSize;
-
-      double dx = 0;
+      float dx = 0;
       float rotateFactor = 0; // 1 means 90', 0 means no rotate
       boolean isValid = true;
       boolean drawContour = false;
@@ -368,49 +341,12 @@ public abstract class FlatGame extends ABrickGame {
       if (drawContour) {
         // TODO only update shape contour when it's thrown in or rotated
         _fieldPainter.updateCurrentShapeContour(getCurrentShape());
-        _fieldPainter.drawShapeContour(g,
-            centerX0 + cellSize / 2 + (int) (dx * cellSize), centerY0 + cellSize / 2,
-            isValid, rotateFactor * 90);
+        _fieldPainter.drawShapeContour(g, this, isValid, dx, rotateFactor * 90);
+            //centerX0 + cellSize / 2 + (int) (dx * cellSize), centerY0 + cellSize / 2,
       }
 
-      paintFallingShape(g, dynamicState);
+      _fieldPainter.paintFallingShape(g, this, _finalCurShapeY, dynamicState);
     }
-  }
-
-  /**
-   * @param c
-   * @param dynamicState current state of shape offset along supported axis
-   */
-  protected void paintFallingShape(Canvas c, DynamicState dynamicState) {
-    FlatShape shape = getCurrentShape();
-    int cols = getWidth(), rows = getHeight();
-    Rect fieldRect = getGameScreenLayout().getFieldRect();
-    int cellSize = getGameScreenLayout().getCellSize();
-    int shapeCenterY = shape.getCenterY();
-
-    // first draw next figure if allowed
-    if(isPrefShowDropTarget()) {
-      for (int i = 0, len = shape.size(); i < len; i++) {
-        int x = shape.getX(i), y = shape.getY(i) + _finalCurShapeY - shapeCenterY,
-            xPos = fieldRect.left + x * cellSize;
-        if (x >= 0 && x < cols && y >= 0 && y < rows) {
-          if (_finalCurShapeY > shapeCenterY) {
-            _fieldPainter.paintCellPix(c, xPos, fieldRect.top + y * cellSize,
-                shape.getCellType(i), CellState.FALLEN_SHADOW);
-          }
-        }
-      }
-    }
-
-    for (int i = 0, len = shape.size(); i < len; i++) {
-      int x = shape.getX(i), y = shape.getY(i), xPos = fieldRect.left + x * cellSize;
-
-      if (x >= 0 && x < cols && y >= 0 && y < rows) {
-        _fieldPainter.paintCellPix(c, xPos, fieldRect.top + y * cellSize,
-            shape.getCellType(i), CellState.FALLING);
-      }
-    }
-
   }
 
   /**
@@ -435,24 +371,7 @@ public abstract class FlatGame extends ABrickGame {
    */
   @Override
   public void paintNext(Canvas g) {
-    Rect nextRect = getGameScreenLayout().getNextShapeRect();
-    Ui.fillRect(g, nextRect, VisualResources.Defaults.FIELD_BG_COLOR);
-
-    int cellSize = getGameScreenLayout().getCellSize();
-    FlatShape shape = getNextShape();
-    Rect bounds = new Rect();
-    shape.getBounds(bounds);
-
-    int x0 = nextRect.left + (nextRect.width() - bounds.width() * cellSize) / 2;
-    int y0 = nextRect.top + (nextRect.height() - bounds.height() * cellSize) / 2;
-
-    for (int i = 0; i < shape.size(); i++) {
-      _fieldPainter.paintCellPix(g,
-        x0 + (-bounds.left + (shape.getX(i) - shape.getCenterX())) * cellSize,
-        y0 + (-bounds.top + (shape.getY(i) - shape.getCenterY())) * cellSize,
-        shape.getCellType(i), CellState.FALLING);
-    }
-
+    getGamePainter().paintNext(g, getNextShape());
   }
 
   @Override

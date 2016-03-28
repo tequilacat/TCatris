@@ -7,8 +7,38 @@ import android.graphics.Rect;
  */
 public class FlatRectShape extends FlatShape {
 
+  private int[] myData;
+
   public FlatRectShape(int[] data) {
-    super(data);
+    myData = data;
+  }
+
+  @Override
+  protected void copyFields(FlatShape fromOther) {
+    super.copyFields(fromOther);
+    FlatRectShape other = (FlatRectShape) fromOther;
+    myData = new int[other.myData.length];
+    System.arraycopy(other.myData, 0, myData, 0, other.myData.length);
+  }
+
+  @Override
+  public int size() {
+    return myData.length / 3;
+  }
+
+  @Override
+  public int getCellType(int i) {
+    return myData[(i << 1) + i + 2];
+  }
+
+  /**
+   * changes cell type
+   * @param i cell index
+   * @param cellType new value for cell type
+   */
+  public void setCellType(int i, int cellType) {
+    // quick *3
+    myData[(i << 1) + i + 2] = cellType;
   }
 
   @Override
@@ -83,4 +113,34 @@ public class FlatRectShape extends FlatShape {
     return myData[(i << 1) + i + 1] + centerY;
   }
 
+  @Override
+  public boolean signatureEquals(Object shapeSignature) {
+    boolean equals = false;
+
+    if (shapeSignature != null && shapeSignature instanceof int[] &&
+        ((int[]) shapeSignature).length == myData.length) {
+      final int[] sigArray = (int[]) shapeSignature;
+      equals = true;
+
+      for (int i = 0, len = sigArray.length; i < len; i++) {
+        if (sigArray[i] != myData[i]) {
+          equals = false;
+          break;
+        }
+        i++;
+        if (sigArray[i] != myData[i]) {
+          equals = false;
+          break;
+        }
+        i++; // skip color - does not matter for shape
+      }
+    }
+
+    return equals;
+  }
+
+  @Override
+  public Object generateSignature() {
+    return myData.clone();
+  }
 }

@@ -28,14 +28,25 @@ public class ClassicGame extends AbstractRotationGame {
   })
   };
 
-  static {
-    autoAssignColors(_StaticShapes);
-  }
-
   public ClassicGame(GameDescriptor descriptor) {
     super(descriptor, new FlatRectGamePainter(), _StaticShapes);
     mySqueezable = new boolean[getHeight()];
   }
+
+
+//  static {
+//    autoAssignColors(_StaticShapes);
+//  }
+//
+//  private static void autoAssignColors(FlatShape[] shapes) {
+//    for (int i = 0; i < shapes.length; i++) {
+//      FlatShape shape = shapes[i];
+//
+//      for (int nCell = 0, n = shape.size(); nCell < n; nCell++) {
+//        ((FlatRectShape)shape).setCellType(nCell, i + 1);
+//      }
+//    }
+//  }
 
   @Override
   protected boolean isSqueezable(int x, int y) {

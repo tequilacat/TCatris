@@ -1,24 +1,19 @@
 package org.tequilacat.tcatris.games;
 
 import org.tequilacat.tcatris.core.GameDescriptor;
-import org.tequilacat.tcatris.core.GameImpulse;
 
 /**
  * Hextris game
  */
 public class HextrisGame extends AbstractRotationGame {
-  private static final FlatShape _StaticShapes[] = {
-      new HextrisShape(new int[]{
-          0, 0, 1, 1, 0, 1, 1, -1, 1, 0, 1, 1
-      })
-  };
 
-  static {
-    autoAssignColors(_StaticShapes);
+  public HextrisGame(GameDescriptor descriptor) {
+    super(descriptor, new HextrisPainter(), HextrisShape.getStaticShapes());
   }
 
-  protected HextrisGame(GameDescriptor descriptor) {
-    super(descriptor, new HextrisPainter(), _StaticShapes);
+  @Override
+  protected FlatShape createNext() {
+    return HextrisShape.getStaticShapes()[0].createCopy();
   }
 
   @Override

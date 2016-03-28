@@ -21,16 +21,6 @@ public abstract class AbstractRotationGame extends FlatGame {
     _maxNextShapeDimension = computeMaxNextShapeDimensions(_originalShapes);
   }
 
-  protected static void autoAssignColors(FlatShape[] shapes) {
-    for (int i = 0; i < shapes.length; i++) {
-      FlatShape shape = shapes[i];
-
-      for (int nCell = 0, n = shape.size(); nCell < n; nCell++) {
-        shape.setCellType(nCell, i + 1);
-      }
-    }
-  }
-
   /**
    * @param shapes array of possible shapes
    * @return max dimensions of specified shapes in cells
