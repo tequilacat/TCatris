@@ -21,13 +21,12 @@ public abstract class AbstractFlatGamePainter {
 
   private GameScreenLayout _gameScreenLayout;
 
-  private Path _shapeContourPath = new Path();
+  private final Path _shapeContourPath = new Path();
   private Object _shapeSignature = null;
-  private Paint _shapeContourPaint = new Paint();
+  private final Paint _shapeContourPaint = new Paint();
 
   // can be used for quick access from inheritors
   protected final Rect _cachedFieldRect = new Rect();
-  protected int _cachedCellSize;
   protected int _cachedNextFieldCenterX;
   protected int _cachedNextFieldCenterY;
 
@@ -44,15 +43,23 @@ public abstract class AbstractFlatGamePainter {
     return ColorCodes.getDistinctColor(cellType - 1, ColorCodes.Lightness.Normal);
   }
 
+  protected Paint getShapeContourPaint() {
+    return _shapeContourPaint;
+  }
+
+  protected Path getShapeContourPath() {
+    return _shapeContourPath;
+  }
+
   /**
    * stores size and calculates all things dependent on cell size
    * @param gameScreenLayout screen view_scores
    */
-  public void init(GameScreenLayout gameScreenLayout){
+  public void init(GameScreenLayout gameScreenLayout, FlatGame game){
     _gameScreenLayout = gameScreenLayout;
 
     _cachedFieldRect.set(gameScreenLayout.getFieldRect());
-    _cachedCellSize = gameScreenLayout.getCellSize();
+   // _cachedCellSize = gameScreenLayout.getCellSize();
 
     Rect nextShapeRect = gameScreenLayout.getNextShapeRect();
 
@@ -90,30 +97,10 @@ public abstract class AbstractFlatGamePainter {
 
   public enum FieldId { GameField, NextField }
 
-  protected int getCenterX(int col, int row, FieldId cellField) {
-    final int x;
-
-    if(cellField == FieldId.NextField) {
-      x = _cachedNextFieldCenterX + _cachedCellSize * col;
-    }else {
-      x = _cachedFieldRect.left + _cachedCellSize * col + (_cachedCellSize >> 1);
-    }
-
-    return x;
-  }
-
-  protected int getCenterY(int col, int row, FieldId cellField) {
-    final int y;
-
-    if(cellField == FieldId.NextField) {
-      y = _cachedNextFieldCenterY + _cachedCellSize * row;
-    }else {
-      y = _cachedFieldRect.top + _cachedCellSize * row + (_cachedCellSize >> 1);
-    }
-
-    return y;
-  }
-
+  public abstract int getCenterX(int col, int row, FieldId cellField);
+  public abstract int getCenterY(int col, int row, FieldId cellField);
+  /*
+*/
   /**
    * Draws current shape contour with rotation
    * @param c canvas
@@ -121,26 +108,7 @@ public abstract class AbstractFlatGamePainter {
    * @param dx from -1 to 1, 0 means no offset
    * @param rotateByDegrees degrees of rotation
    */
-  public void drawShapeContour(Canvas c, FlatGame game, boolean isValid, float dx, float rotateByDegrees) {
-    if (!_shapeContourPath.isEmpty()) {
-      _shapeContourPaint.setColor(isValid ?
-          VisualResources.Defaults.DYN_SHAPE_STROKE_VALID : VisualResources.Defaults.DYN_SHAPE_STROKE_INVALID);
-
-      c.save();
-      c.clipRect(_cachedFieldRect);
-
-      FlatShape shape = game.getCurrentShape();
-      int cx = shape.getCenterX(), cy = shape.getCenterY();
-      c.translate(getCenterX(cx, cy, FieldId.GameField) + (int) (dx * _cachedCellSize),
-          getCenterY(cx, cy, FieldId.GameField));
-
-      if (rotateByDegrees != 0) {
-        c.rotate(rotateByDegrees);
-      }
-      c.drawPath(_shapeContourPath, _shapeContourPaint);
-      c.restore();
-    }
-  }
+  public abstract void drawShapeContour(Canvas c, FlatGame game, boolean isValid, float dx, float rotateByDegrees);
 
   /**
    * Modifies shapeContourPath to represent given shape
@@ -212,8 +180,6 @@ public abstract class AbstractFlatGamePainter {
       int col = shape.getX(i), row = shape.getY(i);
       paintCellPix(g, getCenterX(col, row, FieldId.NextField),
           getCenterY(col, row, FieldId.NextField),
-//          x0 + (-bounds.left + (shape.getX(i) - shape.getCenterX())) * _cachedCellSize,
-//          y0 + (-bounds.top + (shape.getY(i) - shape.getCenterY())) * _cachedCellSize,
           shape.getCellType(i), ABrickGame.CellState.FALLING);
     }
 

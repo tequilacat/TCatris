@@ -39,8 +39,8 @@ int cellSize = getGameScreenLayout().getCellSize();
 */
 
   @Override
-  public void init(GameScreenLayout gameScreenLayout) {
-    super.init(gameScreenLayout);
+  public void init(GameScreenLayout gameScreenLayout, FlatGame game) {
+    super.init(gameScreenLayout, game);
 
     _arrowPath.reset();
     _arrowPath.moveTo(0.3f * _cachedCellSize, 0);

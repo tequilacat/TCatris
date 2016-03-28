@@ -15,7 +15,7 @@ import org.tequilacat.tcatris.core.VisualResources;
 /**
  * Implementation of painter drawing flat color squares
  */
-public class FlatRectGamePainter extends AbstractFlatGamePainter {
+public class FlatRectGamePainter extends AbstractRectGamePainter {
   private Paint _cellPainter = new Paint();
 
   public FlatRectGamePainter() {
@@ -72,7 +72,7 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
     _cellPainter.setColor(VisualResources.Defaults.FIELD_LINE_COLOR);
     _cellPainter.setStrokeWidth(0);
 
-    final int cellSize = getGameScreenLayout().getCellSize();
+    final int cellSize = _cachedCellSize;// getGameScreenLayout().getCellSize();
 
     for (int x = left + cellSize; x < right; x += cellSize) {
       g.drawLine(x, top, x, bottom, _cellPainter);
@@ -106,9 +106,8 @@ public class FlatRectGamePainter extends AbstractFlatGamePainter {
 
   @Override
   protected void updateCurrentShapeContour(FlatShape fallingShape, Path shapeContourPath) {
-//_shapeContourPath = new Path();
     int cx = fallingShape.getCenterX(), cy = fallingShape.getCenterY();
-    int cellSize = (int) (getGameScreenLayout().getCellSize() * GameConstants.CONTOUR_FACTOR); // factor X 2
+    int cellSize = (int) (_cachedCellSize * GameConstants.CONTOUR_FACTOR);
     int x0 = -cellSize >> 1, y0 = x0;
 
     for (int i = 0; i < fallingShape.size(); i++) {

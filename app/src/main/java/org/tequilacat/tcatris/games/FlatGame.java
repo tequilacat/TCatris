@@ -5,7 +5,6 @@
 package org.tequilacat.tcatris.games;
 
 import android.graphics.Canvas;
-import android.graphics.Rect;
 
 import com.google.gson.Gson;
 
@@ -18,7 +17,6 @@ import org.tequilacat.tcatris.core.GameDescriptor;
 import org.tequilacat.tcatris.core.GameImpulse;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.LayoutParameters;
-import org.tequilacat.tcatris.core.Ui;
 import org.tequilacat.tcatris.core.VisualResources;
 
 import java.util.EnumSet;
@@ -137,8 +135,8 @@ public abstract class FlatGame extends ABrickGame {
 
   /**
    * checks whether the given shape fits the field
-   * @param aShape
-   * @return
+   * @param aShape a shape to test
+   * @return whether aShape can be placed to its current coordinates (during fall)
    */
   private boolean isShapePlaceable(FlatShape aShape) {
     return isShapePlaceable(aShape, aShape.getCenterX(), aShape.getCenterY());
@@ -146,18 +144,18 @@ public abstract class FlatGame extends ABrickGame {
 
   /**
    * Checks whether the given shape fits the field when centered at given coordinates
-   * @param aShape
-   * @param centerX
-   * @param centerY
+   * @param aShape shape to test
+   * @param centerCol center of shape
+   * @param centerRow center of shape
    * @return whether the shape can be moved to these coords
    */
-  private boolean isShapePlaceable(FlatShape aShape, int centerX, int centerY) {
+  private boolean isShapePlaceable(FlatShape aShape, int centerCol, int centerRow) {
     // check for not out of bounds, not not over existing
     boolean canPlace = true;
     int rowCount = getHeight(), colCount = getWidth();
 
     for (int i = 0; i < aShape.size(); i++) {
-      int x = aShape.getX(i, centerX, centerY), y = aShape.getY(i, centerX, centerY);
+      int x = aShape.getX(i, centerCol, centerRow), y = aShape.getY(i, centerCol, centerRow);
 
       if (x < 0 || x >= colCount || y >= rowCount || (y >= 0 && field[y][x] != EMPTY)) {
         canPlace = false;
@@ -252,41 +250,72 @@ public abstract class FlatGame extends ABrickGame {
 
     int glassWidth = this.getWidth(), glassHeight = this.getHeight();
 
-    int nextFigWidth = this.getMaxNextWidth(), nextFigHeight = this.getMaxNextHeight();
+    //int nextFigWidth = this.getMaxNextWidth(), nextFigHeight = this.getMaxNextHeight();
 
     int nextFigMargin = VERT_SPACING;
     int width = screenWidth - MARGIN - MARGIN - VERT_SPACING - nextFigMargin * 2;
     int height = screenHeight - MARGIN - MARGIN;
-    int cellSize = width / (glassWidth + nextFigWidth);
 
-    if (cellSize * glassHeight > height) {
-      cellSize = height / glassHeight;
+
+    // consider left to right
+    float[] sideRatios = new float[3];
+    estimateSides(sideRatios);
+    float fieldHwRatio = sideRatios[0], nextWRatio = sideRatios[1], nextHRatio = sideRatios[2];
+    // never consider nextfig higher than the field
+    float sumWidth = 1 + nextWRatio, sumHeight = fieldHwRatio; //Math.max(fieldHwRatio, nextHRatio);
+    // now normalize to existing space of width, height
+    float cellAreasWhRatio = sumWidth / sumHeight, screenWRatio = width / (float)height;
+
+    // how much pixels per estimated sides unit (1.0)
+    double pixelRatio;
+    if (cellAreasWhRatio > screenWRatio) {
+      // field wider the screen
+      pixelRatio = width / (1f + nextWRatio);
+    } else {
+      // taller than the screen
+      pixelRatio = height / (float) fieldHwRatio;
     }
+
+    int fieldWidth = (int) pixelRatio, fieldHeight = (int) (fieldHwRatio * pixelRatio),
+        nextFigWidth = (int) (nextWRatio * pixelRatio),
+        nextFigHeight = (int) (nextHRatio * pixelRatio);
 
     int fieldX0 = MARGIN;
     int fieldY0 = MARGIN;
 
-    int fieldWidth = cellSize * glassWidth;
-    int fieldHeight = cellSize * glassHeight;
+//    int fieldWidth = cellSize * glassWidth;
+//    int fieldHeight = cellSize * glassHeight;
 
 
     // lay out next fig
     ///layoutParams.GameArea.left
     int nextShapeX = layoutParams.GameArea.left + MARGIN + fieldWidth + VERT_SPACING;
-    int nextShapeWidth = nextFigMargin * 2 + nextFigWidth * cellSize;
+    int nextShapeWidth = nextFigMargin * 2 + nextFigWidth;
     int nextShapeY = layoutParams.GameArea.top + MARGIN;
-    int nextShapeHeight = nextFigMargin * 2 + nextFigHeight * cellSize;
+    int nextShapeHeight = nextFigMargin * 2 + nextFigHeight;
 
-    setGameScreenLayout(new GameScreenLayout(cellSize,
+    setGameScreenLayout(new GameScreenLayout(
       layoutParams.GameArea.left + fieldX0, layoutParams.GameArea.top + fieldY0,
       fieldWidth, fieldHeight,
       nextShapeX, nextShapeY, nextShapeWidth, nextShapeHeight));
 
-    _fieldPainter.init(getGameScreenLayout());
+    _fieldPainter.init(getGameScreenLayout(), this);
   }
 
-  protected abstract int getMaxNextWidth();
-  protected abstract int getMaxNextHeight();
+  /**
+   * Fills array with 3 values:
+   * [0] = field height
+   * [1] = next width
+   * [2] = next height
+   *
+   * the field width is considered 1.0f
+   *
+   * @param threeSides array of at least 3 cells
+   */
+  protected abstract void estimateSides(float[] threeSides);
+
+//  protected abstract int getMaxNextWidth();
+//  protected abstract int getMaxNextHeight();
 
   /**
    * paints game field

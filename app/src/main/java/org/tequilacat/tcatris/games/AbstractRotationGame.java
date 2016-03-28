@@ -12,20 +12,20 @@ import org.tequilacat.tcatris.core.GameImpulse;
  */
 public abstract class AbstractRotationGame extends FlatGame {
   private final FlatShape[] _originalShapes;
-  private Dimensions _maxNextShapeDimension;
+  // private Dimensions _maxNextShapeDimension;
 
   protected AbstractRotationGame(GameDescriptor descriptor, AbstractFlatGamePainter fieldPainter,
                                  FlatShape[] staticShapes) {
     super(descriptor, fieldPainter);
     _originalShapes = staticShapes;
-    _maxNextShapeDimension = computeMaxNextShapeDimensions(_originalShapes);
+    // _maxNextShapeDimension = computeMaxNextShapeDimensions(_originalShapes);
   }
 
   /**
    * @param shapes array of possible shapes
    * @return max dimensions of specified shapes in cells
    */
-  private Dimensions computeMaxNextShapeDimensions(FlatShape[] shapes) {
+  protected static Dimensions computeMaxNextShapeDimensions(FlatShape[] shapes) {
     Rect bounds = new Rect();
     int _maxNextWidth = 0;
     int _maxNextHeight = 0;
@@ -51,15 +51,15 @@ public abstract class AbstractRotationGame extends FlatGame {
     return _originalShapes[getRandomInt(_originalShapes.length)].createCopy();
   }
 
-  @Override
-  protected int getMaxNextWidth() {
-    return _maxNextShapeDimension.width;
-  }
-
-  @Override
-  protected int getMaxNextHeight() {
-    return _maxNextShapeDimension.height;
-  }
+//  @Override
+//  protected int getMaxNextWidth() {
+//    return _maxNextShapeDimension.width;
+//  }
+//
+//  @Override
+//  protected int getMaxNextHeight() {
+//    return _maxNextShapeDimension.height;
+//  }
 
   @Override
   public ABrickGame.ImpulseSemantics getImpulseSemantics(GameImpulse impulse) {

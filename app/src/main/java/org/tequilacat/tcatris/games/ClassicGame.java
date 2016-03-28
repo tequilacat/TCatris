@@ -4,6 +4,7 @@
 
 package org.tequilacat.tcatris.games;
 
+import org.tequilacat.tcatris.core.Dimensions;
 import org.tequilacat.tcatris.core.GameDescriptor;
 
 public class ClassicGame extends AbstractRotationGame {
@@ -51,6 +52,15 @@ public class ClassicGame extends AbstractRotationGame {
   @Override
   protected boolean isSqueezable(int x, int y) {
     return (mySqueezable != null) && canSqueeze() && mySqueezable[y];
+  }
+
+  @Override
+  protected void estimateSides(float[] threeSides) {
+    Dimensions maxSizes = computeMaxNextShapeDimensions(_StaticShapes);
+    threeSides[0] = getHeight() / (float) getWidth();
+    float oneCell = 1f / getWidth();
+    threeSides[1] = oneCell * maxSizes.width;
+    threeSides[2] = oneCell * maxSizes.height;
   }
 
   @Override

@@ -49,10 +49,11 @@ public class HextrisPainter extends AbstractFlatGamePainter {
   }
 
   @Override
-  public void init(GameScreenLayout gameScreenLayout) {
-    super.init(gameScreenLayout);
+  public void init(GameScreenLayout gameScreenLayout, FlatGame game) {
+    super.init(gameScreenLayout, game);
     // compute hex size
-    _hexHalfHeight = gameScreenLayout.getCellSize() / 3f;
+    //_hexHalfHeight = gameScreenLayout.getCellSize() / 3f;
+    _hexHalfHeight = _cachedFieldRect.height() / (2 * game.getHeight() + 1);
     _hexHalfWidth = (_hexHalfHeight / sin60);
     _dx = _hexHalfWidth * 1.5f;
 
@@ -71,6 +72,9 @@ public class HextrisPainter extends AbstractFlatGamePainter {
     return ColorCodes.black;
   }
 
+  private static final int EMPTY_CELL_COLOR = ColorCodes.darkCyan;
+  private static final int FALLEN_SHADOW_COLOR = ColorCodes.cyan;
+
   @Override
   public void paintCellPix(Canvas c, int x, int y, int state, ABrickGame.CellState cellState) {
     Path path = null;
@@ -79,7 +83,7 @@ public class HextrisPainter extends AbstractFlatGamePainter {
 
     if(state == FlatGame.EMPTY) {
       path = _scaledHexaPathEmpty;
-      _hexPaint.setColor(ColorCodes.cyan); // TODO define specific empty color
+      _hexPaint.setColor(EMPTY_CELL_COLOR);
       _hexPaint.setStyle(Paint.Style.STROKE);
 
     }else if(cellState == ABrickGame.CellState.FALLING) {
@@ -89,7 +93,7 @@ public class HextrisPainter extends AbstractFlatGamePainter {
 
     }else if(cellState == ABrickGame.CellState.FALLEN_SHADOW) {
       path = _scaledHexaPathEmpty;
-      _hexPaint.setColor(ColorCodes.getDistinctColor(state - 1, ColorCodes.Lightness.Contrast));
+      _hexPaint.setColor(FALLEN_SHADOW_COLOR);
       _hexPaint.setStyle(Paint.Style.STROKE);
 
     }else if(cellState == ABrickGame.CellState.SETTLED) {
@@ -107,7 +111,8 @@ public class HextrisPainter extends AbstractFlatGamePainter {
     }
   }
 
-  protected int getCenterX(int col, int row, FieldId cellField) {
+
+  public int getCenterX(int col, int row, FieldId cellField) {
     final int x;
 
     if(cellField == FieldId.NextField) {
@@ -119,7 +124,7 @@ public class HextrisPainter extends AbstractFlatGamePainter {
     return x;
   }
 
-  protected int getCenterY(int col, int row, FieldId cellField) {
+  public int getCenterY(int col, int row, FieldId cellField) {
     int y = (int) ((_hexHalfHeight + _hexHalfHeight) * row + _hexHalfHeight);
 
     if ((col & 1) == 1) {
@@ -136,26 +141,30 @@ public class HextrisPainter extends AbstractFlatGamePainter {
   }
 
   @Override
+  public void drawShapeContour(Canvas c, FlatGame game, boolean isValid, float dx, float rotateByDegrees) {
+    // TODO draw shape contour when it's computed
+  }
+
+  @Override
   public void paintField(Canvas c, FlatGame game) {
     final Rect fieldRect = _cachedFieldRect;
     // fill with bg and draw circles all over it
     Ui.fillRect(c, fieldRect, getFieldBgColor());
 
+//
+//    _hexPaint.setStyle(Paint.Style.STROKE);
+//    _hexPaint.setColor(ColorCodes.red);
+//
+//    for(int row = 1; row < game.getHeight(); row++) {
+//      int y = fieldRect.top + row * _cachedCellSize;
+//      c.drawLine(fieldRect.left, y, fieldRect.right, y, _hexPaint);
+//    }
 
-    _hexPaint.setStyle(Paint.Style.STROKE);
-    _hexPaint.setColor(ColorCodes.red);
-
-    for(int row = 1; row < game.getHeight(); row++) {
-      int y = fieldRect.top + row * _cachedCellSize;
-      c.drawLine(fieldRect.left, y, fieldRect.right, y, _hexPaint);
-    }
-
-    _hexPaint.setColor(ColorCodes.cyan);
+    //_hexPaint.setColor(ColorCodes.cyan);
 
     // TODO consider ints instead of floats in drawing hex field
 
     float rowHeight = _hexHalfHeight * 2;
-    //float dx = _hexHalfWidth * 1.5f; // width + width*cos(60)
     float centerY = fieldRect.top + _hexHalfHeight;
 
     int gameRows = game.getHeight(), gameCols = game.getWidth();

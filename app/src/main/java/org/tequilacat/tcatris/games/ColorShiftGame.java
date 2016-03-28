@@ -43,14 +43,26 @@ public class ColorShiftGame extends FlatGame {
     return _gameType != ColorGameType.ROTATE;
   }
 
-  @Override
-  protected int getMaxNextWidth() {
-    return _gameType == ColorGameType.SHIFT_HORIZONTALLY ? 3 : 1;
-  }
+//  @Override
+//  protected int getMaxNextWidth() {
+//    return _gameType == ColorGameType.SHIFT_HORIZONTALLY ? 3 : 1;
+//  }
+//
+//  @Override
+//  protected int getMaxNextHeight() {
+//    return _gameType == ColorGameType.SHIFT_HORIZONTALLY ? 1 : 3;
+//  }
 
-  @Override
-  protected int getMaxNextHeight() {
-    return _gameType == ColorGameType.SHIFT_HORIZONTALLY ? 1 : 3;
+  /**
+   * consider
+   * @param threeSides array of at least 3 cells
+   */
+  protected void estimateSides(float[] threeSides) {
+    // field height normalized to width
+    threeSides[0] = getHeight() / (float) getWidth();
+    // next field width
+    threeSides[1] = 1f / getWidth();// since it's 1 cell
+    threeSides[2] = threeSides[1] * 3;
   }
 
   /**
