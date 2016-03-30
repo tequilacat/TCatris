@@ -223,8 +223,8 @@ public class ColorShiftGame extends FlatGame {
     _isSqueezable = false;
     myLastScores = 0;
 
-    for (int y = 0; y < getHeight(); y++) { // scan rows
-      for (int x = 0; x < getWidth(); x++) {// scan cells in rows
+    for (int y = 0, cols = getWidth(), rows = getHeight(); y < rows; y++) { // scan rows
+      for (int x = 0; x < cols; x++) {// scan cells in rows
         _cellsToSqueeze[y][x] = false;
       }
     }
