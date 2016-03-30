@@ -141,11 +141,6 @@ public class HextrisPainter extends AbstractFlatGamePainter {
   }
 
   @Override
-  public void drawShapeContour(Canvas c, FlatGame game, boolean isValid, float dx, float rotateByDegrees) {
-    // TODO draw shape contour when it's computed
-  }
-
-  @Override
   public void paintField(Canvas c, FlatGame game) {
     final Rect fieldRect = _cachedFieldRect;
     // fill with bg and draw circles all over it
@@ -192,4 +187,10 @@ public class HextrisPainter extends AbstractFlatGamePainter {
   protected void updateCurrentShapeContour(FlatShape shape, Path shapeContourPath) {
     // TODO update hex falling shape contour
   }
+
+  @Override
+  public void drawShapeContour(Canvas c, FlatGame game, boolean isValid, float dx, float rotateByDegrees) {
+    // TODO draw shape contour when it's computed
+  }
+
 }

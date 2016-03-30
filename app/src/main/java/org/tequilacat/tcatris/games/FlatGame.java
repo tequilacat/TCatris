@@ -248,10 +248,6 @@ public abstract class FlatGame extends ABrickGame {
 
     int screenWidth = layoutParams.GameArea.width(), screenHeight = layoutParams.GameArea.height();
 
-    int glassWidth = this.getWidth(), glassHeight = this.getHeight();
-
-    //int nextFigWidth = this.getMaxNextWidth(), nextFigHeight = this.getMaxNextHeight();
-
     int nextFigMargin = VERT_SPACING;
     int width = screenWidth - MARGIN - MARGIN - VERT_SPACING - nextFigMargin * 2;
     int height = screenHeight - MARGIN - MARGIN;
@@ -273,7 +269,7 @@ public abstract class FlatGame extends ABrickGame {
       pixelRatio = width / (1f + nextWRatio);
     } else {
       // taller than the screen
-      pixelRatio = height / (float) fieldHwRatio;
+      pixelRatio = height / fieldHwRatio;
     }
 
     int fieldWidth = (int) pixelRatio, fieldHeight = (int) (fieldHwRatio * pixelRatio),

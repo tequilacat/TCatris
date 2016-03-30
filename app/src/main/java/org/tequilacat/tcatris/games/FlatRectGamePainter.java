@@ -108,11 +108,12 @@ public class FlatRectGamePainter extends AbstractRectGamePainter {
   protected void updateCurrentShapeContour(FlatShape fallingShape, Path shapeContourPath) {
     int cx = fallingShape.getCenterX(), cy = fallingShape.getCenterY();
     int cellSize = (int) (_cachedCellSize * GameConstants.CONTOUR_FACTOR);
-    int x0 = -cellSize >> 1, y0 = x0;
+    //int x0 = -cellSize >> 1, y0 = x0;
+    int delta = cellSize >> 1;
 
     for (int i = 0; i < fallingShape.size(); i++) {
-      int cellX = (fallingShape.getX(i) - cx) * cellSize + x0;
-      int cellY = (fallingShape.getY(i) - cy) * cellSize + y0;
+      int cellX = (fallingShape.getX(i) - cx) * cellSize - delta;
+      int cellY = (fallingShape.getY(i) - cy) * cellSize - delta;
 
       shapeContourPath.addRect(cellX, cellY, cellX + cellSize, cellY + cellSize, Path.Direction.CW);
     }
