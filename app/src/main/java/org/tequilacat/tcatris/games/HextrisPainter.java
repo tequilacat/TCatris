@@ -9,6 +9,7 @@ import android.graphics.Rect;
 import org.tequilacat.tcatris.core.ABrickGame;
 import org.tequilacat.tcatris.core.ColorCodes;
 import org.tequilacat.tcatris.core.Debug;
+import org.tequilacat.tcatris.core.GameConstants;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.Ui;
 import org.tequilacat.tcatris.core.VisualResources;
@@ -25,6 +26,7 @@ public class HextrisPainter extends AbstractFlatGamePainter {
 
   private final Path _scaledHexaPath = new Path();
   private final Path _scaledHexaPathEmpty = new Path();
+  private final Path _scaledHexaPathContour = new Path();
 
   private static final float sin60 = (float) Math.sin(Math.PI / 3);
   private static final Path _staticHexaPath;
@@ -48,6 +50,9 @@ public class HextrisPainter extends AbstractFlatGamePainter {
 
   public HextrisPainter() {
     _hexPaint.setStyle(Paint.Style.STROKE);
+    _colorPalette.FIELD_BG_COLOR = ColorCodes.black;
+    _colorPalette.DYN_SHAPE_STROKE_VALID = 0xFFA4E804;
+    _colorPalette.DYN_SHAPE_STROKE_INVALID = 0xFFFF2F80;
   }
 
   @Override
@@ -64,14 +69,14 @@ public class HextrisPainter extends AbstractFlatGamePainter {
     mtx.preScale(_hexHalfHeight, _hexHalfHeight);
     _staticHexaPath.transform(mtx, _scaledHexaPath);
 
+    _scaledHexaPathContour.reset();
+    mtx = new Matrix();
+    mtx.preScale(_hexHalfHeight * GameConstants.CONTOUR_FACTOR, _hexHalfHeight * GameConstants.CONTOUR_FACTOR);
+    _staticHexaPath.transform(mtx, _scaledHexaPathContour);
+
     mtx = new Matrix();
     mtx.preScale(_hexHalfHeight * _emptyRatio, _hexHalfHeight * _emptyRatio);
     _staticHexaPath.transform(mtx, _scaledHexaPathEmpty);
-  }
-
-  @Override
-  public int getFieldBgColor() {
-    return ColorCodes.black;
   }
 
   private static final int EMPTY_CELL_COLOR = ColorCodes.darkCyan;
@@ -147,7 +152,7 @@ public class HextrisPainter extends AbstractFlatGamePainter {
     int gameRows = game.getHeight(), gameCols = game.getWidth();
     final Rect fieldRect = _cachedFieldRect;
 
-    int fieldBgColor = getFieldBgColor();
+    int fieldBgColor = _colorPalette.FIELD_BG_COLOR;
     Ui.fillRect(c, fieldRect, VisualResources.Defaults.SCREEN_BG_COLOR);
 
     _hexPaint.setStyle(Paint.Style.FILL);
@@ -217,12 +222,24 @@ public class HextrisPainter extends AbstractFlatGamePainter {
 
   @Override
   protected void updateCurrentShapeContour(FlatShape shape, Path shapeContourPath) {
-    // TODO update hex falling shape contour
+    shapeContourPath.reset();
+
+    // get center for [0,0] cell
+    int x0 = getCenterX(0, 0, FieldId.NextField);
+    int y0 = getCenterY(0, 0, FieldId.NextField);
+
+    // add hexagons relative to center
+    for (int i = 0; i < HextrisShape.CELLCOUNT; i++) {
+      int col = shape.getX(i, 0, 0), row = shape.getY(i, 0, 0);
+      int x = getCenterX(col, row, FieldId.NextField) - x0;
+      int y = getCenterY(col, row, FieldId.NextField) - y0;
+      shapeContourPath.addPath(_scaledHexaPathContour, x, y);
+    }
   }
 
   @Override
-  public void drawShapeContour(Canvas c, FlatGame game, boolean isValid, float dx, float rotateByDegrees) {
-    // TODO draw shape contour when it's computed
+  public void drawShapeContour(Canvas c, FlatGame game, boolean isValid, float dxFactor, float rotateFactor) {
+    drawTransformedShapeContour(c, game, isValid, dxFactor * _dx, rotateFactor * 30);
   }
 
 }

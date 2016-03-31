@@ -43,25 +43,7 @@ public abstract class AbstractRectGamePainter extends AbstractFlatGamePainter {
     return y;
   }
 
-  public void drawShapeContour(Canvas c, FlatGame game, boolean isValid, float dx, float rotateByDegrees) {
-
-    if (!getShapeContourPath().isEmpty()) {
-      getShapeContourPaint().setColor(isValid ?
-          VisualResources.Defaults.DYN_SHAPE_STROKE_VALID : VisualResources.Defaults.DYN_SHAPE_STROKE_INVALID);
-
-      c.save();
-      c.clipRect(_cachedFieldRect);
-
-      FlatShape shape = game.getCurrentShape();
-      int cx = shape.getCenterX(), cy = shape.getCenterY();
-      c.translate(getCenterX(cx, cy, FieldId.GameField) + (int) (dx * _cachedCellSize),
-          getCenterY(cx, cy, FieldId.GameField));
-
-      if (rotateByDegrees != 0) {
-        c.rotate(rotateByDegrees);
-      }
-      c.drawPath(getShapeContourPath(), getShapeContourPaint());
-      c.restore();
-    }
+  public void drawShapeContour(Canvas c, FlatGame game, boolean isValid, float dxFactor, float rotateFactor) {
+    drawTransformedShapeContour(c, game, isValid, dxFactor * _cachedCellSize, rotateFactor * 90);
   }
 }

@@ -16,7 +16,7 @@ public class HextrisShape extends FlatShape {
   /** ordinal index of shape defining its color */
   private int _shapeColor;
 
-  private static final int CELLCOUNT = 4;
+  public static final int CELLCOUNT = 4;
 
   private static final FlatShape[] _staticShapes;
   private static final byte[] _rotateCw;

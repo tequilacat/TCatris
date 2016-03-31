@@ -326,7 +326,7 @@ public abstract class FlatGame extends ABrickGame {
     // display falling shape
     if (getState() == ACTIVE && !canSqueeze()) {
 
-      float dx = 0;
+      float dxFactor = 0;
       float rotateFactor = 0; // 1 means 90', 0 means no rotate
       boolean isValid = true;
       boolean drawContour = false;
@@ -337,12 +337,12 @@ public abstract class FlatGame extends ABrickGame {
         int pos = moveAxis.ordinal();
 
         if (dynamicState.isTracking(pos)) {
-          dx = dynamicState.getValue(pos);
+          dxFactor = dynamicState.getValue(pos);
           drawContour = true;
 
           if (!dynamicState.isValid(pos)) {
             isValid = false;
-            dx = 0;
+            dxFactor = 0;
           }
         }
       }
@@ -366,7 +366,7 @@ public abstract class FlatGame extends ABrickGame {
       if (drawContour) {
         // TODO only update shape contour when it's thrown in or rotated
         _fieldPainter.updateCurrentShapeContour(getCurrentShape());
-        _fieldPainter.drawShapeContour(g, this, isValid, dx, rotateFactor * 90);
+        _fieldPainter.drawShapeContour(g, this, isValid, dxFactor, rotateFactor);
             //centerX0 + cellSize / 2 + (int) (dx * cellSize), centerY0 + cellSize / 2,
       }
 

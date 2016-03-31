@@ -37,7 +37,7 @@ public class FlatRectGamePainter extends AbstractRectGamePainter {
 
     } else if (cellState == ABrickGame.CellState.SQUEEZED) {
       Ui.drawRect(c, x, y, cellSize - 1, cellSize - 1, cellColor);
-      Ui.fillRect(c, x + 1, y + 1, cellSize - 3, cellSize - 3, getFieldBgColor());
+      Ui.fillRect(c, x + 1, y + 1, cellSize - 3, cellSize - 3, _colorPalette.FIELD_BG_COLOR);
 
     } else if (cellState == ABrickGame.CellState.FALLEN_SHADOW) {
       int innerSize = cellSize * 6 / 10;
@@ -67,7 +67,7 @@ public class FlatRectGamePainter extends AbstractRectGamePainter {
         right = fieldRect.right, left = fieldRect.left,
         top = fieldRect.top, bottom = fieldRect.bottom;
 
-    Ui.fillRect(g, layout.getFieldRect(), getFieldBgColor());
+    Ui.fillRect(g, layout.getFieldRect(), _colorPalette.FIELD_BG_COLOR);
 
     _cellPainter.setColor(VisualResources.Defaults.FIELD_LINE_COLOR);
     _cellPainter.setStrokeWidth(0);

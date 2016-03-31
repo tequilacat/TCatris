@@ -8,6 +8,7 @@ import android.graphics.Rect;
 
 import org.tequilacat.tcatris.core.ABrickGame;
 import org.tequilacat.tcatris.core.ColorCodes;
+import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.Ui;
@@ -19,6 +20,12 @@ import org.tequilacat.tcatris.core.VisualResources;
  */
 public abstract class AbstractFlatGamePainter {
 
+  class ColorPalette {
+    public int DYN_SHAPE_STROKE_VALID = VisualResources.Defaults.DYN_SHAPE_STROKE_VALID;
+    public int DYN_SHAPE_STROKE_INVALID = VisualResources.Defaults.DYN_SHAPE_STROKE_INVALID;
+    public int FIELD_BG_COLOR = VisualResources.Defaults.FIELD_BG_COLOR;
+  }
+
   private GameScreenLayout _gameScreenLayout;
 
   private final Path _shapeContourPath = new Path();
@@ -29,6 +36,8 @@ public abstract class AbstractFlatGamePainter {
   protected final Rect _cachedFieldRect = new Rect();
   protected int _cachedNextFieldCenterX;
   protected int _cachedNextFieldCenterY;
+
+  protected ColorPalette _colorPalette = new ColorPalette();
 
   public AbstractFlatGamePainter(){
     float strokeWidth = VisualResources.Defaults.DYN_SHAPE_STROKE_WIDTH;
@@ -67,13 +76,6 @@ public abstract class AbstractFlatGamePainter {
     _cachedNextFieldCenterY = (nextShapeRect.top + nextShapeRect.bottom) / 2;
   }
 
-  /**
-   * @return background color, defaults to VisualResources.Defaults.FIELD_BG_COLOR
-   */
-  public int getFieldBgColor() {
-    return VisualResources.Defaults.FIELD_BG_COLOR;
-  }
-
   protected GameScreenLayout getGameScreenLayout() {
     return _gameScreenLayout;
   }
@@ -99,16 +101,15 @@ public abstract class AbstractFlatGamePainter {
 
   public abstract int getCenterX(int col, int row, FieldId cellField);
   public abstract int getCenterY(int col, int row, FieldId cellField);
-  /*
-*/
+
   /**
    * Draws current shape contour with rotation
    * @param c canvas
    * @param isValid whether specified offset can be complete
-   * @param dx from -1 to 1, 0 means no offset
-   * @param rotateByDegrees degrees of rotation
+   * @param dxFactor from -1 to 1, 0 means no offset
+   * @param rotateFactor degrees of rotation
    */
-  public abstract void drawShapeContour(Canvas c, FlatGame game, boolean isValid, float dx, float rotateByDegrees);
+  public abstract void drawShapeContour(Canvas c, FlatGame game, boolean isValid, float dxFactor, float rotateFactor);
 
   /**
    * Modifies shapeContourPath to represent given shape
@@ -117,6 +118,34 @@ public abstract class AbstractFlatGamePainter {
    */
   protected abstract void updateCurrentShapeContour(FlatShape shape, Path shapeContourPath);
 
+  /**
+   *
+   * @param c
+   * @param game
+   * @param isValid
+   * @param dx
+   * @param degrees
+   */
+  protected void drawTransformedShapeContour(Canvas c, FlatGame game, boolean isValid, float dx, float degrees) {
+    //rotateFactor *= 90;//
+    if (!getShapeContourPath().isEmpty()) {
+      getShapeContourPaint().setColor(isValid ?
+          _colorPalette.DYN_SHAPE_STROKE_VALID : _colorPalette.DYN_SHAPE_STROKE_INVALID);
+
+      c.save();
+      c.clipRect(_cachedFieldRect);
+
+      FlatShape shape = game.getCurrentShape();
+      int cx = shape.getCenterX(), cy = shape.getCenterY();
+      c.translate(getCenterX(cx, cy, FieldId.GameField) + (int) dx, getCenterY(cx, cy, FieldId.GameField));
+
+      if (degrees != 0) {
+        c.rotate(degrees);
+      }
+      c.drawPath(getShapeContourPath(), getShapeContourPaint());
+      c.restore();
+    }
+  }
 
   /**
    * creates shape contour if needed (if current shape geometry differs)
@@ -166,7 +195,7 @@ public abstract class AbstractFlatGamePainter {
 
   public void paintNext(Canvas g, FlatShape shape) {
     Rect nextRect = getGameScreenLayout().getNextShapeRect();
-    Ui.fillRect(g, nextRect, getFieldBgColor());
+    Ui.fillRect(g, nextRect, _colorPalette.FIELD_BG_COLOR);
 
     // TODO center next figure
     //int cellSize = getGameScreenLayout().getCellSize();
