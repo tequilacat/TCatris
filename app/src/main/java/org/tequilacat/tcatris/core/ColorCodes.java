@@ -70,6 +70,9 @@ public class ColorCodes {
         "#6C5E46", "#D25B88", "#5B656C", "#00B57F", "#545C46", "#866097", "#365D25", "#252F99", "#00CCFF", "#674E60",
         "#FC009C", "#92896B"};
 
+    // Visual fix: swap @8 <-> @11 since #8 is too bright, looks white
+    String swap = colourValues[7]; colourValues[7] = colourValues[10]; colourValues[10] = swap;
+
     _distinctiveColors = new int[colourValues.length];
     _distinctiveContrastColors = new int[colourValues.length];
     _distinctiveDarkColors = new int[colourValues.length];

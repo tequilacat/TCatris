@@ -21,7 +21,6 @@ public class HextrisGame extends AbstractRotationGame {
 
   @Override
   protected boolean isSqueezable(int col, int row) {
-    // TODO implement isSqueezable
     return canSqueeze() && _cellsToSqueeze[row][col];
   }
 

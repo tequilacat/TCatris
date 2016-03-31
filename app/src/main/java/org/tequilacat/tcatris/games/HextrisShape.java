@@ -43,7 +43,7 @@ public class HextrisShape extends FlatShape {
 
   static {
     String[] encodedShapes = new String[] {
-        "EABC", // palka
+        "EABO", // palka
         "NEAB", "PEAB", // kocherga
         "BCDE", // around
         "EABC", "EABG",
