@@ -8,8 +8,10 @@ import android.graphics.Rect;
 
 import org.tequilacat.tcatris.core.ABrickGame;
 import org.tequilacat.tcatris.core.ColorCodes;
+import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.Ui;
+import org.tequilacat.tcatris.core.VisualResources;
 
 /**
  * Paints hexagonal hextris
@@ -142,10 +144,42 @@ public class HextrisPainter extends AbstractFlatGamePainter {
 
   @Override
   public void paintField(Canvas c, FlatGame game) {
+    int gameRows = game.getHeight(), gameCols = game.getWidth();
     final Rect fieldRect = _cachedFieldRect;
-    // fill with bg and draw circles all over it
-    Ui.fillRect(c, fieldRect, getFieldBgColor());
 
+    int fieldBgColor = getFieldBgColor();
+    Ui.fillRect(c, fieldRect, VisualResources.Defaults.SCREEN_BG_COLOR);
+
+    _hexPaint.setStyle(Paint.Style.FILL);
+    _hexPaint.setColor(fieldBgColor);
+    c.drawRect(fieldRect.left + _hexHalfWidth, fieldRect.top,
+        fieldRect.right - _hexHalfWidth, fieldRect.bottom - _hexHalfHeight,
+        _hexPaint);
+
+    int cx = getCenterX(0, 0, FieldId.GameField);
+    int dx = getCenterX(gameCols - 1, 0, FieldId.GameField) - cx;
+
+    for(int y = 0; y < gameRows; y++) {
+      int cy = getCenterY(0, y, FieldId.GameField);
+      c.save();
+      c.translate(cx, cy);
+      c.drawPath(_scaledHexaPath, _hexPaint);
+      c.translate(dx, 0);
+      c.drawPath(_scaledHexaPath, _hexPaint);
+      c.restore();
+    }
+
+    int cy = getCenterY(1, gameRows - 1, FieldId.GameField);
+
+    for (int x = 1; x < gameCols; x += 2) {
+      cx = getCenterX(x, gameRows - 1, FieldId.GameField);
+      c.save();
+      c.translate(cx, cy);
+      c.drawPath(_scaledHexaPath, _hexPaint);
+      c.restore();
+    }
+
+    //Ui.fillRect(c, fieldRect, fieldBgColor);
 //
 //    _hexPaint.setStyle(Paint.Style.STROKE);
 //    _hexPaint.setColor(ColorCodes.red);
@@ -161,8 +195,6 @@ public class HextrisPainter extends AbstractFlatGamePainter {
 
     float rowHeight = _hexHalfHeight * 2;
     float centerY = fieldRect.top + _hexHalfHeight;
-
-    int gameRows = game.getHeight(), gameCols = game.getWidth();
 
     for (int row = 0; row < gameRows; row++) {
       float centerX = fieldRect.left + _hexHalfWidth;
