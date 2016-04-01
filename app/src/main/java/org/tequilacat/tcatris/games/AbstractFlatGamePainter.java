@@ -2,6 +2,7 @@ package org.tequilacat.tcatris.games;
 
 import android.graphics.Canvas;
 import android.graphics.DashPathEffect;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
@@ -74,6 +75,14 @@ public abstract class AbstractFlatGamePainter {
 
     _cachedNextFieldCenterX = (nextShapeRect.left + nextShapeRect.right) / 2;
     _cachedNextFieldCenterY = (nextShapeRect.top + nextShapeRect.bottom) / 2;
+  }
+
+  private static final Matrix _scaleMatrix = new Matrix();
+
+  public static void scale(Path source, Path target, float ratio) {
+    _scaleMatrix.reset();
+    _scaleMatrix.preScale(ratio, ratio);
+    source.transform(_scaleMatrix, target);
   }
 
   protected GameScreenLayout getGameScreenLayout() {

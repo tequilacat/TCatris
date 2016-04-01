@@ -25,27 +25,39 @@ public class HextrisPainter extends AbstractFlatGamePainter {
   private float _dx;
 
   private final Path _scaledHexaPath = new Path();
+  private final Path _scaledHexaPathNormal = new Path();
   private final Path _scaledHexaPathEmpty = new Path();
   private final Path _scaledHexaPathContour = new Path();
+  private final Path _scaledCollapsingPath = new Path();
+  private final Path _scaledHexaPathSettledCore = new Path();
 
   private static final float sin60 = (float) Math.sin(Math.PI / 3);
-  private static final Path _staticHexaPath;
+  private static final Path _rawHexaPath;
+  private static final Path _rawCollapsingPath = new Path();
 
   private static final float _emptyRatio = 0.9f;
+  private static final float SETTLED_CORE_RATIO = 0.7f;
 
   static {
-    _staticHexaPath = new Path();
+    _rawHexaPath = new Path();
     float h = 1f;
     float halfSide = (float) (h / Math.tan(Math.PI / 3));
     float halfWidth = h / sin60;
 
-    _staticHexaPath.moveTo(-halfSide, -h);
-    _staticHexaPath.lineTo(halfSide, -h);
-    _staticHexaPath.lineTo(halfWidth, 0);
-    _staticHexaPath.lineTo(halfSide, h);
-    _staticHexaPath.lineTo(-halfSide, h);
-    _staticHexaPath.lineTo(-halfWidth, 0);
-    _staticHexaPath.close();
+    _rawHexaPath.moveTo(-halfSide, -h);
+    _rawHexaPath.lineTo(halfSide, -h);
+    _rawHexaPath.lineTo(halfWidth, 0);
+    _rawHexaPath.lineTo(halfSide, h);
+    _rawHexaPath.lineTo(-halfSide, h);
+    _rawHexaPath.lineTo(-halfWidth, 0);
+    _rawHexaPath.close();
+
+    float collapseFactor = 0.2f;
+    _rawCollapsingPath.moveTo(-halfWidth * 0.9f, 0);
+    _rawCollapsingPath.lineTo(0, -halfWidth * collapseFactor);
+    _rawCollapsingPath.lineTo(halfWidth * 0.9f, 0);
+    _rawCollapsingPath.lineTo(0, halfWidth * collapseFactor);
+    _rawCollapsingPath.close();
   }
 
   public HextrisPainter() {
@@ -64,19 +76,12 @@ public class HextrisPainter extends AbstractFlatGamePainter {
     _hexHalfWidth = (_hexHalfHeight / sin60);
     _dx = _hexHalfWidth * 1.5f;
 
-    _scaledHexaPath.reset();
-    Matrix mtx = new Matrix();
-    mtx.preScale(_hexHalfHeight, _hexHalfHeight);
-    _staticHexaPath.transform(mtx, _scaledHexaPath);
-
-    _scaledHexaPathContour.reset();
-    mtx = new Matrix();
-    mtx.preScale(_hexHalfHeight * GameConstants.CONTOUR_FACTOR, _hexHalfHeight * GameConstants.CONTOUR_FACTOR);
-    _staticHexaPath.transform(mtx, _scaledHexaPathContour);
-
-    mtx = new Matrix();
-    mtx.preScale(_hexHalfHeight * _emptyRatio, _hexHalfHeight * _emptyRatio);
-    _staticHexaPath.transform(mtx, _scaledHexaPathEmpty);
+    scale(_rawHexaPath, _scaledHexaPath, _hexHalfHeight);
+    scale(_rawHexaPath, _scaledHexaPathNormal, _hexHalfHeight * 0.95f);// little less to have thin margins
+    scale(_rawHexaPath, _scaledHexaPathContour, _hexHalfHeight * GameConstants.CONTOUR_FACTOR);
+    scale(_rawHexaPath, _scaledHexaPathEmpty, _hexHalfHeight * _emptyRatio);
+    scale(_rawHexaPath, _scaledHexaPathSettledCore, _hexHalfHeight * SETTLED_CORE_RATIO);
+    scale(_rawCollapsingPath, _scaledCollapsingPath, _hexHalfHeight);
   }
 
   private static final int EMPTY_CELL_COLOR = ColorCodes.darkCyan;
@@ -88,31 +93,43 @@ public class HextrisPainter extends AbstractFlatGamePainter {
 
     //int color = (state == FlatGame.EMPTY) ? ColorCodes.cyan : ColorCodes.
 
-    if(state == FlatGame.EMPTY) {
+    if (state == FlatGame.EMPTY) {
       path = _scaledHexaPathEmpty;
       _hexPaint.setColor(EMPTY_CELL_COLOR);
       _hexPaint.setStyle(Paint.Style.STROKE);
 
-    }else if(cellState == ABrickGame.CellState.FALLING) {
-      path = _scaledHexaPath;
+    } else if (cellState == ABrickGame.CellState.FALLING) {
+      path = _scaledHexaPathNormal;
       _hexPaint.setColor(getTypeColor(state));
       _hexPaint.setStyle(Paint.Style.FILL);
 
-    }else if(cellState == ABrickGame.CellState.FALLEN_SHADOW) {
+    } else if (cellState == ABrickGame.CellState.FALLEN_SHADOW) {
       path = _scaledHexaPathEmpty;
       _hexPaint.setColor(FALLEN_SHADOW_COLOR);
       _hexPaint.setStyle(Paint.Style.STROKE);
 
-    }else if(cellState == ABrickGame.CellState.SETTLED) {
-      path = _scaledHexaPath;
-      _hexPaint.setColor(ColorCodes.getDistinctColor(state - 1, ColorCodes.Lightness.Contrast));
+    } else if (cellState == ABrickGame.CellState.SETTLED) {
+      path = _scaledHexaPathNormal;
+      _hexPaint.setColor(getTypeColor(state));
       _hexPaint.setStyle(Paint.Style.FILL);
+
+    } else { // SQUEEZED
+      path = _scaledCollapsingPath;
+      _hexPaint.setStyle(Paint.Style.FILL);
+      _hexPaint.setColor(ColorCodes.white); // TODO improve display of hex cells squeezed
     }
 
-    if(path != null) {
+    if (path != null) {
       c.save();
       c.translate(x, y);
       c.drawPath(path, _hexPaint);
+
+      if (cellState == ABrickGame.CellState.SETTLED && state != FlatGame.EMPTY) {
+        // draw another inside, with contrast color
+        _hexPaint.setColor(ColorCodes.getDistinctColor(state - 1, ColorCodes.Lightness.Contrast));
+        _hexPaint.setStyle(Paint.Style.FILL);
+        c.drawPath(_scaledHexaPathSettledCore, _hexPaint);
+      }
 
       c.restore();
     }
@@ -122,9 +139,9 @@ public class HextrisPainter extends AbstractFlatGamePainter {
   public int getCenterX(int col, int row, FieldId cellField) {
     final int x;
 
-    if(cellField == FieldId.NextField) {
-      x = (int)(_cachedNextFieldCenterX + _dx * col);
-    }else {
+    if (cellField == FieldId.NextField) {
+      x = (int) (_cachedNextFieldCenterX + _dx * col);
+    } else {
       x = (int) (_cachedFieldRect.left + _hexHalfWidth + _dx * col);
     }
 
@@ -138,9 +155,9 @@ public class HextrisPainter extends AbstractFlatGamePainter {
       y += (int) _hexHalfHeight;
     }
 
-    if(cellField == FieldId.NextField) {
+    if (cellField == FieldId.NextField) {
       y += _cachedNextFieldCenterY;
-    }else {
+    } else {
       y += _cachedFieldRect.top;
     }
 
@@ -164,7 +181,7 @@ public class HextrisPainter extends AbstractFlatGamePainter {
     int cx = getCenterX(0, 0, FieldId.GameField);
     int dx = getCenterX(gameCols - 1, 0, FieldId.GameField) - cx;
 
-    for(int y = 0; y < gameRows; y++) {
+    for (int y = 0; y < gameRows; y++) {
       int cy = getCenterY(0, y, FieldId.GameField);
       c.save();
       c.translate(cx, cy);
@@ -183,18 +200,6 @@ public class HextrisPainter extends AbstractFlatGamePainter {
       c.drawPath(_scaledHexaPath, _hexPaint);
       c.restore();
     }
-
-    //Ui.fillRect(c, fieldRect, fieldBgColor);
-//
-//    _hexPaint.setStyle(Paint.Style.STROKE);
-//    _hexPaint.setColor(ColorCodes.red);
-//
-//    for(int row = 1; row < game.getHeight(); row++) {
-//      int y = fieldRect.top + row * _cachedCellSize;
-//      c.drawLine(fieldRect.left, y, fieldRect.right, y, _hexPaint);
-//    }
-
-    //_hexPaint.setColor(ColorCodes.cyan);
 
     // TODO consider ints instead of floats in drawing hex field
 
