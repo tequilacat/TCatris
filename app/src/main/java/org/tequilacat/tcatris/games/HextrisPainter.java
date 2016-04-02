@@ -122,7 +122,7 @@ public class HextrisPainter extends AbstractFlatGamePainter {
 
       if (cellState == ABrickGame.CellState.SETTLED && state != ABrickGame.EMPTY_CELL_TYPE) {
         // draw another inside, with contrast color
-        _hexPaint.setColor(getTypeColor(state, true));
+        _hexPaint.setColor(getTypeColor(state, ColorCodes.Lightness.Contrast));
         _hexPaint.setStyle(Paint.Style.FILL);
         c.drawPath(_scaledHexaPathSettledCore, _hexPaint);
       }

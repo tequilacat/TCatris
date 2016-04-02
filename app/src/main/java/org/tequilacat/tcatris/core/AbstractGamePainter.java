@@ -13,6 +13,8 @@ public class AbstractGamePainter {
     public int DYN_SHAPE_STROKE_VALID = VisualResources.Defaults.DYN_SHAPE_STROKE_VALID;
     public int DYN_SHAPE_STROKE_INVALID = VisualResources.Defaults.DYN_SHAPE_STROKE_INVALID;
     public int FIELD_BG_COLOR = VisualResources.Defaults.FIELD_BG_COLOR;
+
+    public int EMPTY_CELL_FRAME_COLOR = VisualResources.Defaults.FIELD_LINE_COLOR;
   }
 
   protected ColorPalette _colorPalette = new ColorPalette();
@@ -29,12 +31,11 @@ public class AbstractGamePainter {
   private static final Matrix _scaleMatrix = new Matrix();
 
   public static int getTypeColor(int cellType) {
-    return getTypeColor(cellType, false);
+    return getTypeColor(cellType, ColorCodes.Lightness.Normal);
   }
 
-  public static int getTypeColor(int cellType, boolean contrast) {
-    return ColorCodes.getDistinctColor(cellType - 1,
-        contrast ? ColorCodes.Lightness.Contrast : ColorCodes.Lightness.Normal );
+  public static int getTypeColor(int cellType, ColorCodes.Lightness lightness) {
+    return ColorCodes.getDistinctColor(cellType - 1,lightness);
   }
 
   public static void scale(Path source, Path target, float ratio) {

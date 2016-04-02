@@ -6,7 +6,7 @@
     <!--@android:color/-->
     <color name="screenBgColor">@color/DarkGray</color>
     <color name="fieldBgColor">#C0C0C0</color>
-    <color name="fieldLineColor">@color/Black</color>
+    <color name="fieldLineColor">@color/DarkGray</color>
 
     <color name="scoreBgColor">@color/Black</color>
     <color name="scoreBarCurColor">@color/YellowGreen</color>
