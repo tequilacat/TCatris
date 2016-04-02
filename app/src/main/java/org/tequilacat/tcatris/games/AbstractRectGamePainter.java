@@ -15,6 +15,7 @@ public abstract class AbstractRectGamePainter extends AbstractFlatGamePainter {
   public void init(GameScreenLayout gameScreenLayout, FlatGame game) {
     super.init(gameScreenLayout, game);
     _cachedCellSize = gameScreenLayout.getFieldRect().width() / game.getWidth();
+    gameScreenLayout.roundFieldRect(_cachedCellSize, _cachedCellSize);
   }
 
   @Override

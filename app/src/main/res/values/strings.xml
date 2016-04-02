@@ -3,6 +3,8 @@
 
     <string name="msg_score">score</string>
     <string name="select_game">Select game</string>
+    <string name="select_another_game">Select another game</string>
+    <string name="select_game_confirm">Selecting another kind of game will reset current game progress.\nDo you want to continue?</string>
     <string name="top_scores">%s top scores</string>
     <string name="current_score">You</string>
     <string name="current_score_too_low">Current score (%d) isn\'t high enough to make it into scoreboard</string>

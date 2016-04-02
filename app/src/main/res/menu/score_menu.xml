@@ -5,21 +5,22 @@
 
     <item
         android:id="@+id/mnu_play_again"
-        android:icon="@drawable/ic_refresh_24dp"
-        android:title="@string/btn_play_again"
-        app:showAsAction="ifRoom"/>
+        android:icon="@drawable/ic_replay_24dp"
+        android:title="@string/btn_play_again"/>
     <item
         android:id="@+id/mnu_back_to_game"
         android:icon="@drawable/ic_arrow_back_24dp"
-        android:title="@string/btn_continue"
-        app:showAsAction="ifRoom"/>
+        android:title="@string/btn_continue"/>
     <item
         android:id="@+id/mnu_selectgame"
-        android:title="@string/select_game"/>
+        android:icon="@drawable/ic_cancel_24dp"
+        android:title="@string/select_another_game"
+        app:showAsAction="ifRoom"/>
     <item
         android:id="@+id/mnu_settings"
         android:icon="@drawable/ic_settings_24dp"
-        android:title="@string/settings"/>
+        android:title="@string/settings"
+        app:showAsAction="ifRoom"/>
     <item
         android:id="@+id/mnu_about"
         android:title="@string/mnu_about"/>

@@ -3,7 +3,7 @@ package org.tequilacat.tcatris.core;
 import android.graphics.Rect;
 
 /**
- * Created by avo on 24.02.2016.
+ * stores dimensions of game field elements computed for current game and screen size
  */
 public class GameScreenLayout {
   private Rect _fieldRect;
@@ -16,6 +16,16 @@ public class GameScreenLayout {
 
     _fieldRect = new Rect(fX, fY, fX + fWidth, fY + fHeight);
     _nextShapeRect = new Rect(nextX, nextY, nextX + nextW, nextY + nextH);
+  }
+
+  /**
+   * force field rect to have exact steps by X and Y axis
+   * @param xStep
+   * @param yStep
+   */
+  public void roundFieldRect(int xStep, int yStep) {
+    _fieldRect.right = _fieldRect.left + (_fieldRect.width() / xStep) * xStep;
+    _fieldRect.bottom = _fieldRect.top + (_fieldRect.height() / yStep) * yStep;
   }
 
   public Rect getNextShapeRect() {

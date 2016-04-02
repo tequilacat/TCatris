@@ -3,6 +3,7 @@ package org.tequilacat.tcatris;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
@@ -10,6 +11,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
@@ -315,11 +317,10 @@ public class MainActivity extends AppCompatActivity {
       ActionBar actionBar = getMainActivity().getSupportActionBar();
 
       if (actionBar != null) {
-        actionBar.setTitle(String.format("%s: %s",
-            getString(R.string.app_name),
+        actionBar.setTitle(
             String.format(getActivity().getString(R.string.top_scores),
                 getMainActivity().getData().getCurrentGame().getDescriptor().getLabel())
-        ));
+        );
       }
     }
 
@@ -341,7 +342,7 @@ public class MainActivity extends AppCompatActivity {
             isGameActive ? R.string.msg_gamestatus_paused : R.string.msg_gamestatus_failed)
         );
         restartResume.setCompoundDrawablesWithIntrinsicBounds(
-          isGameActive ? R.drawable.ic_arrow_back_24dp : R.drawable.ic_refresh_24dp,
+          isGameActive ? R.drawable.ic_arrow_back_24dp : R.drawable.ic_replay_24dp,
           0, 0, 0);
       }
     }
@@ -413,7 +414,20 @@ public class MainActivity extends AppCompatActivity {
       backFromScores();
 
     } else if (itemId == R.id.mnu_selectgame) {
-      showFragment(GameSelectorFragment.Id);
+      new AlertDialog.Builder(this)
+          .setIcon(android.R.drawable.ic_dialog_alert)
+          .setTitle(R.string.select_game)
+          .setMessage(R.string.select_game_confirm)
+          .setPositiveButton(android.R.string.yes , new DialogInterface.OnClickListener()
+          {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+              showFragment(GameSelectorFragment.Id);
+            }
+
+          })
+          .setNegativeButton(android.R.string.no, null)
+          .show();
 
     } else if (itemId == R.id.mnu_settings) {
       showSettings();

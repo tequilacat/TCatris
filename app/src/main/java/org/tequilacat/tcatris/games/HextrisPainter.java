@@ -1,7 +1,6 @@
 package org.tequilacat.tcatris.games;
 
 import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
@@ -63,7 +62,7 @@ public class HextrisPainter extends AbstractFlatGamePainter {
   public HextrisPainter() {
     _hexPaint.setStyle(Paint.Style.STROKE);
     _colorPalette.FIELD_BG_COLOR = ColorCodes.black;
-    _colorPalette.DYN_SHAPE_STROKE_VALID = 0xFFA4E804;
+    _colorPalette.DYN_SHAPE_STROKE_VALID = 0xFF4BFF0A;// acid green instead of blueish 0xFFA4E804;
     _colorPalette.DYN_SHAPE_STROKE_INVALID = 0xFFFF2F80;
   }
 
