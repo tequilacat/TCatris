@@ -35,6 +35,7 @@ public class HextrisPainter extends AbstractFlatGamePainter {
 
   private static final float _emptyRatio = 0.9f;
   private static final float SETTLED_CORE_RATIO = 0.7f;
+  private static final float SQUEEZE_RATIO = 0.5f;
 
   static {
     _rawHexaPath = new Path();
@@ -82,12 +83,14 @@ public class HextrisPainter extends AbstractFlatGamePainter {
     scale(_rawHexaPath, _scaledHexaPathContour, _hexHalfHeight * GameConstants.CONTOUR_FACTOR);
     scale(_rawHexaPath, _scaledHexaPathEmpty, _hexHalfHeight * _emptyRatio);
     scale(_rawHexaPath, _scaledHexaPathSettledCore, _hexHalfHeight * SETTLED_CORE_RATIO);
-    scale(_rawCollapsingPath, _scaledCollapsingPath, _hexHalfHeight);
+    //scale(_rawCollapsingPath, _scaledCollapsingPath, _hexHalfHeight);
+    scale(_rawHexaPath, _scaledCollapsingPath, _hexHalfHeight * SQUEEZE_RATIO);
   }
 
   @Override
   public void paintCellPix(Canvas c, int x, int y, int state, ABrickGame.CellState cellState) {
     Path path = null;
+    int cellColor = getTypeColor(state);
 
     if (state == ABrickGame.EMPTY_CELL_TYPE) {
       path = _scaledHexaPathEmpty;
@@ -96,7 +99,7 @@ public class HextrisPainter extends AbstractFlatGamePainter {
 
     } else if (cellState == ABrickGame.CellState.FALLING) {
       path = _scaledHexaPathNormal;
-      _hexPaint.setColor(getTypeColor(state));
+      _hexPaint.setColor(cellColor);
       _hexPaint.setStyle(Paint.Style.FILL);
 
     } else if (cellState == ABrickGame.CellState.FALLEN_SHADOW) {
@@ -106,13 +109,14 @@ public class HextrisPainter extends AbstractFlatGamePainter {
 
     } else if (cellState == ABrickGame.CellState.SETTLED) {
       path = _scaledHexaPathNormal;
-      _hexPaint.setColor(getTypeColor(state));
+      _hexPaint.setColor(cellColor);
       _hexPaint.setStyle(Paint.Style.FILL);
 
     } else { // SQUEEZED
       path = _scaledCollapsingPath;
       _hexPaint.setStyle(Paint.Style.FILL);
-      _hexPaint.setColor(ColorCodes.white); // TODO improve display of hex cells squeezed
+      _hexPaint.setColor(cellColor);
+      //_hexPaint.setColor(ColorCodes.white); // TODO improve display of hex cells squeezed
     }
 
     if (path != null) {
