@@ -241,15 +241,22 @@ public abstract class FlatGame extends ABrickGame {
   @Override
   public void layout(LayoutParameters layoutParams) {
 
-    int MARGIN = VisualResources.Defaults.MARGIN_SIZE;
-    int VERT_SPACING = MARGIN;
+    //int MARGIN = VisualResources.Defaults.MARGIN_SIZE;
+    //int VERT_SPACING = MARGIN;
 
     int screenWidth = layoutParams.GameArea.width(), screenHeight = layoutParams.GameArea.height();
 
-    int nextFigMargin = VERT_SPACING;
-    int width = screenWidth - MARGIN - MARGIN - VERT_SPACING - nextFigMargin * 2;
-    int height = screenHeight - MARGIN - MARGIN;
+    // padding around widest next figure but still within next shape area
+    int nextFigMargin = VisualResources.Defaults.MARGIN_SIZE;
 
+    //int width = screenWidth - MARGIN - MARGIN - VERT_SPACING - nextFigMargin * 2;
+    //int height = screenHeight - MARGIN - MARGIN;
+
+    int marginPadding = (int) (VisualResources.Defaults.ROUNDED_FRAME_MARGIN
+            + VisualResources.Defaults.ROUNDED_FRAME_PADDING);
+    // left right and between, + padding within next shape area
+    int width = screenWidth - (marginPadding * 4 + nextFigMargin * 2);
+    int height = screenHeight - marginPadding * 2;// top and bottom
 
     // consider left to right
     float[] sideRatios = new float[3];
@@ -274,8 +281,8 @@ public abstract class FlatGame extends ABrickGame {
         nextFigWidth = (int) (nextWRatio * pixelRatio),
         nextFigHeight = (int) (nextHRatio * pixelRatio);
 
-    int fieldX0 = MARGIN;
-    int fieldY0 = MARGIN;
+    int fieldX0 = marginPadding;
+    int fieldY0 = marginPadding;
 
 //    int fieldWidth = cellSize * glassWidth;
 //    int fieldHeight = cellSize * glassHeight;
@@ -283,9 +290,9 @@ public abstract class FlatGame extends ABrickGame {
 
     // lay out next fig
     ///layoutParams.GameArea.left
-    int nextShapeX = layoutParams.GameArea.left + MARGIN + fieldWidth + VERT_SPACING;
+    int nextShapeX = layoutParams.GameArea.left + fieldWidth + marginPadding * 3;
     int nextShapeWidth = nextFigMargin * 2 + nextFigWidth;
-    int nextShapeY = layoutParams.GameArea.top + MARGIN;
+    int nextShapeY = layoutParams.GameArea.top + marginPadding;
     int nextShapeHeight = nextFigMargin * 2 + nextFigHeight;
 
     setGameScreenLayout(new GameScreenLayout(

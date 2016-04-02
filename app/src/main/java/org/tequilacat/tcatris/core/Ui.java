@@ -46,7 +46,7 @@ public class Ui {
     _textPainter.setColor(textColor);
     Paint.FontMetrics fm = _textPainter.getFontMetrics();
     float textH = fm.descent - fm.ascent;
-    g.drawText(text, x, y - textH / 2  - fm.ascent, _textPainter);
+    g.drawText(text, x, y - textH / 2 - fm.ascent, _textPainter);
     //g.drawText(text, x, y - fm.ascent, _textPainter);
   }
 
@@ -62,32 +62,6 @@ public class Ui {
 
   public static void fillRect(Canvas c, Rect fieldRect, int fillColor) {
     fillRect(c, fieldRect.left, fieldRect.top, fieldRect.width(), fieldRect.height(), fillColor);
-  }
-
-  public static void draw3dRect(Canvas g, Rect rect) {
-    draw3dRect(g, rect.left, rect.top, rect.width(), rect.height());
-  }
-
-  public static void draw3dRect(Canvas g, int x, int y, int w, int h) {
-    x += 2;
-    w -= 4;
-    y += 2;
-    h -= 4;
-
-    _framePainter.setColor(VisualResources.Defaults.DARKSHADOW_COLOR);
-    g.drawLine(x - 1, y - 1, x - 1, y + h, _framePainter);
-    g.drawLine(x - 1, y - 1, x + w, y - 1, _framePainter);
-
-    _framePainter.setColor(VisualResources.Defaults.LIGHTSHADOW_COLOR);
-    x += w;
-    y += h;
-    g.drawLine(x, y, x - w, y, _framePainter);
-    g.drawLine(x, y, x, y - h, _framePainter);
-  }
-
-
-  public enum ButtonGlyph {
-    LEFT, RIGHT, RCW, RCCW, DROP,
   }
 
   private static EnumMap<ABrickGame.ImpulseSemantics, Path> _gameImpulseGlyph
@@ -399,5 +373,59 @@ public class Ui {
     _fillPainter.setColor(flashColor);
     c.drawRoundRect(_rbOval, r, r, _fillPainter);
   }
+
+  private static final RectF _roundedAreaRect = new RectF();
+
+  /**
+   * Expands all dimensions by delta.
+   * If delta is positive the rect becomes bigger otherwise it becomes smaller.
+   * No sanity checks are made on resulting bounds
+   * @param rect the rect to modify
+   * @param delta the delta applied to each bound
+   */
+  public static void expand(Rect rect, int delta) {
+    rect.left -= delta;
+    rect.right += delta;
+    rect.top -= delta;
+    rect.bottom += delta;
+  }
+
+  enum FramePosition {EXACT, AROUND, INSIDE}
+
+  public static void drawRoundedArea(Canvas c, Rect rect, FramePosition framePosition) {
+    int left = rect.left, top = rect.top, right = rect.right, bottom = rect.bottom;
+
+    if (framePosition == FramePosition.AROUND) {
+      final int framePadding = (int) VisualResources.Defaults.ROUNDED_FRAME_PADDING;
+      left -= framePadding;
+      top -= framePadding;
+      right += framePadding;
+      bottom += framePadding;
+
+    } else if (framePosition == FramePosition.INSIDE) {
+      final int frameMargin = (int) VisualResources.Defaults.ROUNDED_FRAME_MARGIN;
+      left += frameMargin;
+      top += frameMargin;
+      right -= frameMargin;
+      bottom -= frameMargin;
+    }
+
+    float radius = VisualResources.Defaults.ROUNDED_FRAME_RADIUS;
+    float shadowDelta = VisualResources.Defaults.ROUNDED_FRAME_STROKE_WIDTH;
+    _framePainter.setStrokeWidth(shadowDelta);
+
+
+    _framePainter.setColor(VisualResources.Defaults.LIGHTSHADOW_COLOR);
+    _roundedAreaRect.set(left, top, right, bottom);
+    c.drawRoundRect(_roundedAreaRect, radius, radius, _framePainter);
+
+    left -= shadowDelta;
+    top -= shadowDelta;
+
+    _framePainter.setColor(VisualResources.Defaults.DARKSHADOW_COLOR);
+    _roundedAreaRect.set(left, top, right, bottom);
+    c.drawRoundRect(_roundedAreaRect, radius, radius, _framePainter);
+  }
+
 }
 

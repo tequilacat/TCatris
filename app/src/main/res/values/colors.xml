@@ -14,7 +14,7 @@
     <color name="scoreCurTextColor">@color/Black</color>
     <color name="scoreCurTextColorAlone">@color/White</color>
 
-    <color name="darkShadow">#606060</color>
+    <color name="darkShadow">#808080</color>
     <color name="lightShadow">@color/White</color>
 
     <color name="glyphFill">@color/White</color>

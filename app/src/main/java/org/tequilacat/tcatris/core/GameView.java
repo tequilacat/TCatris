@@ -26,6 +26,38 @@ public final class GameView extends SurfaceView {
   private Sounds _sounds;
   private boolean _prefEnableSound;
 
+  private final Object _layoutLock = new Object();
+
+  // layout objects
+
+  private final List<ClickableZone> _clickableZones = new ArrayList<>();
+  private final List<Button> _buttons = new ArrayList<>();
+
+  /**
+   * game statictics area: scores and level
+   */
+  private final Rect _gameStatisticsArea = new Rect();
+
+  /**
+   * black area displaying
+   */
+  private final Rect _scoreArea = new Rect();
+
+  /**
+   * shows number of current level
+   */
+  private final Rect _levelArea = new Rect();
+
+  private final Rect _buttonArea = new Rect();
+
+  /**
+   * separates color bars in score area
+   */
+  private float _scoreMargin;
+
+  private final Rect _scoresClickableArea = new Rect();
+
+
   private GameRunner _gameRunner = new GameRunner() {
     @Override
     public void onPaintGameScreen(Canvas c, boolean repaintAll, DynamicState dynamicState) {
@@ -51,7 +83,6 @@ public final class GameView extends SurfaceView {
       });
     }
   };
-
   /**
    * override for visual constructor
    * @param context
@@ -460,31 +491,6 @@ public final class GameView extends SurfaceView {
     }
   }
 
-  private final List<ClickableZone> _clickableZones = new ArrayList<>();
-  private final List<Button> _buttons = new ArrayList<>();
-
-  /**
-   * game statictics area: scores and level
-   */
-  private Rect _gameStatisticsArea = new Rect();
-
-  /**
-   * black area displaying
-   */
-  private Rect _scoreArea = new Rect();
-
-  /**
-   * shows number of current level
-   */
-  private Rect _levelArea = new Rect();
-
-  /**
-   * separates color bars in score area
-   */
-  private float _scoreMargin;
-
-  private final Object _layoutLock = new Object();
-
   /**
    * computes all areas to be displayed on screen
    * @param w width of game screen
@@ -498,7 +504,7 @@ public final class GameView extends SurfaceView {
       synchronized (_layoutLock) {
         _tracksByType = new DragTrack[]{
             new DragTrack(DragAxis.ROTATE, (int) (w * 0.4 / 12)), // rotations per btn
-            new DragTrack(DragAxis.HORIZONTAL, (int) (w * 0.4 / getGame().getMoveDimension() / 2)), // [W]*2 movements per button
+            new DragTrack(DragAxis.HORIZONTAL, (int) (w * 0.4 / game.getMoveDimension() / 2)), // [W]*2 movements per button
         };
 
         _scoreMargin = VisualResources.Defaults.HEADER_FONT_SIZE / 3;
@@ -516,52 +522,83 @@ public final class GameView extends SurfaceView {
         // compute proportional sizes of painted screen components
         _gameStatisticsArea.set(0, 0, w, _scoreArea.bottom);
 
-        int buttonHeight = VisualResources.Defaults.BUTTONAREA_HEIGHT,
-            buttonY = h - buttonHeight, buttonWidth = w / 5, buttonX = 0;
+        _buttonArea.set(0, h - VisualResources.Defaults.BUTTONAREA_HEIGHT, w, h);
+        LayoutParameters layoutParams = new LayoutParameters();
+        layoutParams.GameArea = new Rect(0, _gameStatisticsArea.bottom, w, _buttonArea.top);
+        game.layout(layoutParams);
+
+        int buttonWidth;
+        final boolean LOWER_DROP_BTN = false;
+        Button dropButton;
+
+        if (LOWER_DROP_BTN) {
+          buttonWidth = w / 5;
+          dropButton = new Button(null, new ABrickGame.ImpulseSemantics[]{
+              ABrickGame.ImpulseSemantics.MOVE_DOWN},
+              _buttonArea.left + buttonWidth * 2, _buttonArea.top, buttonWidth, _buttonArea.height());
+        } else {
+          buttonWidth = w / 4;
+          dropButton = null;
+        }
+
+        Button dragRotateButton = new Button(DragAxis.ROTATE,
+            new ABrickGame.ImpulseSemantics[]{
+                game.getImpulseSemantics(game.getAxisImpulse(DragAxis.ROTATE, false)),
+                game.getImpulseSemantics(game.getAxisImpulse(DragAxis.ROTATE, true)),
+            }, _buttonArea.left, _buttonArea.top, buttonWidth * 2, _buttonArea.height());
+
+        Button dragMoveButton = new Button(DragAxis.HORIZONTAL,
+            new ABrickGame.ImpulseSemantics[]{
+                game.getImpulseSemantics(game.getAxisImpulse(DragAxis.HORIZONTAL, false)),
+                game.getImpulseSemantics(game.getAxisImpulse(DragAxis.HORIZONTAL, true)),
+            }, _buttonArea.right - buttonWidth * 2, _buttonArea.top, buttonWidth * 2, _buttonArea.height());
+
+        GameScreenLayout gsl = game.getGameScreenLayout();
+        // to display drop inside Next frame,
+        // diff between minScoreBottom and buttons top must be at least buttonsHeight + nextWidth
+        _scoresClickableArea.set(gsl.getNextShapeRect());
+        int paddingMargin = (int) (+VisualResources.Defaults.ROUNDED_FRAME_MARGIN
+                        + VisualResources.Defaults.ROUNDED_FRAME_PADDING);
+        // expand by margin so clickable area covers margins around next field
+
+        Ui.expand(_scoresClickableArea, paddingMargin);
+        // resize nextfig bottom to button area to have half button height in between
+        // but not lower than main field (otherwise looks ugly)
+        _scoresClickableArea.bottom = Math.min(gsl.getFieldRect().bottom + paddingMargin,
+            _buttonArea.top - _buttonArea.height() / 2);
 
 
         _buttons.clear();
-        _buttons.add(new Button(DragAxis.ROTATE,
-            new ABrickGame.ImpulseSemantics[] {
-                game.getImpulseSemantics(game.getAxisImpulse(DragAxis.ROTATE, false)),
-                game.getImpulseSemantics(game.getAxisImpulse(DragAxis.ROTATE, true)),
-            },
-            buttonX, buttonY, buttonWidth * 2, buttonHeight));
-
-        _buttons.add(new Button(null, new ABrickGame.ImpulseSemantics[]{ABrickGame.ImpulseSemantics.MOVE_DOWN},
-            buttonX + buttonWidth * 2, buttonY, buttonWidth, buttonHeight));
-
-        _buttons.add(new Button(DragAxis.HORIZONTAL,
-            new ABrickGame.ImpulseSemantics[] {
-                game.getImpulseSemantics(game.getAxisImpulse(DragAxis.HORIZONTAL, false)),
-                game.getImpulseSemantics(game.getAxisImpulse(DragAxis.HORIZONTAL, true)),
-            },
-            buttonX + buttonWidth * 3, buttonY, buttonWidth * 2, buttonHeight));
-
-        LayoutParameters layoutParams = new LayoutParameters();
-        layoutParams.GameArea = new Rect(0, _gameStatisticsArea.bottom, w, h - buttonHeight); // - _gameStatisticsArea.height());
+        _buttons.add(dragRotateButton);
+        _buttons.add(dragMoveButton);
 
         _clickableZones.clear();
-        _clickableZones.add(new ClickableZone(ClickableZoneType.DROP_BUTTON, _buttons.get(1).rect));
-        _clickableZones.add(new ClickableZone(ClickableZoneType.PAUSE_BUTTON, layoutParams.GameArea));
+        _clickableZones.add(new ClickableZone(ClickableZoneType.DROP_BUTTON, _scoresClickableArea));
+        Rect clickableFieldArea = new Rect(gsl.getFieldRect());
+        Ui.expand(clickableFieldArea, paddingMargin);
+        _clickableZones.add(new ClickableZone(ClickableZoneType.PAUSE_BUTTON, clickableFieldArea));
+
+        if (dropButton != null) {
+          _buttons.add(dropButton);
+          _clickableZones.add(new ClickableZone(ClickableZoneType.DROP_BUTTON, dropButton.rect));
+        }
 
         // add zones for halves of axis buttons
         // Rotate button
-        Rect btnRect = _buttons.get(0).rect;
+        Rect btnRect = dragRotateButton.rect;
         _clickableZones.add(new ClickableZone(new Rect(btnRect.left, btnRect.top,
             btnRect.left + btnRect.width() / 2, btnRect.bottom), DragAxis.ROTATE, false));
         _clickableZones.add(new ClickableZone(new Rect(btnRect.left + btnRect.width() / 2, btnRect.top,
             btnRect.right, btnRect.bottom), DragAxis.ROTATE, true));
 
         // Move button
-        btnRect = _buttons.get(2).rect;
+        btnRect = dragMoveButton.rect;
         _clickableZones.add(new ClickableZone(new Rect(btnRect.left, btnRect.top,
             btnRect.left + btnRect.width() / 2, btnRect.bottom), DragAxis.HORIZONTAL, false));
         _clickableZones.add(new ClickableZone(new Rect(btnRect.left + btnRect.width() / 2, btnRect.top,
             btnRect.right, btnRect.bottom), DragAxis.HORIZONTAL, true));
 
         //Debug.print("do game view_scores [" + getGame().getDescriptor().getId() + "]");
-        getGame().layout(layoutParams);
       }
     }
   }
@@ -581,10 +618,19 @@ public final class GameView extends SurfaceView {
       // Debug.print("paint: " + (repaintAll ? "ALL" : "field only"));
       final ABrickGame game = getGame();
 
+//      int frameMargin = (int) VisualResources.Defaults.ROUNDED_FRAME_MARGIN,
+//          framePadding = (int) VisualResources.Defaults.ROUNDED_FRAME_PADDING;
+
       if (repaintAll) {
         c.drawColor(VisualResources.Defaults.SCREEN_BG_COLOR);
 
+        Ui.drawRoundedArea(c, game.getGameScreenLayout().getFieldRect(), Ui.FramePosition.AROUND);
+        Ui.drawRoundedArea(c, _scoresClickableArea, Ui.FramePosition.INSIDE);
+
         game.paintNext(c);
+
+        // try fitting round drop button here
+
 
         Scoreboard.GameScores gs = Scoreboard.instance().getGameScores(game.getDescriptor().getId());
         Ui.paintScores(c, game.getScore(), gs.getMaxScore(), _scoreArea.left, _scoreArea.top,

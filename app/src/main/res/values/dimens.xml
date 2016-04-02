@@ -10,6 +10,11 @@
     <dimen name="dynaShapeStrokeWidth">2dp</dimen>
     <dimen name="fallenShadowStrokeWidth">1dp</dimen>
 
+    <dimen name="uiRoundedFrameStrokeWidth">2dp</dimen>
+    <dimen name="uiRoundedFrameRadius">5dp</dimen>
+    <dimen name="uiRoundedFramePadding">10dp</dimen>
+    <dimen name="uiRoundedFrameMargin">5dp</dimen>
+
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>

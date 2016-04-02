@@ -50,6 +50,10 @@ public class VisualResources {
   public final float DYN_SHAPE_STROKE_WIDTH;
 
   public final float FALLEN_SHADOW_STROKE_WIDTH;
+  public final float ROUNDED_FRAME_STROKE_WIDTH;
+  public final float ROUNDED_FRAME_RADIUS;
+  public final float ROUNDED_FRAME_PADDING;
+  public final float ROUNDED_FRAME_MARGIN;
 
   public VisualResources(Resources bundle) {
     HEADER_FONT_SIZE = bundle.getDimensionPixelSize(R.dimen.canvas_score_font_size);
@@ -59,6 +63,10 @@ public class VisualResources {
 
     DYN_SHAPE_STROKE_WIDTH = bundle.getDimension(R.dimen.dynaShapeStrokeWidth);
     FALLEN_SHADOW_STROKE_WIDTH = bundle.getDimension(R.dimen.fallenShadowStrokeWidth);
+    ROUNDED_FRAME_STROKE_WIDTH = bundle.getDimension(R.dimen.uiRoundedFrameStrokeWidth);
+    ROUNDED_FRAME_RADIUS = bundle.getDimension(R.dimen.uiRoundedFrameRadius);
+    ROUNDED_FRAME_PADDING = bundle.getDimension(R.dimen.uiRoundedFramePadding);
+    ROUNDED_FRAME_MARGIN = bundle.getDimension(R.dimen.uiRoundedFrameMargin);
 
     SCREEN_BG_COLOR = bundle.getColor(R.color.screenBgColor);
     FIELD_BG_COLOR = bundle.getColor(R.color.fieldBgColor);
