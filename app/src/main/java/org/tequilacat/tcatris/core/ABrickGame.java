@@ -11,6 +11,7 @@ import java.util.EnumSet;
  * keeps state of game field implemented by descendants
  */
 public abstract class ABrickGame {
+  public static final int EMPTY_CELL_TYPE = 0;
 
   public enum CellState {
     FALLING, SQUEEZED, SETTLED, FALLEN_SHADOW,

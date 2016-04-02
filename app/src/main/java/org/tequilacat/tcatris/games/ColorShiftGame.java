@@ -292,7 +292,7 @@ public class ColorShiftGame extends FlatGame {
         rlen = 1;
         prevCol = curCol;
       } else {
-        if (curCol != EMPTY) {
+        if (curCol != EMPTY_CELL_TYPE) {
           rlen++;
         }
       }
@@ -333,7 +333,7 @@ public class ColorShiftGame extends FlatGame {
         }
       }
       while (dst >= 0) {
-        field[dst][x] = EMPTY;
+        field[dst][x] = EMPTY_CELL_TYPE;
         dst--;
       }
     }

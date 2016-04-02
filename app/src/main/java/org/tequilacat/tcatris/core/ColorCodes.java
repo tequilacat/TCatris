@@ -35,12 +35,14 @@ public class ColorCodes {
   public final static int darkCyan = ColorCodes.intValue(0, 0x80, 0x80);
 
 
-  private static final int[] _distinctiveColors, _distinctiveDarkColors, _distinctiveLightColors;
-  private static final int[] _distinctiveContrastColors;
+  private static final int[] _gameColors, _gameDarkColors, _gameLightColors;
+  private static final int[] _gameContrastColors;
+
+  private static final int[] _distinctiveColors;
 
   static {
 
-    final String[] colourValues = new String[]{
+    final String[] distinctiveColorNames = new String[]{
         "#FFFF00", "#1CE6FF", "#FF34FF", "#FF4A46", "#008941", "#006FA6", "#A30059", "#FFDBE5",
         "#7A4900", "#0000A6", "#63FFAC", "#B79762", "#004D43", "#8FB0FF", "#997D87", "#5A0007",
         "#809693", "#FEFFE6", "#1B4400", "#4FC601", "#3B5DFF", "#4A3B53", "#FF2F80", "#61615A",
@@ -74,26 +76,46 @@ public class ColorCodes {
         "#FC009C", "#92896B"};
 
     // Visual fix: swap @8 <-> @11 since #8 is too bright, looks white
-    String swap = colourValues[7]; colourValues[7] = colourValues[10]; colourValues[10] = swap;
 
-    _distinctiveColors = new int[colourValues.length];
-    _distinctiveContrastColors = new int[colourValues.length];
-    _distinctiveDarkColors = new int[colourValues.length];
-    _distinctiveLightColors = new int[colourValues.length];
-    int index = 0;
+    _distinctiveColors = new int[distinctiveColorNames.length];
+
+    for(int i = 0; i < distinctiveColorNames.length; i++){
+      String colorCode = distinctiveColorNames[i];
+      if (colorCode.startsWith("#")) {
+        colorCode = colorCode.substring(1);
+      }
+      _distinctiveColors[i] = Color.parseColor("#FF"+colorCode);
+    }
+
+    //final int CELL_COLOR_COUNT = 8;
+    // modify some colors:
+    // brighter blue at position 7
+
+//    int swap = _distinctiveColors[7]; _distinctiveColors[7] = _distinctiveColors[10]; _distinctiveColors[10] = swap;
+    _distinctiveColors[4] = 0xff63FFAC;
+    _distinctiveColors[5] = 0xff8FB0FF;
+    _distinctiveColors[7] = 0xffFFB500;
+    _distinctiveColors[9] = 0xffDFFB71;
+
+    _gameColors = new int[distinctiveColorNames.length];
+    _gameContrastColors = new int[distinctiveColorNames.length];
+    _gameDarkColors = new int[distinctiveColorNames.length];
+    _gameLightColors = new int[distinctiveColorNames.length];
+
+    //int index = 0;
     float[] hsvCompos =new float[3];
 
-    for (String colorCode : colourValues) {
-      colorCode = colorCode.startsWith("#") ? colorCode.substring(1) : colorCode;
-      int color = Color.parseColor("#FF"+colorCode);
-      _distinctiveColors[index] = color;
-      _distinctiveLightColors[index] = lighten(color, 0.4f);
-      _distinctiveDarkColors[index] = darken(color, 0.4f);
+//    for (String colorCode : distinctiveColorNames) {
+//      colorCode = colorCode.startsWith("#") ? colorCode.substring(1) : colorCode;
+//      int color = Color.parseColor("#FF"+colorCode);
+    for(int index = 0; index < _distinctiveColors.length;index++) {
+      int color = _distinctiveColors[index];
+      _gameColors[index] = color;
+      _gameLightColors[index] = lighten(color, 0.4f);
+      _gameDarkColors[index] = darken(color, 0.4f);
 
       Color.colorToHSV(color, hsvCompos);
-      _distinctiveContrastColors[index] = (hsvCompos[2] > 0.5) ? _distinctiveDarkColors[index] : _distinctiveLightColors[index];
-
-      index++;
+      _gameContrastColors[index] = (hsvCompos[2] > 0.5) ? _gameDarkColors[index] : _gameLightColors[index];
     }
   }
 
@@ -102,23 +124,23 @@ public class ColorCodes {
   public static int getDistinctColor(int colorIndex, Lightness strength) {
     int distinctColor;
 
-    if (colorIndex < 0 || colorIndex >= _distinctiveColors.length) {
+    if (colorIndex < 0 || colorIndex >= _gameColors.length) {
       distinctColor = 0;
     } else {
       final int[] colors;
 
       switch (strength) {
         case Contrast:
-          colors = _distinctiveContrastColors;
+          colors = _gameContrastColors;
           break;
         case Lighter:
-          colors = _distinctiveLightColors;
+          colors = _gameLightColors;
           break;
         case Darker:
-          colors = _distinctiveDarkColors;
+          colors = _gameDarkColors;
           break;
         default:
-          colors = _distinctiveColors;
+          colors = _gameColors;
           break;
       }
       distinctColor = colors[colorIndex];

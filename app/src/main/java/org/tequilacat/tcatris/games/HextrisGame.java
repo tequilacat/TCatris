@@ -16,7 +16,7 @@ public class HextrisGame extends AbstractRotationGame {
 
 //  @Override
 //  protected FlatShape createNext() {
-//    return HextrisShape.getStaticShapes()[1].createCopy();
+//    return HextrisShape.getStaticShapes()[7].createCopy();
 //  }
 
   @Override
@@ -62,7 +62,7 @@ public class HextrisGame extends AbstractRotationGame {
       boolean allOdds = true, allEvens = true;
 
       for (int x = 0; x < cols; x++) {// scan cells in rows
-        if (field[y][x] == FlatGame.EMPTY) {
+        if (field[y][x] == EMPTY_CELL_TYPE) {
           if(evenCol){
             allEvens=false;
           }else {
@@ -121,7 +121,7 @@ public class HextrisGame extends AbstractRotationGame {
         }
       }
       while (dst >= 0) {
-        field[dst][x] = EMPTY;
+        field[dst][x] = EMPTY_CELL_TYPE;
         dst--;
       }
     }

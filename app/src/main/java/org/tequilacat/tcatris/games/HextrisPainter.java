@@ -7,7 +7,6 @@ import android.graphics.Rect;
 
 import org.tequilacat.tcatris.core.ABrickGame;
 import org.tequilacat.tcatris.core.ColorCodes;
-import org.tequilacat.tcatris.core.Debug;
 import org.tequilacat.tcatris.core.GameConstants;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.Ui;
@@ -66,12 +65,15 @@ public class HextrisPainter extends AbstractFlatGamePainter {
     _colorPalette.DYN_SHAPE_STROKE_INVALID = 0xFFFF2F80;
   }
 
+  private static final int EMPTY_CELL_COLOR = ColorCodes.darkCyan;
+  private static final int FALLEN_SHADOW_COLOR = ColorCodes.cyan;
+
   @Override
-  public void init(GameScreenLayout gameScreenLayout, FlatGame game) {
+  public void init(GameScreenLayout gameScreenLayout, ABrickGame game) {
     super.init(gameScreenLayout, game);
     // compute hex size
     //_hexHalfHeight = gameScreenLayout.getCellSize() / 3f;
-    _hexHalfHeight = _cachedFieldRect.height() / (2 * game.getHeight() + 1);
+    _hexHalfHeight = _cachedFieldRect.height() / (2 * ((FlatGame)game).getHeight() + 1);
     _hexHalfWidth = (_hexHalfHeight / sin60);
     _dx = _hexHalfWidth * 1.5f;
 
@@ -83,16 +85,11 @@ public class HextrisPainter extends AbstractFlatGamePainter {
     scale(_rawCollapsingPath, _scaledCollapsingPath, _hexHalfHeight);
   }
 
-  private static final int EMPTY_CELL_COLOR = ColorCodes.darkCyan;
-  private static final int FALLEN_SHADOW_COLOR = ColorCodes.cyan;
-
   @Override
   public void paintCellPix(Canvas c, int x, int y, int state, ABrickGame.CellState cellState) {
     Path path = null;
 
-    //int color = (state == FlatGame.EMPTY) ? ColorCodes.cyan : ColorCodes.
-
-    if (state == FlatGame.EMPTY) {
+    if (state == ABrickGame.EMPTY_CELL_TYPE) {
       path = _scaledHexaPathEmpty;
       _hexPaint.setColor(EMPTY_CELL_COLOR);
       _hexPaint.setStyle(Paint.Style.STROKE);
@@ -123,9 +120,9 @@ public class HextrisPainter extends AbstractFlatGamePainter {
       c.translate(x, y);
       c.drawPath(path, _hexPaint);
 
-      if (cellState == ABrickGame.CellState.SETTLED && state != FlatGame.EMPTY) {
+      if (cellState == ABrickGame.CellState.SETTLED && state != ABrickGame.EMPTY_CELL_TYPE) {
         // draw another inside, with contrast color
-        _hexPaint.setColor(ColorCodes.getDistinctColor(state - 1, ColorCodes.Lightness.Contrast));
+        _hexPaint.setColor(getTypeColor(state, true));
         _hexPaint.setStyle(Paint.Style.FILL);
         c.drawPath(_scaledHexaPathSettledCore, _hexPaint);
       }

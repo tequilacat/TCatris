@@ -6,7 +6,7 @@ import android.graphics.Path;
 import android.graphics.Rect;
 
 import org.tequilacat.tcatris.core.ABrickGame;
-import org.tequilacat.tcatris.core.ColorCodes;
+import org.tequilacat.tcatris.core.AbstractGamePainter;
 import org.tequilacat.tcatris.core.GameConstants;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.Ui;
@@ -29,7 +29,7 @@ public class FlatRectGamePainter extends AbstractRectGamePainter {
     y -= halfCellSize;
     int cellColor = getTypeColor(state);
 
-    if (state == FlatGame.EMPTY) {
+    if (state == ABrickGame.EMPTY_CELL_TYPE) {
       // nothing
 
     } else if (cellState == ABrickGame.CellState.FALLING) {
@@ -42,7 +42,7 @@ public class FlatRectGamePainter extends AbstractRectGamePainter {
     } else if (cellState == ABrickGame.CellState.FALLEN_SHADOW) {
       int innerSize = cellSize * 6 / 10;
       int margin = (cellSize - innerSize) >> 1;// fast /2
-      _cellPainter.setColor(ColorCodes.getDistinctColor(state - 1, ColorCodes.Lightness.Contrast));
+      _cellPainter.setColor(AbstractGamePainter.getTypeColor(state, true));
       _cellPainter.setStrokeWidth(VisualResources.Defaults.FALLEN_SHADOW_STROKE_WIDTH);
       c.drawRect(x + margin, y + margin, x + margin + innerSize, y + margin + innerSize, _cellPainter);
       //Ui.drawRect(c, x + margin, y + margin, innerSize, innerSize, blockColor);
@@ -52,7 +52,7 @@ public class FlatRectGamePainter extends AbstractRectGamePainter {
 
       int innerSize = cellSize * 6 / 10;
       int margin = (cellSize - innerSize) >> 1;// fast /2
-      final int blockColor = ColorCodes.getDistinctColor(state - 1, ColorCodes.Lightness.Contrast);
+      final int blockColor = AbstractGamePainter.getTypeColor(state, true);
       Ui.fillRect(c, x + margin, y + margin, innerSize, innerSize, blockColor);
     }
   }
@@ -93,7 +93,7 @@ public class FlatRectGamePainter extends AbstractRectGamePainter {
         // settled
         int cellValue = game.getCellValue(x, y);
 
-        if (cellValue != FlatGame.EMPTY) {
+        if (cellValue != ABrickGame.EMPTY_CELL_TYPE) {
           paintCellPix(g, pixX, pixY, cellValue,
               game.isSqueezable(x, y) ? ABrickGame.CellState.SQUEEZED : ABrickGame.CellState.SETTLED);
         }

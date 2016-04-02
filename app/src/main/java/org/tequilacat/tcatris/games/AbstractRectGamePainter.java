@@ -2,8 +2,8 @@ package org.tequilacat.tcatris.games;
 
 import android.graphics.Canvas;
 
+import org.tequilacat.tcatris.core.ABrickGame;
 import org.tequilacat.tcatris.core.GameScreenLayout;
-import org.tequilacat.tcatris.core.VisualResources;
 
 /**
  * rectangular game with all 2d rect services but without painting exact pixels and field
@@ -12,9 +12,9 @@ public abstract class AbstractRectGamePainter extends AbstractFlatGamePainter {
   protected int _cachedCellSize;
 
   @Override
-  public void init(GameScreenLayout gameScreenLayout, FlatGame game) {
+  public void init(GameScreenLayout gameScreenLayout, ABrickGame game) {
     super.init(gameScreenLayout, game);
-    _cachedCellSize = gameScreenLayout.getFieldRect().width() / game.getWidth();
+    _cachedCellSize = gameScreenLayout.getFieldRect().width() / ((FlatGame)game).getWidth();
     gameScreenLayout.roundFieldRect(_cachedCellSize, _cachedCellSize);
   }
 

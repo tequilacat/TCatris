@@ -70,7 +70,7 @@ public class ClassicGame extends AbstractRotationGame {
     for (int y = 0; y < getHeight(); y++) {
       mySqueezable[y] = true;
       for (int x = 0; x < getWidth(); x++) {
-        if (field[y][x] == EMPTY) {
+        if (field[y][x] == EMPTY_CELL_TYPE) {
           mySqueezable[y] = false;
           break;
         }
@@ -103,7 +103,7 @@ public class ClassicGame extends AbstractRotationGame {
 
     while (targetRow >= 0) {
       for (int col = 0; col < getWidth(); col++) {
-        field[targetRow][col] = EMPTY;
+        field[targetRow][col] = EMPTY_CELL_TYPE;
       }
       targetRow--;
     }

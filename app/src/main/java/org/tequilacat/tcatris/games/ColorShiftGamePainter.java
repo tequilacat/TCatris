@@ -5,6 +5,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 
+import org.tequilacat.tcatris.core.ABrickGame;
 import org.tequilacat.tcatris.core.DragAxis;
 import org.tequilacat.tcatris.core.DragSensitivity;
 import org.tequilacat.tcatris.core.DynamicState;
@@ -39,7 +40,7 @@ int cellSize = getGameScreenLayout().getCellSize();
 */
 
   @Override
-  public void init(GameScreenLayout gameScreenLayout, FlatGame game) {
+  public void init(GameScreenLayout gameScreenLayout, ABrickGame game) {
     super.init(gameScreenLayout, game);
 
     _arrowPath.reset();
@@ -126,7 +127,7 @@ int cellSize = getGameScreenLayout().getCellSize();
         cellIndex = 0;
       }
 
-      _shiftedCellFill.setColor(FlatRectGamePainter.getTypeColor(fallingShape.getCellType(cellIndex)));
+      _shiftedCellFill.setColor(getTypeColor(fallingShape.getCellType(cellIndex)));
 
       if (i == 0) {
         int x = fallingShape.getX(cellIndex), y = fallingShape.getY(cellIndex);

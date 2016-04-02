@@ -2,14 +2,12 @@ package org.tequilacat.tcatris.games;
 
 import android.graphics.Canvas;
 import android.graphics.DashPathEffect;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 
 import org.tequilacat.tcatris.core.ABrickGame;
-import org.tequilacat.tcatris.core.ColorCodes;
-import org.tequilacat.tcatris.core.Debug;
+import org.tequilacat.tcatris.core.AbstractGamePainter;
 import org.tequilacat.tcatris.core.DynamicState;
 import org.tequilacat.tcatris.core.GameScreenLayout;
 import org.tequilacat.tcatris.core.Ui;
@@ -19,26 +17,11 @@ import org.tequilacat.tcatris.core.VisualResources;
  * Draws cells on field.
  * Created by avo on 29.02.2016.
  */
-public abstract class AbstractFlatGamePainter {
-
-  class ColorPalette {
-    public int DYN_SHAPE_STROKE_VALID = VisualResources.Defaults.DYN_SHAPE_STROKE_VALID;
-    public int DYN_SHAPE_STROKE_INVALID = VisualResources.Defaults.DYN_SHAPE_STROKE_INVALID;
-    public int FIELD_BG_COLOR = VisualResources.Defaults.FIELD_BG_COLOR;
-  }
-
-  private GameScreenLayout _gameScreenLayout;
+public abstract class AbstractFlatGamePainter extends AbstractGamePainter {
 
   private final Path _shapeContourPath = new Path();
   private Object _shapeSignature = null;
   private final Paint _shapeContourPaint = new Paint();
-
-  // can be used for quick access from inheritors
-  protected final Rect _cachedFieldRect = new Rect();
-  protected int _cachedNextFieldCenterX;
-  protected int _cachedNextFieldCenterY;
-
-  protected ColorPalette _colorPalette = new ColorPalette();
 
   public AbstractFlatGamePainter(){
     float strokeWidth = VisualResources.Defaults.DYN_SHAPE_STROKE_WIDTH;
@@ -49,44 +32,12 @@ public abstract class AbstractFlatGamePainter {
         strokeWidth * 7, strokeWidth * 3}, 0));
   }
 
-  public static int getTypeColor(int cellType) {
-    return ColorCodes.getDistinctColor(cellType - 1, ColorCodes.Lightness.Normal);
-  }
-
   protected Paint getShapeContourPaint() {
     return _shapeContourPaint;
   }
 
   protected Path getShapeContourPath() {
     return _shapeContourPath;
-  }
-
-  /**
-   * stores size and calculates all things dependent on cell size
-   * @param gameScreenLayout screen view_scores
-   */
-  public void init(GameScreenLayout gameScreenLayout, FlatGame game){
-    _gameScreenLayout = gameScreenLayout;
-
-    _cachedFieldRect.set(gameScreenLayout.getFieldRect());
-   // _cachedCellSize = gameScreenLayout.getCellSize();
-
-    Rect nextShapeRect = gameScreenLayout.getNextShapeRect();
-
-    _cachedNextFieldCenterX = (nextShapeRect.left + nextShapeRect.right) / 2;
-    _cachedNextFieldCenterY = (nextShapeRect.top + nextShapeRect.bottom) / 2;
-  }
-
-  private static final Matrix _scaleMatrix = new Matrix();
-
-  public static void scale(Path source, Path target, float ratio) {
-    _scaleMatrix.reset();
-    _scaleMatrix.preScale(ratio, ratio);
-    source.transform(_scaleMatrix, target);
-  }
-
-  protected GameScreenLayout getGameScreenLayout() {
-    return _gameScreenLayout;
   }
 
   /**
@@ -105,8 +56,6 @@ public abstract class AbstractFlatGamePainter {
    * @param game game for which the field is painted
    */
   public abstract void paintField(Canvas c, FlatGame game);
-
-  public enum FieldId { GameField, NextField }
 
   public abstract int getCenterX(int col, int row, FieldId cellField);
   public abstract int getCenterY(int col, int row, FieldId cellField);

@@ -23,7 +23,6 @@ import java.util.EnumSet;
 
 public abstract class FlatGame extends ABrickGame {
 
-  public static final int EMPTY = 0;
   private final Dimensions _fieldDimensions;
 
   protected int field[][];
@@ -78,7 +77,7 @@ public abstract class FlatGame extends ABrickGame {
 
     for (int i = 0; i < getHeight(); i++) {
       for (int j = 0; j < getWidth(); j++) {
-        field[i][j] = EMPTY;
+        field[i][j] = EMPTY_CELL_TYPE;
       }
     }
   }
@@ -157,7 +156,7 @@ public abstract class FlatGame extends ABrickGame {
     for (int i = 0; i < aShape.size(); i++) {
       int x = aShape.getX(i, centerCol, centerRow), y = aShape.getY(i, centerCol, centerRow);
 
-      if (x < 0 || x >= colCount || y >= rowCount || (y >= 0 && field[y][x] != EMPTY)) {
+      if (x < 0 || x >= colCount || y >= rowCount || (y >= 0 && field[y][x] != EMPTY_CELL_TYPE)) {
         canPlace = false;
         break;
       }
