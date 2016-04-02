@@ -26,7 +26,7 @@ public abstract class ABrickGame {
   private boolean _prefAdvanceLevel = false;
   private boolean _prefShowDropTarget = false;
 
-
+  private final AbstractGamePainter _gamePainter;
   private Scoreboard.GameScores _scoreboard;
 
   private int myState = NOTINIT;
@@ -46,7 +46,8 @@ public abstract class ABrickGame {
 
   /**************************************************
    **************************************************/
-  public ABrickGame(GameDescriptor descriptor) {
+  public ABrickGame(GameDescriptor descriptor, AbstractGamePainter gamePainter) {
+    _gamePainter = gamePainter;
     //String gameLabel, String gameDescriptor
     // byte[] gameData, String gameLabel, int fWidth, int fHeight, int nextWidth, int nextHeight){
     // example:
@@ -62,6 +63,10 @@ public abstract class ABrickGame {
     myFieldHeight = Integer.parseInt(gameParams.substring(whSep + 1, lastSep));
     configure(gameParams.substring(lastSep + 1));
     */
+  }
+
+  protected AbstractGamePainter getGamePainter(){
+    return _gamePainter;
   }
 
   public GameDescriptor getDescriptor() {

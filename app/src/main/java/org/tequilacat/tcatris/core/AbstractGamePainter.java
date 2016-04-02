@@ -1,13 +1,16 @@
 package org.tequilacat.tcatris.core;
 
+import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Path;
 import android.graphics.Rect;
 
+import org.tequilacat.tcatris.games.FlatGame;
+
 /**
  * Base class to display game state on screen
  */
-public class AbstractGamePainter {
+public abstract class AbstractGamePainter {
 
   public class ColorPalette {
     public int DYN_SHAPE_STROKE_VALID = VisualResources.Defaults.DYN_SHAPE_STROKE_VALID;
@@ -35,7 +38,7 @@ public class AbstractGamePainter {
   }
 
   public static int getTypeColor(int cellType, ColorCodes.Lightness lightness) {
-    return ColorCodes.getDistinctColor(cellType - 1,lightness);
+    return ColorCodes.getDistinctColor(cellType - 1, lightness);
   }
 
   public static void scale(Path source, Path target, float ratio) {
@@ -60,5 +63,12 @@ public class AbstractGamePainter {
   protected GameScreenLayout getGameScreenLayout() {
     return _gameScreenLayout;
   }
+
+  /**
+   * paints background of field if needed
+   * @param c canvas
+   * @param game game for which the field is painted
+   */
+  public abstract void paintField(Canvas c, ABrickGame game);
 
 }

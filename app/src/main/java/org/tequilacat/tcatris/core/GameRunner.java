@@ -115,6 +115,10 @@ public abstract class GameRunner {
                 boolean gameStateChanged = getGame().nextState(curAction == GameAction.DROP);
                 if(getGame().canSqueeze()) {
                   playViewSoundEffect(Sounds.Id.SQUEEZE);
+
+//                  for (int squeezeStep = getGame().getSqueezeSteps(); squeezeStep > 0; squeezeStep--) {
+//
+//                  }
                 }
 
                 if(gameStateChanged) {
@@ -293,7 +297,7 @@ public abstract class GameRunner {
       }
 
       long end = System.currentTimeMillis();
-      // Debug.print("Repaint [" + paintType + "] took " + (end - start) + " ms");
+      Debug.print("Repaint [" + paintType + "] took " + (end - start) + " ms");
     }
   }
 

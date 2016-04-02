@@ -30,21 +30,20 @@ public abstract class FlatGame extends ABrickGame {
   private FlatShape myFallingShape;
   private FlatShape myNextShape;
 
-  private AbstractFlatGamePainter _fieldPainter;
+  //private AbstractFlatGamePainter _fieldPainter;
   private int _finalCurShapeY;
 
   protected FlatGame(GameDescriptor descriptor, AbstractFlatGamePainter fieldPainter) {
-    super(descriptor);
+    super(descriptor, fieldPainter);
 
-    _fieldPainter = fieldPainter;
+    //_fieldPainter = fieldPainter;
     _fieldDimensions = new Gson().fromJson(descriptor.getGameParameters().get(
         GameConstants.JSON_DIMENSIONS), Dimensions.class);
   }
 
-  protected AbstractFlatGamePainter getGamePainter() {
-    return _fieldPainter;
+  private AbstractFlatGamePainter getAbstractFlatGamePainter() {
+    return (AbstractFlatGamePainter) getGamePainter();
   }
-
 
   /**
    * @return width of game field in cells
@@ -294,7 +293,7 @@ public abstract class FlatGame extends ABrickGame {
       fieldWidth, fieldHeight,
       nextShapeX, nextShapeY, nextShapeWidth, nextShapeHeight));
 
-    _fieldPainter.init(getGameScreenLayout(), this);
+    getGamePainter().init(getGameScreenLayout(), this);
   }
 
   /**
@@ -320,7 +319,7 @@ public abstract class FlatGame extends ABrickGame {
   @Override
   public void paintField(Canvas g, DynamicState dynamicState) {
     // paints field background and field cells
-    _fieldPainter.paintField(g, this);
+    getGamePainter().paintField(g, this);
 
     // display falling shape
     if (getState() == ACTIVE && !canSqueeze()) {
@@ -364,12 +363,12 @@ public abstract class FlatGame extends ABrickGame {
 
       if (drawContour) {
         // TODO only update shape contour when it's thrown in or rotated
-        _fieldPainter.updateCurrentShapeContour(getCurrentShape());
-        _fieldPainter.drawShapeContour(g, this, isValid, dxFactor, rotateFactor);
+        getAbstractFlatGamePainter().updateCurrentShapeContour(getCurrentShape());
+        getAbstractFlatGamePainter().drawShapeContour(g, this, isValid, dxFactor, rotateFactor);
             //centerX0 + cellSize / 2 + (int) (dx * cellSize), centerY0 + cellSize / 2,
       }
 
-      _fieldPainter.paintFallingShape(g, this, _finalCurShapeY, dynamicState);
+      getAbstractFlatGamePainter().paintFallingShape(g, this, _finalCurShapeY, dynamicState);
     }
   }
 
@@ -395,7 +394,7 @@ public abstract class FlatGame extends ABrickGame {
    */
   @Override
   public void paintNext(Canvas g) {
-    getGamePainter().paintNext(g, getNextShape());
+    getAbstractFlatGamePainter().paintNext(g, getNextShape());
   }
 
   @Override

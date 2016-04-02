@@ -98,7 +98,8 @@ public class FlatRectGamePainter extends AbstractRectGamePainter {
   }
 
   @Override
-  public void paintField(Canvas g, FlatGame game) {
+  public void paintField(Canvas g, ABrickGame brickGame) {
+    FlatGame game = (FlatGame) brickGame;
     // do nothing or fill the rect
 
     final GameScreenLayout layout = getGameScreenLayout();

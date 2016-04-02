@@ -161,7 +161,8 @@ public class HextrisPainter extends AbstractFlatGamePainter {
   }
 
   @Override
-  public void paintField(Canvas c, FlatGame game) {
+  public void paintField(Canvas c, ABrickGame brickGame) {
+    FlatGame game = (FlatGame) brickGame;
     int gameRows = game.getHeight(), gameCols = game.getWidth();
     final Rect fieldRect = _cachedFieldRect;
 

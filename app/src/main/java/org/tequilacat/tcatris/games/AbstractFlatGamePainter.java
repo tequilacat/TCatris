@@ -50,13 +50,6 @@ public abstract class AbstractFlatGamePainter extends AbstractGamePainter {
    */
   public abstract void paintCellPix(Canvas c, int cx, int cy, int state, ABrickGame.CellState cellState);
 
-  /**
-   * paints background of field if needed
-   * @param c canvas
-   * @param game game for which the field is painted
-   */
-  public abstract void paintField(Canvas c, FlatGame game);
-
   public abstract int getCenterX(int col, int row, FieldId cellField);
   public abstract int getCenterY(int col, int row, FieldId cellField);
 
@@ -135,18 +128,25 @@ public abstract class AbstractFlatGamePainter extends AbstractGamePainter {
 
     final boolean drawShadow = game.isPrefShowDropTarget() && finalFallingShapeY > shapeCenterY;
 
+    // draw projection
+    if(drawShadow) {
+
+      for (int i = 0, len = shape.size(); i < len; i++) {
+        int x = shape.getX(i), y = shape.getY(i);
+
+        y += (finalFallingShapeY - shape.getCenterY());
+        paintCellPix(c, getCenterX(x, y, FieldId.GameField), getCenterY(x, y, FieldId.GameField),
+            shape.getCellType(i), ABrickGame.CellState.FALLEN_SHADOW);
+      }
+    }
+
+    // then overdraw with actually falling
     for (int i = 0, len = shape.size(); i < len; i++) {
       int x = shape.getX(i), y = shape.getY(i);
 
       if (x >= 0 && x < cols && y >= 0 && y < rows) {
         paintCellPix(c, getCenterX(x, y, FieldId.GameField), getCenterY(x, y, FieldId.GameField),
             shape.getCellType(i), ABrickGame.CellState.FALLING);
-      }
-
-      if(drawShadow) {
-        y += (finalFallingShapeY - shape.getCenterY());
-        paintCellPix(c, getCenterX(x, y, FieldId.GameField), getCenterY(x, y, FieldId.GameField),
-            shape.getCellType(i), ABrickGame.CellState.FALLEN_SHADOW);
       }
     }
   }
