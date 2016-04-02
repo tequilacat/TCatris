@@ -247,6 +247,10 @@ public class MainActivity extends AppCompatActivity {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+      // forget current game
+      Debug.print("create game selector view");
+      getMainActivity().getData().setCurrentGame(null);
+
       View view = inflater.inflate(R.layout.view_gameselector, container, false);
 
       final List<GameDescriptor> gameTypes = getMainActivity().getData().getGameDescriptors();
@@ -494,9 +498,27 @@ public class MainActivity extends AppCompatActivity {
     showFragment(GameViewFragment.Id);
   }
 
+  private static final int REQUEST_CODE = 1;
+
   private void showSettings() {
     Intent intent = new Intent();
     intent.setClass(MainActivity.this, SettingsActivity.class);
-    startActivityForResult(intent, 0);
+    startActivityForResult(intent, REQUEST_CODE);
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+
+    if (requestCode == REQUEST_CODE) {
+      // that's our settings activity
+      ABrickGame game = getData().getCurrentGame();
+      Debug.print("returned from ... game = " + game);
+
+      if (game != null && game.getState() == ABrickGame.ACTIVE) {
+        Debug.print("  game is active, return to it");
+        showFragment(GameViewFragment.Id);
+      }
+    }
   }
 }
