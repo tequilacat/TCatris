@@ -80,9 +80,9 @@ public class Ui {
    */
   private static Path rotated(Path srcPath, int degree) {
     Matrix mtx = new Matrix();
-    mtx.postTranslate(-0.5f, -0.5f);
+    //mtx.postTranslate(-0.5f, -0.5f);
     mtx.postRotate(degree);
-    mtx.postTranslate(0.5f, 0.5f);
+    //mtx.postTranslate(0.5f, 0.5f);
     Path path = new Path();
     srcPath.transform(mtx, path);
     return path;
@@ -92,7 +92,7 @@ public class Ui {
     Matrix mtx = new Matrix();
     //mtx.postTranslate(-0.5f, -0.5f);
     mtx.preScale(-1, 1);
-    mtx.postTranslate(1, 0);
+    //mtx.postTranslate(1, 0);
     //mtx.postRotate(degree);
     //mtx.postTranslate(0.5f, 0.5f);
     Path path = new Path();
@@ -113,48 +113,47 @@ public class Ui {
     _buttonGlyphFillPainter.setColor(VisualResources.Defaults.GLYPH_FILL_COLOR);
 
     // create rotate arrow
-    RectF oval = new RectF(0.3f, 0.3f, 0.7f, 0.7f);
+    RectF oval = new RectF(0.3f - 0.5f, 0.3f - 0.5f, 0.7f - 0.5f, 0.7f - 0.5f);
     Path ccwArrow = new Path();
 
-    ccwArrow.moveTo(0.5f, 0f);
-    ccwArrow.lineTo(0.3f, 0.2f);
-    ccwArrow.lineTo(0.5f, 0.4f);
-    ccwArrow.lineTo(0.5f, 0.3f);
+    ccwArrow.moveTo(0.5f - 0.5f, 0f - 0.5f);
+    ccwArrow.lineTo(0.3f - 0.5f, 0.2f - 0.5f);
+    ccwArrow.lineTo(0.5f - 0.5f, 0.4f - 0.5f);
+    ccwArrow.lineTo(0.5f - 0.5f, 0.3f - 0.5f);
 
     ccwArrow.arcTo(oval, -90, 270);
-    ccwArrow.lineTo(0.1f, 0.5f);
+    ccwArrow.lineTo(0.1f - 0.5f, 0.5f - 0.5f);
 
-    oval.set(0.1f, 0.1f, 0.9f, 0.9f);
+    oval.set(0.1f - 0.5f, 0.1f - 0.5f, 0.9f - 0.5f, 0.9f - 0.5f);
     ccwArrow.arcTo(oval, 180, -270);
 
-    ccwArrow.lineTo(0.5f, 0f);
+    ccwArrow.lineTo(0.5f - 0.5f, 0f - 0.5f);
 
     // create straight arrow
-    float side = 1;
     // create path
     Path arrowRightPath = new Path();
-    arrowRightPath.moveTo(side * 0.2f, side * 0.4f);
-    arrowRightPath.lineTo(side * 0.4f, side * 0.4f);
-    arrowRightPath.lineTo(side * 0.4f, side * 0.2f);
-    arrowRightPath.lineTo(side * 0.8f, side * 0.5f);
-    arrowRightPath.lineTo(side * 0.4f, side * 0.8f);
-    arrowRightPath.lineTo(side * 0.4f, side * 0.6f);
-    arrowRightPath.lineTo(side * 0.2f, side * 0.6f);
+    arrowRightPath.moveTo(0.2f - 0.5f, 0.4f - 0.5f);
+    arrowRightPath.lineTo(0.4f - 0.5f, 0.4f - 0.5f);
+    arrowRightPath.lineTo(0.4f - 0.5f, 0.2f - 0.5f);
+    arrowRightPath.lineTo(0.8f - 0.5f, 0.5f - 0.5f);
+    arrowRightPath.lineTo(0.4f - 0.5f, 0.8f - 0.5f);
+    arrowRightPath.lineTo(0.4f - 0.5f, 0.6f - 0.5f);
+    arrowRightPath.lineTo(0.2f - 0.5f, 0.6f - 0.5f);
     arrowRightPath.close();
 
     
     Path shiftRightPath = new Path();
-    shiftRightPath.moveTo(0.4f, 0.3f);
-    shiftRightPath.lineTo(0.5f, 0.3f);
-    shiftRightPath.lineTo(0.5f, 0f);
-    shiftRightPath.lineTo(1f, 0.5f);
-    shiftRightPath.lineTo(0.5f, 1f);
-    shiftRightPath.lineTo(0.5f, 0.7f);
-    shiftRightPath.lineTo(0.4f, 0.7f);
+    shiftRightPath.moveTo(0.4f - 0.5f, 0.3f - 0.5f);
+    shiftRightPath.lineTo(0.5f - 0.5f, 0.3f - 0.5f);
+    shiftRightPath.lineTo(0.5f - 0.5f, 0f - 0.5f);
+    shiftRightPath.lineTo(1f - 0.5f, 0.5f - 0.5f);
+    shiftRightPath.lineTo(0.5f - 0.5f, 1f - 0.5f);
+    shiftRightPath.lineTo(0.5f - 0.5f, 0.7f - 0.5f);
+    shiftRightPath.lineTo(0.4f - 0.5f, 0.7f - 0.5f);
     shiftRightPath.close();
 
-    shiftRightPath.addRect(0f, 0.3f, 0.15f, 0.7f, Path.Direction.CW);
-    shiftRightPath.addRect(0.2f, 0.3f, 0.35f, 0.7f, Path.Direction.CW);
+    shiftRightPath.addRect(-0.5f, 0.3f - 0.5f, 0.15f - 0.5f, 0.7f - 0.5f, Path.Direction.CW);
+    shiftRightPath.addRect(0.2f - 0.5f, 0.3f - 0.5f, 0.35f - 0.5f, 0.7f - 0.5f, Path.Direction.CW);
 
     // create buttons
     GLYPH_PATHS = new ArrayList<>();
@@ -204,7 +203,7 @@ public class Ui {
       Path path = GLYPH_PATHS.get(index);*/
       if (path != null) {
         c.save();
-        c.translate(x, y);
+        c.translate(x + (w >> 1), y + (h >> 1));
         c.scale(w, h);
 
         c.drawPath(path, _buttonGlyphFillPainter);

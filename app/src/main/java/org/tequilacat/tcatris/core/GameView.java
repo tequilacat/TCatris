@@ -626,11 +626,16 @@ public final class GameView extends SurfaceView {
 
         Ui.drawRoundedArea(c, game.getGameScreenLayout().getFieldRect(), Ui.FramePosition.AROUND);
         Ui.drawRoundedArea(c, _scoresClickableArea, Ui.FramePosition.INSIDE);
-
         game.paintNext(c);
 
-        // try fitting round drop button here
-
+        // drop arrow below next fig
+        Rect nextRect = game.getGameScreenLayout().getNextShapeRect();
+        int dropX = nextRect.left, dropWidth = nextRect.width();
+        int dropBottom = (int) (_scoresClickableArea.bottom
+            - VisualResources.Defaults.ROUNDED_FRAME_MARGIN
+            - VisualResources.Defaults.ROUNDED_FRAME_PADDING);
+        int dropY = Math.max(nextRect.bottom, dropBottom - dropWidth);
+        Ui.drawGlyph(c, dropX, dropY, dropWidth, dropBottom - dropY, ABrickGame.ImpulseSemantics.MOVE_DOWN);
 
         Scoreboard.GameScores gs = Scoreboard.instance().getGameScores(game.getDescriptor().getId());
         Ui.paintScores(c, game.getScore(), gs.getMaxScore(), _scoreArea.left, _scoreArea.top,
@@ -660,7 +665,8 @@ public final class GameView extends SurfaceView {
             Ui.drawRoundedButton(c, roundedX + buttonMargin, roundedY + buttonMargin,
                 roundedWidth - buttonMargin - buttonMargin,
                 roundedHeight - buttonMargin - buttonMargin, ColorCodes.red, 0xffffbaba);
-            //Ui.drawRoundButton(c, gX, btn.rect.top + btnHeight / 2, btnRadius, ColorCodes.red, 0xffffbaba);
+
+            //Ui.drawGlyph(c, gX - gliphSide / 2, btn.rect.top + btnHeight / 2 - gliphSide / 2,
             Ui.drawGlyph(c, gX - gliphSide / 2, btn.rect.top + btnHeight / 2 - gliphSide / 2,
                 gliphSide, gliphSide, buttonGlyph);
             gX += glyphAreaWidth;
