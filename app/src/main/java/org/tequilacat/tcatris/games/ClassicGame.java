@@ -85,12 +85,14 @@ public class ClassicGame extends AbstractRotationGame {
   @Override
   public boolean squeeze() {
     int curRow = getHeight() - 1, targetRow = curRow;
+    int curScore = getScore(), deltaScore = getLevel(); // add level-1 after each successful squeeze
 
     while (curRow >= 0) {
       if(mySqueezable[curRow]) { // have contents
         curRow--; // move forward, keep target pointed to same
-        setScore(getScore() + 1);
-        
+        curScore += deltaScore;
+        deltaScore++; // each next row is awarded +1
+
       }else {
         if(curRow < targetRow) {
           System.arraycopy(field[curRow], 0, field[targetRow], 0, getWidth());
@@ -100,7 +102,7 @@ public class ClassicGame extends AbstractRotationGame {
         curRow--;
       }
     }
-
+    setScore(curScore);
     while (targetRow >= 0) {
       for (int col = 0; col < getWidth(); col++) {
         field[targetRow][col] = EMPTY_CELL_TYPE;
