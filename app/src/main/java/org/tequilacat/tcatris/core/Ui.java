@@ -420,6 +420,8 @@ public class Ui {
 
     left -= shadowDelta;
     top -= shadowDelta;
+    right -= shadowDelta;
+    bottom -= shadowDelta;
 
     _framePainter.setColor(VisualResources.Defaults.DARKSHADOW_COLOR);
     _roundedAreaRect.set(left, top, right, bottom);
