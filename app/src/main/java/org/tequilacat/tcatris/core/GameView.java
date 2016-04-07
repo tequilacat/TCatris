@@ -6,10 +6,13 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.preference.PreferenceManager;
 import android.support.v4.view.MotionEventCompat;
+import android.support.v4.view.VelocityTrackerCompat;
 import android.util.AttributeSet;
+import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.VelocityTracker;
 import android.view.ViewConfiguration;
 
 import org.tequilacat.tcatris.MainActivity;
@@ -120,8 +123,11 @@ public final class GameView extends SurfaceView {
    */
   private void initView(Context context) {
     _sounds = new Sounds(context);
+
     DragTrack.MinDragDistance = ViewConfiguration.get(context).getScaledTouchSlop();
     DragTrack.MaxTapInterval = ViewConfiguration.get(context).getJumpTapTimeout();
+    DragTrack.MinimumFlingVelocity = ViewConfiguration.get(context).getScaledMinimumFlingVelocity();
+
 
     SurfaceHolder _holder = getHolder();
     _holder.addCallback(new SurfaceHolder.Callback() {
@@ -208,6 +214,8 @@ public final class GameView extends SurfaceView {
     /** min dist in pixels required to start drag */
     public static int MinDragDistance;
     private static int MaxTapInterval;
+    public static int MinimumFlingVelocity;
+    public static int MinFlingDistance;
 
     private final DragAxis _dragType;
     private final int _stepDistance;
@@ -322,6 +330,11 @@ public final class GameView extends SurfaceView {
   }
 
   /**
+   * stores trackers used for certain pointer id
+   */
+  private SparseArray<VelocityTracker> _velocityTrackers = new SparseArray<>();
+
+  /**
    * for drag event returns the action for this drag gesture,
    * e.g. dragging specific button left or right will return LEFT or RIGHT actions
    * after dragging for certain distance.
@@ -337,6 +350,17 @@ public final class GameView extends SurfaceView {
     if(action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN){
       int index = MotionEventCompat.getActionIndex(event);
       int pointerId = MotionEventCompat.getPointerId(event, index);
+
+      VelocityTracker velocityTracker = _velocityTrackers.get(pointerId);
+
+      if(velocityTracker == null) {
+        velocityTracker = VelocityTracker.obtain();
+        _velocityTrackers.put(pointerId, velocityTracker);
+      }else{
+        velocityTracker.clear();
+      }
+      velocityTracker.addMovement(event);
+
 //      Debug.print(">>> Event AD/APD #" + action + " (" + event.getAction() + "): index = " + index + " of " + MotionEventCompat.getPointerCount(event));
       int x = (int) MotionEventCompat.getX(event, index), y = (int) MotionEventCompat.getY(event, index);
 
@@ -364,6 +388,11 @@ public final class GameView extends SurfaceView {
     } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP || action == MotionEvent.ACTION_CANCEL) {
       //Debug.print(">>> Event AU/APU/AC #" + action + " (" + event.getAction() + ")");//: index = " + index + " of " + MotionEventCompat.getPointerCount(event));
       int pointerId = MotionEventCompat.getPointerId(event, MotionEventCompat.getActionIndex(event));
+      VelocityTracker velocityTracker = _velocityTrackers.get(pointerId);
+
+      if(velocityTracker != null) {
+        velocityTracker.clear();
+      }
 
       // find drag for this index,
       for (DragTrack track : _tracksByType) {
@@ -381,14 +410,32 @@ public final class GameView extends SurfaceView {
       }
 
     } else if (action == MotionEvent.ACTION_MOVE) {
+      // drop gesture means quick upward fling
+      boolean isDropGesture = false;
+
       for(DragTrack track : _tracksByType) {
         // check if is dragging, get its pointer ID,
         if(track.isStarted()) {
           int pointerIndex = MotionEventCompat.findPointerIndex(event, track.pointerId);
           int x = (int) MotionEventCompat.getX(event, pointerIndex), y = (int) MotionEventCompat.getY(event, pointerIndex);
 
+          // check if we moved up
+          VelocityTracker velocityTracker = _velocityTrackers.get(track.pointerId);
+
+          if(velocityTracker != null) {
+            velocityTracker.addMovement(event);
+            velocityTracker.computeCurrentVelocity(1000);
+            float velocity = VelocityTrackerCompat.getYVelocity(velocityTracker, pointerIndex);
+
+            if(Math.abs(velocity) > DragTrack.MinimumFlingVelocity
+                && (track._startY - y) > DragTrack.MinFlingDistance) {
+              Debug.print("Velocity #" + pointerIndex + ": " + velocity
+                  + ", distance = " + (track._startY - y) + " of " + DragTrack.MinFlingDistance);
+            }
+          }
+
           //track.dragTo(x, y);
-          if(track.dragTo(x, y)==DragProgress.InProgress) {
+          if (track.dragTo(x, y) == DragProgress.InProgress) {
             dragResult = DragProgress.InProgress;
           }
         }
@@ -523,6 +570,11 @@ public final class GameView extends SurfaceView {
         _gameStatisticsArea.set(0, 0, w, _scoreArea.bottom);
 
         _buttonArea.set(0, h - VisualResources.Defaults.BUTTONAREA_HEIGHT, w, h);
+
+        // assign params depending on button height:
+        // quick fling must be more than 2 button heights
+        DragTrack.MinFlingDistance = _buttonArea.height() * 2;
+
         LayoutParameters layoutParams = new LayoutParameters();
         layoutParams.GameArea = new Rect(0, _gameStatisticsArea.bottom, w, _buttonArea.top);
         game.layout(layoutParams);
